@@ -89,7 +89,8 @@ async function completeAndParse(
   system: string,
   messages: ChatMessage[],
 ): Promise<EngineOutput> {
-  const raw = await provider.complete({ system, messages, maxTokens: 8000 });
+  // Les longs road trips (10 j+) produisent un gros JSON : large marge de sortie
+  const raw = await provider.complete({ system, messages, maxTokens: 32000 });
   return engineOutputSchema.parse(extractJson(raw));
 }
 
