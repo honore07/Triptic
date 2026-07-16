@@ -1,0 +1,119 @@
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Send } from 'lucide-react';
+import type { Lang, TripProposal } from '@triptic/shared';
+import { ChatBubble, TypingBubble } from '../components/ChatBubble';
+import { TripCompare } from '../components/TripCompare';
+import { useChatStore } from '../store/chatStore';
+import { useTripStore } from '../store/tripStore';
+import { useUserStore } from '../store/userStore';
+
+export function Plan() {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation() as { state?: { initialQuery?: string } };
+  const { messages, status, error, result, send } = useChatStore();
+  const { plan, openPaywall, setRemaining } = useUserStore();
+  const selectTrip = useTripStore((s) => s.select);
+  const [input, setInput] = useState('');
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const startedRef = useRef(false);
+
+  const lang = (i18n.language as Lang) ?? 'fr';
+  const busy = status !== 'idle' && status !== 'error';
+
+  useEffect(() => {
+    const initial = location.state?.initialQuery;
+    if (initial && !startedRef.current && messages.length === 0) {
+      startedRef.current = true;
+      void send(initial, lang, plan);
+    }
+  }, [location.state, messages.length, send, lang, plan]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, status, result]);
+
+  useEffect(() => {
+    if (result && result.remaining !== null) setRemaining(result.remaining);
+  }, [result, setRemaining]);
+
+  const submit = () => {
+    const text = input.trim();
+    if (!text || busy) return;
+    setInput('');
+    void send(text, lang, plan);
+  };
+
+  const onChoose = (trip: TripProposal) => {
+    selectTrip(trip);
+    navigate('/trip');
+  };
+
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
+      <h1 className="font-display text-2xl font-bold text-trail">{t('chat.title')}</h1>
+
+      <section aria-label={t('chat.title')} className="flex flex-col gap-3">
+        {messages.map((message, i) => (
+          <ChatBubble key={i} message={message} />
+        ))}
+        {busy && <TypingBubble label={t(`chat.status_${status}`, t('chat.thinking'))} />}
+        {status === 'error' && (
+          <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
+            {error === 'quota_exceeded' ? t('chat.error_quota') : t('chat.error_generation')}
+            {error === 'quota_exceeded' && (
+              <button
+                type="button"
+                onClick={openPaywall}
+                className="ml-2 font-semibold underline"
+              >
+                {t('trips.locked_cta')}
+              </button>
+            )}
+          </p>
+        )}
+        <div ref={bottomRef} />
+      </section>
+
+      {!result && (
+        <form
+          className="sticky bottom-4 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={messages.length === 0 ? t('home.placeholder') : t('chat.placeholder')}
+            aria-label={t('chat.placeholder')}
+            disabled={busy}
+            className="min-h-12 flex-1 rounded-xl border border-mist bg-snow px-4 text-sm text-trail placeholder:text-fog disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={busy || !input.trim()}
+            aria-label={t('chat.send')}
+            className="flex min-h-12 min-w-12 items-center justify-center rounded-xl bg-summit text-snow transition-colors hover:bg-summit/90 disabled:bg-fog"
+          >
+            <Send size={18} aria-hidden="true" />
+          </button>
+        </form>
+      )}
+
+      {result && (
+        <TripCompare
+          trips={result.generation.trips}
+          lockedCount={result.locked_proposals}
+          differentiator={result.generation.differentiator}
+          onChoose={onChoose}
+          onUnlock={openPaywall}
+        />
+      )}
+    </main>
+  );
+}

@@ -1,0 +1,84 @@
+{
+  "app": {
+    "tagline": "Plan, Explore, Repeat.",
+    "promise": "Tu décris ton aventure. TRIPTIC te propose 3 itinéraires sur-mesure. Tu choisis. Tu peaufines. Tu pars.",
+    "offline": "Hors ligne — tes trips sauvegardés restent disponibles",
+    "online": "En ligne"
+  },
+  "home": {
+    "question": "Où veux-tu aller ?",
+    "placeholder": "Ex. : 4 jours de trek sauvage dans les Vosges depuis Colmar…",
+    "cta": "Générer mes 3 trips",
+    "examples_title": "Besoin d'inspiration ?",
+    "example_1": "Road trip van 5 jours dans le Jura, ambiance sauvage",
+    "example_2": "Trek de 3 jours autour du Hohneck avec bivouac",
+    "example_3": "Bikepacking 4 jours le long du Rhin, niveau facile"
+  },
+  "chat": {
+    "title": "Décris ton aventure",
+    "placeholder": "Réponds ici…",
+    "send": "Envoyer",
+    "thinking": "TRIPTIC réfléchit…",
+    "status_generating": "Génération des 3 itinéraires…",
+    "status_validating": "Validation géographique par l'agent correcteur…",
+    "status_retrying": "Correction des itinéraires…",
+    "status_photos": "Recherche des photos…",
+    "error_generation": "La génération a échoué. Réessaie dans un instant.",
+    "error_quota": "Tu as utilisé tes 3 générations gratuites ce mois-ci."
+  },
+  "trips": {
+    "compare_title": "3 itinéraires en compétition",
+    "compare_hint": "Proches mais distincts — à toi de choisir.",
+    "days": "jours",
+    "day": "Jour",
+    "elevation": "D+",
+    "distance": "Distance",
+    "per_day": "par jour",
+    "choose": "Choisir ce trip",
+    "locked_title": "2 autres variantes t'attendent",
+    "locked_cta": "Débloquer les 3 trips",
+    "waypoints_title": "Étapes",
+    "save": "Sauvegarder",
+    "saved": "Sauvegardé ✓",
+    "share": "Lien public",
+    "copied": "Lien copié !",
+    "back": "Retour aux propositions",
+    "not_found": "Trip introuvable."
+  },
+  "difficulty": {
+    "easy": "Facile",
+    "medium": "Modéré",
+    "hard": "Difficile"
+  },
+  "mode": {
+    "roadtrip": "Road trip",
+    "trek": "Trek",
+    "bikepacking": "Bikepacking"
+  },
+  "gpx": {
+    "export": "Exporter GPX",
+    "locked": "GPX réservé aux plans payants"
+  },
+  "map": {
+    "preview": "Aperçu du tracé",
+    "no_token": "Carte interactive disponible avec un token Mapbox (aperçu simplifié affiché)"
+  },
+  "paywall": {
+    "title": "Passe en mode Aventurier",
+    "subtitle": "Les 3 trips en compétition, l'export GPX, le mode offline et les treks & bikepacking.",
+    "feature_trips": "3 itinéraires en compétition à chaque génération",
+    "feature_unlimited": "Générations IA illimitées",
+    "feature_gpx": "Export GPX vers ta montre ou ton GPS",
+    "feature_offline": "Cartes offline (5 régions)",
+    "price_aventurier": "29 € / an",
+    "price_explorateur": "49 € / an",
+    "plan_aventurier": "Aventurier",
+    "plan_explorateur": "Explorateur",
+    "cta": "Choisir Aventurier",
+    "later": "Plus tard",
+    "explorateur_extra": "Tout Aventurier + offline monde entier + sync Garmin/Wahoo"
+  },
+  "lang": {
+    "label": "Langue"
+  }
+}
