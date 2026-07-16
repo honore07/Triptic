@@ -6,8 +6,10 @@ module.exports = {
       cwd: './server',
       script: 'node_modules/.bin/tsx',
       args: 'src/index.ts',
-      instances: 'max',
-      exec_mode: 'cluster',
+      // 1 instance tant que le store est in-memory (pas de DATABASE_URL/Redis
+      // partagés) : le cluster fragmenterait quotas et trips entre workers.
+      instances: 1,
+      exec_mode: 'fork',
       watch: false,
       env_production: {
         NODE_ENV: 'production',

@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express, { type Express } from 'express';
 import cors from 'cors';
 import { pinoHttp } from 'pino-http';
@@ -34,6 +37,23 @@ export function createApp({ provider, repo, quota }: AppDeps): Express {
   app.use('/api/ai', aiRateLimiter, createAiRouter(provider, quotaService));
   app.use('/api/trips', createTripsRouter(tripRepo));
   app.use('/api/public', createPublicTripsRouter(tripRepo));
+
+  // Production sans reverse proxy dédié (VPS : Traefik occupe 80/443) :
+  // Express sert aussi la PWA buildée + fallback SPA.
+  const webDist = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '../../apps/web/dist',
+  );
+  if (fs.existsSync(webDist)) {
+    app.use(express.static(webDist));
+    app.use((req, res, next) => {
+      if (req.method === 'GET' && !req.path.startsWith('/api')) {
+        res.sendFile(path.join(webDist, 'index.html'));
+      } else {
+        next();
+      }
+    });
+  }
 
   return app;
 }
