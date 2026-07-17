@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
-import type { Lang, TripProposal } from '@triptic/shared';
+import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
 import { ChatBubble, TypingBubble } from '../components/ChatBubble';
 import { TripCompare } from '../components/TripCompare';
 import { useChatStore } from '../store/chatStore';
@@ -13,7 +13,7 @@ export function Plan() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { initialQuery?: string } };
-  const { messages, status, error, result, send } = useChatStore();
+  const { messages, status, error, result, send, regenerate } = useChatStore();
   const { plan, openPaywall, setRemaining } = useUserStore();
   const selectTrip = useTripStore((s) => s.select);
   const [input, setInput] = useState('');
@@ -38,6 +38,19 @@ export function Plan() {
   useEffect(() => {
     if (result && result.remaining !== null) setRemaining(result.remaining);
   }, [result, setRemaining]);
+
+  // Après un upgrade de plan (paywall), relance automatiquement la même
+  // demande : le résultat affiché ne contenait qu'1 trip, le serveur peut
+  // maintenant renvoyer les 3.
+  useEffect(() => {
+    if (
+      result &&
+      result.locked_proposals > 0 &&
+      PLANS[plan].limits.trip_proposals > result.generation.trips.length
+    ) {
+      void regenerate(lang, plan);
+    }
+  }, [plan, result, regenerate, lang]);
 
   const submit = () => {
     const text = input.trim();

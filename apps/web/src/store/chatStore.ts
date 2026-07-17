@@ -10,19 +10,13 @@ interface ChatState {
   error: string | null;
   result: TripsPayload | null;
   send: (content: string, lang: Lang, plan: PlanId) => Promise<void>;
+  /** Relance la génération avec la conversation existante (ex. après upgrade de plan). */
+  regenerate: (lang: Lang, plan: PlanId) => Promise<void>;
   reset: () => void;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
-  messages: [],
-  status: 'idle',
-  error: null,
-  result: null,
-
-  reset: () => set({ messages: [], status: 'idle', error: null, result: null }),
-
-  send: async (content, lang, plan) => {
-    const messages: ChatMessage[] = [...get().messages, { role: 'user', content }];
+export const useChatStore = create<ChatState>((set, get) => {
+  async function run(messages: ChatMessage[], lang: Lang, plan: PlanId): Promise<void> {
     set({ messages, status: 'generating', error: null, result: null });
     try {
       await generateTripsStream(messages, lang, plan, (event) => {
@@ -50,5 +44,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } catch {
       set({ status: 'error', error: 'generation_failed' });
     }
-  },
-}));
+  }
+
+  return {
+    messages: [],
+    status: 'idle',
+    error: null,
+    result: null,
+
+    reset: () => set({ messages: [], status: 'idle', error: null, result: null }),
+
+    send: async (content, lang, plan) => {
+      await run([...get().messages, { role: 'user', content }], lang, plan);
+    },
+
+    regenerate: async (lang, plan) => {
+      const { messages, status } = get();
+      if (messages.length === 0 || status !== 'idle') return;
+      await run(messages, lang, plan);
+    },
+  };
+});
