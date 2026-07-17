@@ -150,4 +150,29 @@ describe('generateTrips', () => {
       expect(result.validated).toBe(true);
     }
   });
+
+  it('does not regenerate when the corrector is technically unavailable', async () => {
+    let completeCalls = 0;
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async () => {
+        completeCalls += 1;
+        return JSON.stringify(TRIPS_OUTPUT);
+      },
+      correct: async () => {
+        throw new Error('deepseek-reasoner down');
+      },
+    };
+    const result = await generateTrips(
+      provider,
+      [{ role: 'user', content: '3 jours de trek dans les Vosges' }],
+      { lang: 'fr', maxProposals: 3 },
+    );
+    expect(completeCalls).toBe(1); // pas de retry : panne technique ≠ contenu invalide
+    expect(result.type).toBe('trips');
+    if (result.type === 'trips') {
+      expect(result.validated).toBe(false);
+      expect(result.issues).toEqual(['corrector_unavailable']);
+    }
+  });
 });

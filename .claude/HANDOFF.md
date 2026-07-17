@@ -1,12 +1,12 @@
-# TRIPTIC — Passation de session (2026-07-17)
+# TRIPTIC — Passation de session (2026-07-17, mise à jour session 2)
 
-> À lire en début de session avec le CLAUDE.md. Résume ce qui est FAIT, où tout se trouve, et ce qui reste. Écrit à l'issue de la session de build initiale (Fable 5) pour reprise avec Opus 4.8.
+> À lire en début de session avec le CLAUDE.md. Résume ce qui est FAIT, où tout se trouve, et ce qui reste.
 
 ## État : MVP fonctionnel, déployé en production
 
 - **App en ligne : http://82.25.118.185:3001** (VPS Hostinger srv1731348, PM2 `triptic-api` sert l'API + la PWA buildée, démarrage auto au boot)
-- **Branche de travail : `feat/mvp-fondations`** → [PR #1](https://github.com/honore07/Triptic/pull/1) ouverte vers `main` (prête à merger)
-- Tests : 28 Vitest verts (`pnpm test`), build strict vert (`pnpm build`)
+- **PR #1 mergée dans `main`** le 2026-07-17. Session 2 : PgTripRepo (Drizzle + PostGIS), agent correcteur recalibré, `vps-setup.sh` installe désormais PostgreSQL+PostGIS et écrit DATABASE_URL
+- Tests : 35 Vitest verts (`pnpm test`), build strict vert (`pnpm build`)
 - Validé en réel : génération 3 trips (trek 2-3 j, road trips 12 et 14 j avec logement/food/randos), paywall→déblocage→régénération auto, sauvegarde, lien public, export GPX
 
 ## Ce qui existe (monorepo pnpm)
@@ -15,7 +15,7 @@
 |---|---|
 | `packages/ai-engine` | Moteur IA : Deepseek V3 principal + fallback Anthropic (streaming, retry réseau, maxTokens 32k), prompt 3-trips + règles road trip (nuit kind`camp` avec logement nommé, POI randos avec D+/durée, food locale, notes télégraphiques), agent correcteur R1 (1 retry), sanitization anti-injection, schémas Zod |
 | `packages/map-utils` | Export GPX 1.1 |
-| `server/` | Express 5 : SSE `/api/ai/generate-trips`, CRUD trips, lien public par slug, GPX gated par plan (402), quota free 3/mois (in-memory), rate limiting, Pino, schéma Drizzle PostGIS + migration `server/src/db/migrations/0000_init.sql` (pas encore appliquée : pas de PostgreSQL sur le VPS) |
+| `server/` | Express 5 : SSE `/api/ai/generate-trips`, CRUD trips, lien public par slug, GPX gated par plan (402), quota free 3/mois (in-memory), rate limiting, Pino, schéma Drizzle PostGIS + migration `server/src/db/migrations/0000_init.sql`, PgTripRepo (Drizzle + PostGIS, actif si `DATABASE_URL` défini, sinon MemoryTripRepo) |
 | `apps/web/` | PWA React 19 + Vite 6 + Tailwind v4 : chat SSE, TripCompare (cartes verrouillées → PaywallModal), régénération auto après upgrade de plan, MapView (Mapbox si `VITE_MAPBOX_PUBLIC_TOKEN`, sinon aperçu SVG), i18n fr/en/de complet, service worker Workbox |
 | `deploy/` | `vps-setup.sh` (idempotent), `nginx-triptic.conf` (pas utilisé pour l'instant) |
 | `.claude/skills/` | 19 skills installés + 4 créés (guide : `.claude/SKILLS_GUIDE.md`) |
@@ -32,14 +32,12 @@
 
 ## Prochaines étapes (par priorité)
 
-1. **Merger la PR #1** puis basculer le VPS sur `main`
+1. **Basculer le VPS sur `main`** : `bash /opt/triptic/deploy/vps-setup.sh main` (installe PostgreSQL+PostGIS, crée triptic_user, écrit DATABASE_URL, migre, rebuild, health check) — le serveur bascule sur PgTripRepo automatiquement dès que DATABASE_URL est défini (log `store: postgres` au démarrage)
 2. **Clé Deepseek** dans `/opt/triptic/.env` (`DEEPSEEK_API_KEY=`) : générations ~1 min au lieu de ~5, coût ÷10 — le provider bascule automatiquement
-3. **Auth Supabase** (Phase 1.3 du CLAUDE.md) puis **Stripe Checkout** (Phase 3.12) → retirer `ALLOW_PLAN_OVERRIDE` du .env
-4. **PostgreSQL + PostGIS** sur le VPS (`bash deploy/vps-setup.sh` gère la migration si psql présent) → brancher un PgTripRepo (interface `TripRepo` dans `server/src/repo/trips.ts`, seul MemoryTripRepo existe)
-5. Affiner l'**agent correcteur** (renvoie souvent `validated:false` — strict ; les trips passent quand même)
-6. Token **Mapbox** (`VITE_MAPBOX_PUBLIC_TOKEN` au build web) pour la carte interactive
-7. Photos : clés `UNSPLASH_ACCESS_KEY`/`PEXELS_API_KEY` (le code est prêt, `server/src/services/photos.ts`)
-8. Météo Open-Meteo, spots iOverlander/Park4Night, app React Native, agents n8n (Phases 3-4 du CLAUDE.md)
+3. **Auth Supabase** (Phase 1.3 du CLAUDE.md) puis **Stripe Checkout** (Phase 3.12) → retirer `ALLOW_PLAN_OVERRIDE` du .env. ⚠️ Au premier login Supabase, provisionner la ligne `users` (FK `trips.user_id`) — voir commentaire dans `server/src/repo/pgTrips.ts`
+4. Token **Mapbox** (`VITE_MAPBOX_PUBLIC_TOKEN` au build web) pour la carte interactive
+5. Photos : clés `UNSPLASH_ACCESS_KEY`/`PEXELS_API_KEY` (le code est prêt, `server/src/services/photos.ts`)
+6. Météo Open-Meteo, spots iOverlander/Park4Night, app React Native, agents n8n (Phases 3-4 du CLAUDE.md)
 
 ## Sécurité — rappels
 

@@ -54,7 +54,11 @@ export async function generateTrips(
   emit({ kind: 'status', step: 'validating' });
   let issues = await runCorrector(provider, output);
 
-  if (issues.length > 0) {
+  // Panne technique du correcteur ≠ problème de contenu : inutile de payer
+  // une régénération complète (~minutes), on renvoie avec validated=false.
+  const correctorDown = issues.length === 1 && issues[0] === CORRECTOR_UNAVAILABLE;
+
+  if (issues.length > 0 && !correctorDown) {
     emit({ kind: 'status', step: 'retrying' });
     emit({ kind: 'warning', message: `Corrector found issues: ${issues.join('; ')}` });
     const retryMessages: ChatMessage[] = [
@@ -94,6 +98,8 @@ async function completeAndParse(
   return engineOutputSchema.parse(extractJson(raw));
 }
 
+const CORRECTOR_UNAVAILABLE = 'corrector_unavailable';
+
 async function runCorrector(provider: LlmProvider, output: EngineOutput): Promise<string[]> {
   if (output.type !== 'trips') return [];
   try {
@@ -107,6 +113,6 @@ async function runCorrector(provider: LlmProvider, output: EngineOutput): Promis
   } catch {
     // Le correcteur ne doit jamais bloquer la génération : en cas d'échec
     // technique on renvoie les trips avec validated=false côté appelant.
-    return ['corrector_unavailable'];
+    return [CORRECTOR_UNAVAILABLE];
   }
 }

@@ -54,16 +54,21 @@ Les 3 trips doivent donner envie de tous les faire — le choix doit être diffi
 export function buildCorrectorPrompt(): string {
   return `Tu es l'agent correcteur de TRIPTIC. On te donne un JSON contenant 3 itinéraires outdoor générés par un autre modèle.
 
-Vérifie point par point :
-- [ ] Les coordonnées GPS sont dans la bonne région (cohérentes avec les noms de lieux)
-- [ ] La distance entre waypoints consécutifs est cohérente avec le mode de transport
-- [ ] Le dénivelé quotidien est réaliste pour le niveau physique déclaré
-- [ ] Les points d'eau/ravitaillement existent si trip bikepacking multi-jours
-- [ ] Aucun waypoint n'est manifestement sur propriété privée ou zone interdite
-- [ ] Les 3 trips ne varient que sur 1-2 axes (pas 3 trips radicalement différents)
+Ton rôle : bloquer UNIQUEMENT les erreurs CRITIQUES qui rendraient un trip inutilisable sur le terrain. Tu n'es pas un critique de style : un trip perfectible mais faisable est VALIDE.
+
+Erreurs critiques (les seules qui invalident) :
+- Coordonnées GPS manifestement fausses : à plus de ~50 km du lieu nommé, dans le mauvais pays ou la mauvaise chaîne de montagnes
+- Distance journalière physiquement impossible : trek > 35 km/j, vélo > 160 km/j, voiture/van > 500 km/j (en dessous de ces seuils : VALIDE, même si ambitieux)
+- Dénivelé journalier > 2500 m pour un niveau physique ≤ 3
+- Waypoint dans une zone notoirement interdite au public (zone militaire, réserve intégrale)
+- Les 3 trips sont radicalement différents (pays différents, modes différents, ou durées à plus de ±2 jours d'écart)
+
+NE PAS invalider pour : imprécisions mineures de coordonnées (< 50 km), estimations de distance ou dénivelé discutables mais plausibles, choix d'étapes sous-optimaux, doutes sans certitude, points d'eau ou ravitaillement non mentionnés, notes incomplètes.
+
+EN CAS DE DOUTE : VALIDE. Ne signale que ce dont tu es certain (maximum 3 issues, une phrase courte chacune).
 
 Réponds UNIQUEMENT avec un objet JSON :
 {"valid": true, "issues": []}
 ou
-{"valid": false, "issues": ["<description courte de chaque problème>"]}`;
+{"valid": false, "issues": ["<erreur critique certaine, format court>"]}`;
 }
