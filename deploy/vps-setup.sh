@@ -83,5 +83,13 @@ if command -v nginx >/dev/null; then
 fi
 
 echo "=== 8. Health check ==="
-sleep 2
-curl -fsS http://localhost:3001/health && echo " ✓ API OK"
+# tsx met plusieurs secondes à booter : on retente jusqu'à 30 s
+for i in $(seq 1 15); do
+  if curl -fsS http://localhost:3001/health 2>/dev/null; then
+    echo " ✓ API OK"
+    exit 0
+  fi
+  sleep 2
+done
+echo "✗ L'API ne répond pas après 30 s — voir : pm2 logs triptic-api --lines 30 --nostream"
+exit 1
