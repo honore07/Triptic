@@ -1,0 +1,17 @@
+{
+  "name": "triptic",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TRIPTIC — Plan, Explore, Repeat. Planification d'aventures multi-modales propulsée par IA.",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @triptic/server --filter @triptic/web dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

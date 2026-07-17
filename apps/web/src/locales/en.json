@@ -1,0 +1,84 @@
+{
+  "app": {
+    "tagline": "Plan, Explore, Repeat.",
+    "promise": "Describe your adventure. TRIPTIC crafts 3 tailored routes. You choose. You refine. You go.",
+    "offline": "Offline — your saved trips remain available",
+    "online": "Online"
+  },
+  "home": {
+    "question": "Where do you want to go?",
+    "placeholder": "E.g.: 4 days of wild trekking in the Vosges from Colmar…",
+    "cta": "Generate my 3 trips",
+    "examples_title": "Need inspiration?",
+    "example_1": "5-day van road trip in the Jura, wild vibes",
+    "example_2": "3-day trek around the Hohneck with bivouac",
+    "example_3": "4-day bikepacking along the Rhine, easy level"
+  },
+  "chat": {
+    "title": "Describe your adventure",
+    "placeholder": "Answer here…",
+    "send": "Send",
+    "thinking": "TRIPTIC is thinking…",
+    "status_generating": "Generating the 3 routes…",
+    "status_validating": "Geographic validation by the corrector agent…",
+    "status_retrying": "Fixing the routes…",
+    "status_photos": "Finding photos…",
+    "error_generation": "Generation failed. Try again in a moment.",
+    "error_quota": "You have used your 3 free generations this month."
+  },
+  "trips": {
+    "compare_title": "3 competing routes",
+    "compare_hint": "Close but distinct — the choice is yours.",
+    "days": "days",
+    "day": "Day",
+    "elevation": "Elev.",
+    "distance": "Distance",
+    "per_day": "per day",
+    "choose": "Choose this trip",
+    "locked_title": "2 more variants await you",
+    "locked_cta": "Unlock all 3 trips",
+    "waypoints_title": "Stages",
+    "save": "Save",
+    "saved": "Saved ✓",
+    "share": "Public link",
+    "copied": "Link copied!",
+    "back": "Back to proposals",
+    "not_found": "Trip not found."
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Moderate",
+    "hard": "Hard"
+  },
+  "mode": {
+    "roadtrip": "Road trip",
+    "trek": "Trek",
+    "bikepacking": "Bikepacking"
+  },
+  "gpx": {
+    "export": "Export GPX",
+    "locked": "GPX is for paid plans"
+  },
+  "map": {
+    "preview": "Route preview",
+    "no_token": "Interactive map available with a Mapbox token (simplified preview shown)"
+  },
+  "paywall": {
+    "title": "Go Adventurer",
+    "subtitle": "All 3 competing trips, GPX export, offline mode, plus trek & bikepacking.",
+    "feature_trips": "3 competing routes on every generation",
+    "feature_unlimited": "Unlimited AI generations",
+    "feature_gpx": "GPX export to your watch or GPS",
+    "feature_offline": "Offline maps (5 regions)",
+    "price_aventurier": "€29 / year",
+    "price_explorateur": "€49 / year",
+    "plan_aventurier": "Adventurer",
+    "plan_explorateur": "Explorer Pro",
+    "cta": "Choose Adventurer",
+    "later": "Later",
+    "explorateur_extra": "Everything in Adventurer + worldwide offline + Garmin/Wahoo sync"
+  },
+  "lang": {
+    "label": "Language"
+  }
+}

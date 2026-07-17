@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-summit: #1a6bdb;
+  --color-trail: #0d1b2a;
+  --color-ridge: #3a5068;
+  --color-terrain: #f0f5fb;
+  --color-pine: #1a8a4a;
+  --color-amber: #c97a00;
+  --color-storm: #c03030;
+  --color-snow: #ffffff;
+  --color-mist: #d0dce8;
+  --color-fog: #8aa0b8;
+
+  --font-display: 'DM Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-trip: 16px;
+  --radius-badge: 6px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-terrain);
+  color: var(--color-trail);
+}
+
+/* Focus visible sur tous les éléments interactifs (a11y) */
+:focus-visible {
+  outline: 2px solid var(--color-summit);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes trip-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trip-card-enter {
+  animation: trip-card-in 220ms ease-out both;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.typing-dot {
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
