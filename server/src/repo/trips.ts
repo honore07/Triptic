@@ -1,12 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import type { Trip } from '@triptic/shared';
 
+/** Champs modifiables via PATCH /api/trips/:id (voir routes/trips.ts). */
+export type TripPatch = Partial<
+  Pick<
+    Trip,
+    'title' | 'is_public' | 'status' | 'waypoints' | 'slug' | 'mode' | 'metadata' | 'cover_photo'
+  >
+>;
+
 export interface TripRepo {
   save(trip: Omit<Trip, 'id' | 'created_at' | 'updated_at'>): Promise<Trip>;
   listByUser(userId: string): Promise<Trip[]>;
   getById(id: string): Promise<Trip | null>;
   getBySlug(slug: string): Promise<Trip | null>;
-  update(id: string, patch: Partial<Pick<Trip, 'title' | 'is_public' | 'status' | 'waypoints' | 'slug'>>): Promise<Trip | null>;
+  update(id: string, patch: TripPatch): Promise<Trip | null>;
 }
 
 /**
@@ -35,10 +43,7 @@ export class MemoryTripRepo implements TripRepo {
     return [...this.trips.values()].find((t) => t.slug === slug && t.is_public) ?? null;
   }
 
-  async update(
-    id: string,
-    patch: Partial<Pick<Trip, 'title' | 'is_public' | 'status' | 'waypoints' | 'slug'>>,
-  ): Promise<Trip | null> {
+  async update(id: string, patch: TripPatch): Promise<Trip | null> {
     const trip = this.trips.get(id);
     if (!trip) return null;
     const updated: Trip = { ...trip, ...patch, updated_at: new Date().toISOString() };

@@ -31,14 +31,36 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
-echo "=== 4. Base de données (PostGIS si PostgreSQL présent) ==="
-if command -v psql >/dev/null && sudo -u postgres psql -c '\q' 2>/dev/null; then
-  sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='triptic_db'" | grep -q 1 \
-    || sudo -u postgres createdb triptic_db
-  sudo -u postgres psql -d triptic_db -f server/src/db/migrations/0000_init.sql
-else
-  echo "PostgreSQL absent → l'API utilisera le store in-memory (DATABASE_URL vide dans .env)."
+echo "=== 4. Base de données (PostgreSQL 16 + PostGIS) ==="
+# Installation si absent (Ubuntu 24.04 : postgresql = 16)
+if ! command -v psql >/dev/null; then
+  apt-get update -qq
+  apt-get install -y postgresql postgresql-16-postgis-3
 fi
+systemctl enable --now postgresql
+
+# Rôle applicatif + DATABASE_URL dans .env (mot de passe via TRIPTIC_DB_PASSWORD,
+# sinon généré). Si .env a déjà un DATABASE_URL réel (pas le placeholder), on ne touche à rien.
+if grep -qE '^DATABASE_URL=postgresql://' .env && ! grep -q 'triptic_user:password@' .env; then
+  echo "DATABASE_URL déjà configuré dans .env"
+else
+  DB_PASS="${TRIPTIC_DB_PASSWORD:-$(openssl rand -hex 16)}"
+  if sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='triptic_user'" | grep -q 1; then
+    sudo -u postgres psql -c "ALTER ROLE triptic_user LOGIN PASSWORD '${DB_PASS}'"
+  else
+    sudo -u postgres psql -c "CREATE ROLE triptic_user LOGIN PASSWORD '${DB_PASS}'"
+  fi
+  sed -i '/^DATABASE_URL=/d' .env
+  echo "DATABASE_URL=postgresql://triptic_user:${DB_PASS}@localhost:5432/triptic_db" >> .env
+  echo "DATABASE_URL écrit dans .env"
+fi
+
+# Base + migration (idempotente) + droits applicatifs
+sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='triptic_db'" | grep -q 1 \
+  || sudo -u postgres createdb triptic_db
+sudo -u postgres psql -d triptic_db -f server/src/db/migrations/0000_init.sql
+sudo -u postgres psql -d triptic_db -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO triptic_user;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO triptic_user;"
 
 echo "=== 5. Build ==="
 pnpm install --frozen-lockfile
