@@ -5,6 +5,20 @@
 # (TRIPTIC est alors exposé sur le port 8088).
 set -euo pipefail
 
+# apt ne doit jamais ouvrir de dialogue interactif (needrestart "Pending kernel
+# upgrade" a gelé le terminal navigateur Hostinger le 2026-07-17)
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_SUSPEND=1
+
+# Le script se met à jour lui-même via git pull : bash lisant le fichier au fil
+# de l'eau, on s'exécute depuis une copie pour ne pas mélanger ancienne et
+# nouvelle version en pleine course.
+if [[ "${TRIPTIC_SETUP_COPY:-}" != "1" && -f "${BASH_SOURCE[0]:-}" ]]; then
+  TMP_COPY=$(mktemp /tmp/triptic-vps-setup.XXXXXX.sh)
+  cp "${BASH_SOURCE[0]}" "$TMP_COPY"
+  TRIPTIC_SETUP_COPY=1 exec bash "$TMP_COPY" "$@"
+fi
+
 BRANCH="${1:-main}"
 DIR=/opt/triptic
 

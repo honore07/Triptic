@@ -5,7 +5,8 @@
 ## État : MVP fonctionnel, déployé en production
 
 - **App en ligne : http://82.25.118.185:3001** (VPS Hostinger srv1731348, PM2 `triptic-api` sert l'API + la PWA buildée, démarrage auto au boot)
-- **PR #1 mergée dans `main`** le 2026-07-17. Session 2 : PgTripRepo (Drizzle + PostGIS), agent correcteur recalibré, `vps-setup.sh` installe désormais PostgreSQL+PostGIS et écrit DATABASE_URL
+- **PR #1, #2, #3 mergées dans `main`** le 2026-07-17. Session 2 : PgTripRepo (Drizzle + PostGIS), agent correcteur recalibré, `vps-setup.sh` installe PostgreSQL+PostGIS
+- **VPS À JOUR : PostgreSQL 16 + PostGIS actifs** (store `postgres`, vérifié : trip API → ligne en base avec longueur PostGIS), **Deepseek actif** (clé posée le 17/07, `provider: deepseek` au /health)
 - Tests : 35 Vitest verts (`pnpm test`), build strict vert (`pnpm build`)
 - Validé en réel : génération 3 trips (trek 2-3 j, road trips 12 et 14 j avec logement/food/randos), paywall→déblocage→régénération auto, sauvegarde, lien public, export GPX
 
@@ -23,7 +24,8 @@
 ## Particularités du VPS (importantes, découvertes à la main)
 
 - **Pas de Nginx** ; Traefik (Docker) tient 80/443 pour n8n (:5678), Hermes, Gotenberg → TRIPTIC vit sur le **port 3001** servi par Express directement
-- **Pas de PostgreSQL** → store in-memory (trips/quotas perdus au restart PM2)
+- **PostgreSQL 16 + PostGIS installés le 2026-07-17** (base `triptic_db`, rôle `triptic_user`, DATABASE_URL dans le .env) → trips persistants ; les **quotas free restent in-memory** (`server/src/services/quota.ts`)
+- ⚠️ Reboot du VPS recommandé à l'occasion (kernel 6.8.0-134 en attente) — PM2 `pm2 save` fait, redémarrage auto OK
 - npm global prefix = `/root/.hermes/node` (hors PATH) → symlinks pnpm/pm2 créés dans `/usr/local/bin`
 - PM2 lance `node --import tsx` (voir `ecosystem.config.cjs`), 1 seule instance fork (store in-memory non partageable)
 - `.env` du VPS : `/opt/triptic/.env` — contient la clé Anthropic de Jules + **`ALLOW_PLAN_OVERRIDE=true` (MODE DÉMO : le paywall débloque les plans sans paiement — À RETIRER quand Stripe/Supabase seront branchés)**
@@ -32,12 +34,10 @@
 
 ## Prochaines étapes (par priorité)
 
-1. **Basculer le VPS sur `main`** : `bash /opt/triptic/deploy/vps-setup.sh main` (installe PostgreSQL+PostGIS, crée triptic_user, écrit DATABASE_URL, migre, rebuild, health check) — le serveur bascule sur PgTripRepo automatiquement dès que DATABASE_URL est défini (log `store: postgres` au démarrage)
-2. **Clé Deepseek** dans `/opt/triptic/.env` (`DEEPSEEK_API_KEY=`) : générations ~1 min au lieu de ~5, coût ÷10 — le provider bascule automatiquement
+1. **Features / design / UI-UX** de la PWA (Phase 2 du CLAUDE.md) — polish TripCompare/chat, carte, i18n ; la skill `frontend-design` porte le design system
+2. Token **Mapbox** (`VITE_MAPBOX_PUBLIC_TOKEN` au build web) pour la carte interactive + clés photos `UNSPLASH_ACCESS_KEY`/`PEXELS_API_KEY` (le code est prêt, `server/src/services/photos.ts`)
 3. **Auth Supabase** (Phase 1.3 du CLAUDE.md) puis **Stripe Checkout** (Phase 3.12) → retirer `ALLOW_PLAN_OVERRIDE` du .env. ⚠️ Au premier login Supabase, provisionner la ligne `users` (FK `trips.user_id`) — voir commentaire dans `server/src/repo/pgTrips.ts`
-4. Token **Mapbox** (`VITE_MAPBOX_PUBLIC_TOKEN` au build web) pour la carte interactive
-5. Photos : clés `UNSPLASH_ACCESS_KEY`/`PEXELS_API_KEY` (le code est prêt, `server/src/services/photos.ts`)
-6. Météo Open-Meteo, spots iOverlander/Park4Night, app React Native, agents n8n (Phases 3-4 du CLAUDE.md)
+4. Quotas free en PostgreSQL (encore in-memory), météo Open-Meteo, spots iOverlander/Park4Night, app React Native, agents n8n (Phases 3-4 du CLAUDE.md)
 
 ## Sécurité — rappels
 
