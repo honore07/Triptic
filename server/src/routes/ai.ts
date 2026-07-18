@@ -6,6 +6,14 @@ import { logger } from '../logger.js';
 import { findTripPhoto } from '../services/photos.js';
 import type { QuotaService } from '../services/quota.js';
 
+const tuningValue = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+]);
+
 const generateBodySchema = z.object({
   messages: z
     .array(
@@ -17,6 +25,15 @@ const generateBodySchema = z.object({
     .min(1)
     .max(30),
   lang: z.enum(['fr', 'en', 'de']).default('fr'),
+  /** Curseurs 1-5 du TripTuner (optionnels : anciens clients, tests). */
+  tuning: z
+    .object({
+      physical: tuningValue,
+      pace: tuningValue,
+      culture: tuningValue,
+      discovery: tuningValue,
+    })
+    .optional(),
 });
 
 function sseWrite(res: Response, event: string, data: unknown): void {
@@ -40,7 +57,7 @@ export function createAiRouter(provider: LlmProvider, quota: QuotaService): Rout
       res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
       return;
     }
-    const { messages, lang } = parsed.data;
+    const { messages, lang, tuning } = parsed.data;
     const { id: userId, plan } = req.user;
     const limits = PLANS[plan].limits;
 
@@ -60,6 +77,7 @@ export function createAiRouter(provider: LlmProvider, quota: QuotaService): Rout
       const result = await generateTrips(provider, messages, {
         lang,
         maxProposals: limits.trip_proposals,
+        tuning,
         onEvent: (event) => {
           if (event.kind === 'status') sseWrite(res, 'status', { step: event.step });
         },

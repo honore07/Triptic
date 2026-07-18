@@ -18,21 +18,37 @@ user-invocable: true
 - Micro-interactions sobres (Framer Motion) : durée 150–250ms, ease-out,
   respecter `prefers-reduced-motion`
 
-## Palette (CSS custom properties — source de vérité)
+## Palette v2 — juillet 2026 (CSS custom properties — source de vérité : apps/web/src/styles.css)
+Charte fondateur : Shadow Grey · Rosy Copper · Sunflower Gold · Pale Sky.
+Ambiance chill & aventure, moderne, très animée.
 ```css
 :root {
-  --color-summit:  #1A6BDB; /* CTA principal */
-  --color-trail:   #0D1B2A; /* textes */
-  --color-ridge:   #3A5068; /* textes secondaires */
-  --color-terrain: #F0F5FB; /* surfaces */
-  --color-pine:    #1A8A4A; /* succès */
-  --color-amber:   #C97A00; /* warning */
-  --color-storm:   #C03030; /* erreur */
-  --color-snow:    #FFFFFF;
-  --color-mist:    #D0DCE8; /* bordures */
-  --color-fog:     #8AA0B8; /* placeholders */
+  --color-summit:      #C86341; /* Rosy Copper — accent aventure (icônes, hovers, halos) */
+  --color-copper-deep: #A64E30; /* copper lisible sur fond clair (petits textes, liens) */
+  --color-gold:        #FAC05E; /* Sunflower Gold — CTA (TOUJOURS texte trail dessus) */
+  --color-gold-deep:   #E8A83D; /* hover des CTA gold */
+  --color-trail:       #1E1E24; /* Shadow Grey — textes, fonds sombres (hero, bulle user) */
+  --color-ridge:       #4A4A55; /* textes secondaires */
+  --color-sky:         #CDE6F5; /* Pale Sky — surfaces accent, texte sur fond sombre */
+  --color-terrain:     #EAF4FB; /* surface claire dérivée de Pale Sky */
+  --color-cloud:       #F6FAFD; /* fond de page */
+  --color-pine:        #1A8A4A; /* succès */
+  --color-amber:       #C97A00; /* warning */
+  --color-storm:       #C03030; /* erreur */
+  --color-snow:        #FFFFFF;
+  --color-mist:        #B9D8EA; /* bordures */
+  --color-fog:         #6E7480; /* placeholders (4.5:1 sur snow) */
 }
 ```
+
+### Règles de contraste de la palette v2
+- CTA = `bg-gold` + `text-trail` (9:1). JAMAIS `text-snow` sur gold ni sur copper
+  en petit texte (copper/snow ≈ 3.4:1) — pour du copper texte sur fond clair,
+  utiliser `copper-deep`
+- Fond sombre (trail) : textes en snow / sky / gold
+- Animations signature : `.fade-up` (entrées, stagger via animation-delay),
+  `.hero-blob` (halos copper/gold flottants sur le hero), `.glow-cta`
+  (lueur pulsée des CTA gold), `.tuner-range` (curseurs du TripTuner)
 
 ## Typographie
 - Display : `DM Sans` — titres, chiffres clés des TripCards

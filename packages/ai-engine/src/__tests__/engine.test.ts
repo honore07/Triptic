@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sanitizeUserInput } from '../sanitize.js';
+import { buildSystemPrompt } from '../prompts.js';
 import { engineOutputSchema, extractJson } from '../schema.js';
 import { generateTrips, type LlmProvider } from '../index.js';
 
@@ -97,6 +98,25 @@ describe('engineOutputSchema', () => {
   it('rejects an output with only 2 trips', () => {
     const bad = { ...TRIPS_OUTPUT, trips: TRIPS_OUTPUT.trips.slice(0, 2) };
     expect(() => engineOutputSchema.parse(bad)).toThrow();
+  });
+});
+
+describe('buildSystemPrompt — tuning', () => {
+  it('injects the TripTuner sliders into the prompt', () => {
+    const prompt = buildSystemPrompt('fr', 3, {
+      physical: 5,
+      pace: 1,
+      culture: 2,
+      discovery: 4,
+    });
+    expect(prompt).toContain('PERSONNALISATION FINE');
+    expect(prompt).toContain('Niveau sportif : 5/5');
+    expect(prompt).toContain('Rythme : 1/5');
+    expect(prompt).toContain('Exploration : 4/5');
+  });
+
+  it('omits the tuning section without sliders', () => {
+    expect(buildSystemPrompt('fr', 3)).not.toContain('PERSONNALISATION FINE');
   });
 });
 

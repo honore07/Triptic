@@ -1,4 +1,12 @@
-import type { ChatMessage, Lang, PlanId, Trip, TripGeneration, TripProposal } from '@triptic/shared';
+import type {
+  ChatMessage,
+  Lang,
+  PlanId,
+  Trip,
+  TripGeneration,
+  TripProposal,
+  TripTuning,
+} from '@triptic/shared';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -31,11 +39,12 @@ export async function generateTripsStream(
   lang: Lang,
   plan: PlanId,
   onEvent: (event: GenerateEvent) => void,
+  tuning?: TripTuning | null,
 ): Promise<void> {
   const res = await fetch(`${API_URL}/api/ai/generate-trips`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
-    body: JSON.stringify({ messages, lang }),
+    body: JSON.stringify({ messages, lang, ...(tuning ? { tuning } : {}) }),
   });
   if (!res.ok || !res.body) {
     throw new Error(`generate-trips failed: ${res.status}`);

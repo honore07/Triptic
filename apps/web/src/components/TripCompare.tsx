@@ -39,11 +39,11 @@ export function TripCompare({ trips, lockedCount, differentiator, onChoose, onUn
             style={{ animationDelay: `${(trips.length + i) * 80}ms` }}
             aria-label={t('trips.locked_cta')}
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-terrain">
-              <Lock size={20} className="text-ridge" aria-hidden="true" />
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/25">
+              <Lock size={20} className="text-copper-deep" aria-hidden="true" />
             </span>
             <p className="font-display font-semibold text-trail">{t('trips.locked_title')}</p>
-            <span className="rounded-xl bg-summit px-4 py-2 text-sm font-semibold text-snow">
+            <span className="rounded-xl bg-gold px-4 py-2 text-sm font-bold text-trail">
               {t('trips.locked_cta')}
             </span>
           </button>

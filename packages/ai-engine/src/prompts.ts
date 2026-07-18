@@ -1,4 +1,4 @@
-import type { Lang } from '@triptic/shared';
+import type { Lang, TripTuning } from '@triptic/shared';
 
 const LANG_NAMES: Record<Lang, string> = {
   fr: 'français',
@@ -6,7 +6,41 @@ const LANG_NAMES: Record<Lang, string> = {
   de: 'Deutsch',
 };
 
-export function buildSystemPrompt(lang: Lang, maxProposals: 1 | 3): string {
+/** Traduction des positions de curseurs (1-5) en consignes pour le modèle. */
+const TUNING_SCALES: Record<keyof TripTuning, { label: string; low: string; high: string }> = {
+  physical: {
+    label: 'Niveau sportif',
+    low: 'balades faciles, peu de dénivelé, journées courtes',
+    high: 'gros dénivelés, longues journées, terrain exigeant',
+  },
+  pace: {
+    label: 'Rythme',
+    low: 'chill : grasses matinées, pauses longues, peu de km/jour',
+    high: 'intense : journées pleines, maximum de choses vues',
+  },
+  culture: {
+    label: 'Activités',
+    low: 'pleine nature : paysages, sommets, lacs, bivouacs',
+    high: 'culture : villages, patrimoine, marchés, gastronomie locale',
+  },
+  discovery: {
+    label: 'Exploration',
+    low: 'incontournables : les grands classiques qui valent leur réputation',
+    high: 'hors des sentiers battus : pépites méconnues, éviter les foules',
+  },
+};
+
+export function buildTuningSection(tuning: TripTuning): string {
+  const lines = (Object.keys(TUNING_SCALES) as (keyof TripTuning)[]).map((key) => {
+    const scale = TUNING_SCALES[key];
+    return `- ${scale.label} : ${tuning[key]}/5 (1 = ${scale.low} ; 5 = ${scale.high})`;
+  });
+  return `\n\nPERSONNALISATION FINE — curseurs réglés par l'utilisateur (échelle 1 à 5) :
+${lines.join('\n')}
+Adapte dénivelés, distances quotidiennes, choix des étapes, des POI et des nuits à ces réglages. Un curseur à 3 est neutre. Ces réglages priment sur tes valeurs par défaut, mais jamais sur une demande explicite de la conversation.`;
+}
+
+export function buildSystemPrompt(lang: Lang, maxProposals: 1 | 3, tuning?: TripTuning): string {
   return `Tu es le moteur de planification de TRIPTIC, une app d'aventure outdoor (road trip, trek, bikepacking).
 Langue de réponse pour tout texte visible : ${LANG_NAMES[lang]}.
 
@@ -45,6 +79,8 @@ TripProposal :
 {"title": string, "mode": "roadtrip"|"trek"|"bikepacking", "duration_days": number, "distance_km": number, "elevation_gain_m": number, "difficulty": "easy"|"medium"|"hard", "ambiance": string, "summary": "<2-3 phrases en ${LANG_NAMES[lang]}>", "daily_distance_km": number, "waypoints": [{"name": string, "lat": number, "lng": number, "day": number, "kind": "start"|"stage"|"poi"|"camp"|"trailhead"|"end", "note"?: string}], "photo_keywords": ["<région>", "<activité>", "<ambiance>"]}
 
 Les 3 trips doivent donner envie de tous les faire — le choix doit être difficile et plaisant.${
+    tuning ? buildTuningSection(tuning) : ''
+  }${
     maxProposals === 1
       ? "\n\nNOTE PLAN GRATUIT : l'utilisateur ne verra que le premier trip. Mets le meilleur en premier."
       : ''

@@ -5,6 +5,7 @@ import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
 import { ChatBubble, TypingBubble } from '../components/ChatBubble';
 import { TripCompare } from '../components/TripCompare';
+import { TripTuner } from '../components/TripTuner';
 import { useChatStore } from '../store/chatStore';
 import { useTripStore } from '../store/tripStore';
 import { useUserStore } from '../store/userStore';
@@ -13,7 +14,8 @@ export function Plan() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { initialQuery?: string } };
-  const { messages, status, error, result, send, regenerate } = useChatStore();
+  const { messages, status, error, result, tuning, begin, confirmTuning, send, regenerate } =
+    useChatStore();
   const { plan, openPaywall, setRemaining } = useUserStore();
   const selectTrip = useTripStore((s) => s.select);
   const [input, setInput] = useState('');
@@ -22,18 +24,20 @@ export function Plan() {
 
   const lang = (i18n.language as Lang) ?? 'fr';
   const busy = status !== 'idle' && status !== 'error';
+  // Le TripTuner s'affiche après la demande initiale, avant la 1re génération
+  const tunerVisible = messages.length > 0 && !tuning && !result && !busy;
 
   useEffect(() => {
     const initial = location.state?.initialQuery;
     if (initial && !startedRef.current && messages.length === 0) {
       startedRef.current = true;
-      void send(initial, lang, plan);
+      begin(initial);
     }
-  }, [location.state, messages.length, send, lang, plan]);
+  }, [location.state, messages.length, begin]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, status, result]);
+  }, [messages, status, result, tuning]);
 
   useEffect(() => {
     if (result && result.remaining !== null) setRemaining(result.remaining);
@@ -56,7 +60,13 @@ export function Plan() {
     const text = input.trim();
     if (!text || busy) return;
     setInput('');
-    void send(text, lang, plan);
+    // La toute première demande passe par le TripTuner ; les suivantes
+    // (réponses aux questions du moteur) génèrent directement.
+    if (messages.length === 0) {
+      begin(text);
+    } else {
+      void send(text, lang, plan);
+    }
   };
 
   const onChoose = (trip: TripProposal) => {
@@ -66,7 +76,7 @@ export function Plan() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-trail">{t('chat.title')}</h1>
+      <h1 className="fade-up font-display text-2xl font-bold text-trail">{t('chat.title')}</h1>
 
       <section aria-label={t('chat.title')} className="flex flex-col gap-3">
         {messages.map((message, i) => (
@@ -74,7 +84,7 @@ export function Plan() {
         ))}
         {busy && <TypingBubble label={t(`chat.status_${status}`, t('chat.thinking'))} />}
         {status === 'error' && (
-          <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
+          <p role="alert" className="fade-up rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
             {error === 'quota_exceeded' ? t('chat.error_quota') : t('chat.error_generation')}
             {error === 'quota_exceeded' && (
               <button
@@ -90,7 +100,9 @@ export function Plan() {
         <div ref={bottomRef} />
       </section>
 
-      {!result && (
+      {tunerVisible && <TripTuner onConfirm={(value) => void confirmTuning(value, lang, plan)} />}
+
+      {!result && !tunerVisible && (
         <form
           className="sticky bottom-4 flex gap-2"
           onSubmit={(e) => {
@@ -105,13 +117,13 @@ export function Plan() {
             placeholder={messages.length === 0 ? t('home.placeholder') : t('chat.placeholder')}
             aria-label={t('chat.placeholder')}
             disabled={busy}
-            className="min-h-12 flex-1 rounded-xl border border-mist bg-snow px-4 text-sm text-trail placeholder:text-fog disabled:opacity-60"
+            className="min-h-12 flex-1 rounded-xl border border-mist bg-snow px-4 text-sm text-trail shadow-sm placeholder:text-fog disabled:opacity-60"
           />
           <button
             type="submit"
             disabled={busy || !input.trim()}
             aria-label={t('chat.send')}
-            className="flex min-h-12 min-w-12 items-center justify-center rounded-xl bg-summit text-snow transition-colors hover:bg-summit/90 disabled:bg-fog"
+            className="flex min-h-12 min-w-12 items-center justify-center rounded-xl bg-gold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-mist disabled:text-fog"
           >
             <Send size={18} aria-hidden="true" />
           </button>

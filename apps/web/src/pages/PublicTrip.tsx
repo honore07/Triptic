@@ -23,7 +23,7 @@ export function PublicTrip() {
     return (
       <main className="mx-auto max-w-3xl px-4 py-12 text-center">
         <p className="text-ridge">{t('trips.not_found')}</p>
-        <Link to="/" className="mt-4 inline-block font-semibold text-summit underline">
+        <Link to="/" className="mt-4 inline-block font-semibold text-copper-deep underline">
           TRIPTIC
         </Link>
       </main>
@@ -41,7 +41,7 @@ export function PublicTrip() {
       <MapView waypoints={trip.waypoints} />
       <Link
         to="/"
-        className="self-start rounded-xl bg-summit px-5 py-3 text-sm font-semibold text-snow hover:bg-summit/90"
+        className="glow-cta self-start rounded-xl bg-gold px-5 py-3 text-sm font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep"
       >
         {t('home.cta')}
       </Link>

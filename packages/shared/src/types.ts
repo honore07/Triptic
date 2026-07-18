@@ -5,6 +5,24 @@ export type Vehicle = 'van' | 'car' | 'moto' | 'none';
 export type Budget = 'low' | 'medium' | 'high';
 export type Lang = 'fr' | 'en' | 'de';
 
+/** Position d'un curseur de personnalisation (TripTuner). */
+export type TuningValue = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Réglages fins posés juste après la demande initiale (curseurs 1-5) —
+ * l'hyper-personnalisation des 3 trips. Injectés dans le prompt système.
+ */
+export interface TripTuning {
+  /** 1 tranquille → 5 athlète */
+  physical: TuningValue;
+  /** 1 chill → 5 intense */
+  pace: TuningValue;
+  /** 1 pleine nature → 5 culture & villages */
+  culture: TuningValue;
+  /** 1 incontournables → 5 hors des sentiers battus */
+  discovery: TuningValue;
+}
+
 /** Paramètres extraits de la conversation par le moteur IA. */
 export interface TripRequest {
   departure: string;

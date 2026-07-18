@@ -20,7 +20,7 @@ export function LangSwitcher() {
           aria-pressed={i18n.language === code}
           className={`min-h-8 rounded-badge px-2 py-1 font-mono text-xs transition-colors ${
             i18n.language === code
-              ? 'bg-summit text-snow'
+              ? 'bg-trail text-snow'
               : 'text-ridge hover:bg-mist/50'
           }`}
         >
