@@ -1,4 +1,4 @@
-import type { ChatMessage, Lang, TripGeneration } from '@triptic/shared';
+import type { ChatMessage, Lang, TripGeneration, TripTuning } from '@triptic/shared';
 import { buildCorrectorPrompt, buildSystemPrompt } from './prompts.js';
 import {
   correctorOutputSchema,
@@ -21,6 +21,8 @@ export type EngineEvent =
 export interface GenerateOptions {
   lang: Lang;
   maxProposals: 1 | 3;
+  /** Curseurs 1-5 du TripTuner — hyper-personnalisation du prompt. */
+  tuning?: TripTuning | undefined;
   onEvent?: (event: EngineEvent) => void;
 }
 
@@ -41,7 +43,7 @@ export async function generateTrips(
   const cleanMessages: ChatMessage[] = messages.map((m) =>
     m.role === 'user' ? { ...m, content: sanitizeUserInput(m.content) } : m,
   );
-  const system = buildSystemPrompt(opts.lang, opts.maxProposals);
+  const system = buildSystemPrompt(opts.lang, opts.maxProposals, opts.tuning);
 
   emit({ kind: 'status', step: 'generating' });
   let output = await completeAndParse(provider, system, cleanMessages);

@@ -6,6 +6,7 @@
     "online": "En ligne"
   },
   "home": {
+    "headline": "Pars explorer l'Europe.",
     "question": "Où veux-tu aller ?",
     "placeholder": "Ex. : 4 jours de trek sauvage dans les Vosges depuis Colmar…",
     "cta": "Générer mes 3 trips",
@@ -25,6 +26,23 @@
     "status_photos": "Recherche des photos…",
     "error_generation": "La génération a échoué. Réessaie dans un instant.",
     "error_quota": "Tu as utilisé tes 3 générations gratuites ce mois-ci."
+  },
+  "tuner": {
+    "title": "Affinons ton aventure",
+    "hint": "Règle les curseurs — tes 3 trips seront taillés sur mesure.",
+    "cta": "Générer mes 3 trips sur-mesure",
+    "physical_label": "Niveau sportif",
+    "physical_low": "Tranquille",
+    "physical_high": "Athlète",
+    "pace_label": "Rythme",
+    "pace_low": "Chill",
+    "pace_high": "Intense",
+    "culture_label": "Activités",
+    "culture_low": "Pleine nature",
+    "culture_high": "Culture & villages",
+    "discovery_label": "Exploration",
+    "discovery_low": "Incontournables",
+    "discovery_high": "Hors des sentiers"
   },
   "trips": {
     "compare_title": "3 itinéraires en compétition",

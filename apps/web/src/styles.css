@@ -1,16 +1,27 @@
 @import 'tailwindcss';
 
+/*
+ * Palette TRIPTIC v2 (juillet 2026) — Shadow Grey / Rosy Copper /
+ * Sunflower Gold / Pale Sky. Ambiance chill & aventure.
+ * summit = Rosy Copper (accent principal), gold = CTA (texte trail dessus),
+ * trail = Shadow Grey (textes + fonds sombres), terrain/sky = surfaces claires.
+ */
 @theme {
-  --color-summit: #1a6bdb;
-  --color-trail: #0d1b2a;
-  --color-ridge: #3a5068;
-  --color-terrain: #f0f5fb;
-  --color-pine: #1a8a4a;
-  --color-amber: #c97a00;
-  --color-storm: #c03030;
+  --color-summit: #c86341; /* Rosy Copper — accent aventure */
+  --color-copper-deep: #a64e30; /* copper lisible sur fond clair (texte, hover) */
+  --color-gold: #fac05e; /* Sunflower Gold — CTA (toujours avec texte trail) */
+  --color-gold-deep: #e8a83d;
+  --color-trail: #1e1e24; /* Shadow Grey — textes, fond sombre */
+  --color-ridge: #4a4a55; /* textes secondaires */
+  --color-sky: #cde6f5; /* Pale Sky — surfaces accent */
+  --color-terrain: #eaf4fb; /* surface claire dérivée de Pale Sky */
+  --color-cloud: #f6fafd; /* fond de page */
+  --color-pine: #1a8a4a; /* succès */
+  --color-amber: #c97a00; /* warning */
+  --color-storm: #c03030; /* erreur */
   --color-snow: #ffffff;
-  --color-mist: #d0dce8;
-  --color-fog: #8aa0b8;
+  --color-mist: #b9d8ea; /* bordures */
+  --color-fog: #6e7480; /* placeholders (4.5:1 sur snow) */
 
   --font-display: 'DM Sans', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
@@ -22,7 +33,7 @@
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-terrain);
+  background-color: var(--color-cloud);
   color: var(--color-trail);
 }
 
@@ -41,10 +52,12 @@ body {
   }
 }
 
-@keyframes trip-card-in {
+/* ---------- Animations ---------- */
+
+@keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -52,8 +65,23 @@ body {
   }
 }
 
+.fade-up {
+  animation: fade-up 320ms ease-out both;
+}
+
+@keyframes trip-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .trip-card-enter {
-  animation: trip-card-in 220ms ease-out both;
+  animation: trip-card-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes pulse-dot {
@@ -74,4 +102,97 @@ body {
 }
 .typing-dot:nth-child(3) {
   animation-delay: 0.3s;
+}
+
+/* Halos flottants du hero (copper + gold sur fond trail) */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(28px, -22px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 16px) scale(0.95);
+  }
+}
+
+.hero-blob {
+  animation: drift 14s ease-in-out infinite;
+  filter: blur(70px);
+  will-change: transform;
+}
+.hero-blob-slow {
+  animation-duration: 19s;
+  animation-delay: -7s;
+}
+
+/* Lueur douce des CTA gold */
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 4px 18px rgba(250, 192, 94, 0.35);
+  }
+  50% {
+    box-shadow: 0 6px 26px rgba(250, 192, 94, 0.55);
+  }
+}
+
+.glow-cta {
+  animation: glow 2.6s ease-in-out infinite;
+}
+
+/* ---------- Curseurs du TripTuner ---------- */
+
+.tuner-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 28px; /* zone tactile confortable */
+  background: transparent;
+  cursor: pointer;
+}
+.tuner-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-sky), var(--color-gold), var(--color-summit));
+}
+.tuner-range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-sky), var(--color-gold), var(--color-summit));
+}
+.tuner-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -8px;
+  height: 22px;
+  width: 22px;
+  border-radius: 999px;
+  border: 3px solid var(--color-snow);
+  background: var(--color-trail);
+  box-shadow: 0 2px 8px rgba(30, 30, 36, 0.35);
+  transition: transform 150ms ease-out;
+}
+.tuner-range::-moz-range-thumb {
+  height: 22px;
+  width: 22px;
+  border-radius: 999px;
+  border: 3px solid var(--color-snow);
+  background: var(--color-trail);
+  box-shadow: 0 2px 8px rgba(30, 30, 36, 0.35);
+  transition: transform 150ms ease-out;
+}
+.tuner-range:active::-webkit-slider-thumb,
+.tuner-range:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.tuner-range:active::-moz-range-thumb,
+.tuner-range:hover::-moz-range-thumb {
+  transform: scale(1.15);
+}
+.tuner-range:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

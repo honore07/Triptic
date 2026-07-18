@@ -6,6 +6,7 @@
     "online": "Online"
   },
   "home": {
+    "headline": "Go explore Europe.",
     "question": "Where do you want to go?",
     "placeholder": "E.g.: 4 days of wild trekking in the Vosges from Colmar…",
     "cta": "Generate my 3 trips",
@@ -25,6 +26,23 @@
     "status_photos": "Finding photos…",
     "error_generation": "Generation failed. Try again in a moment.",
     "error_quota": "You have used your 3 free generations this month."
+  },
+  "tuner": {
+    "title": "Let's fine-tune your adventure",
+    "hint": "Set the sliders — your 3 trips will be tailor-made.",
+    "cta": "Generate my 3 tailored trips",
+    "physical_label": "Fitness level",
+    "physical_low": "Easy-going",
+    "physical_high": "Athlete",
+    "pace_label": "Pace",
+    "pace_low": "Chill",
+    "pace_high": "Intense",
+    "culture_label": "Activities",
+    "culture_low": "Pure nature",
+    "culture_high": "Culture & villages",
+    "discovery_label": "Exploration",
+    "discovery_low": "Must-sees",
+    "discovery_high": "Off the beaten path"
   },
   "trips": {
     "compare_title": "3 competing routes",

@@ -6,6 +6,7 @@
     "online": "Online"
   },
   "home": {
+    "headline": "Entdecke Europa.",
     "question": "Wohin willst du?",
     "placeholder": "Z. B.: 4 Tage wildes Trekking in den Vogesen ab Colmar…",
     "cta": "Meine 3 Trips generieren",
@@ -25,6 +26,23 @@
     "status_photos": "Fotos werden gesucht…",
     "error_generation": "Generierung fehlgeschlagen. Versuche es gleich noch einmal.",
     "error_quota": "Du hast deine 3 kostenlosen Generierungen diesen Monat aufgebraucht."
+  },
+  "tuner": {
+    "title": "Verfeinern wir dein Abenteuer",
+    "hint": "Stelle die Regler ein — deine 3 Trips werden maßgeschneidert.",
+    "cta": "Meine 3 maßgeschneiderten Trips generieren",
+    "physical_label": "Sportlevel",
+    "physical_low": "Gemütlich",
+    "physical_high": "Athlet",
+    "pace_label": "Tempo",
+    "pace_low": "Chill",
+    "pace_high": "Intensiv",
+    "culture_label": "Aktivitäten",
+    "culture_low": "Pure Natur",
+    "culture_high": "Kultur & Dörfer",
+    "discovery_label": "Erkundung",
+    "discovery_low": "Klassiker",
+    "discovery_high": "Abseits der Pfade"
   },
   "trips": {
     "compare_title": "3 Routen im Wettbewerb",

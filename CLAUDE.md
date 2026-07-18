@@ -294,24 +294,32 @@ Après chaque génération Deepseek V3, l'agent R1 valide :
 
 ## 5. DESIGN SYSTEM — IDENTITÉ VISUELLE TRIPTIC
 
-### Palette de couleurs
+### Palette de couleurs — v2 (charte fondateur, juillet 2026)
+> Shadow Grey · Rosy Copper · Sunflower Gold · Pale Sky — ambiance chill &
+> aventure. Source de vérité : `apps/web/src/styles.css` (+ règles de
+> contraste dans `.claude/skills/frontend-design/SKILL.md`).
 ```css
 :root {
   /* Primaires */
-  --color-summit:    #1A6BDB;   /* Bleu ciel altitude — CTA principal */
-  --color-trail:     #0D1B2A;   /* Quasi-noir nuit — textes */
-  --color-ridge:     #3A5068;   /* Bleu-gris moyen — textes secondaires */
+  --color-trail:       #1E1E24;   /* Shadow Grey — textes, fonds sombres */
+  --color-summit:      #C86341;   /* Rosy Copper — accent aventure */
+  --color-gold:        #FAC05E;   /* Sunflower Gold — CTA (texte trail dessus) */
+  --color-sky:         #CDE6F5;   /* Pale Sky — surfaces accent */
 
-  /* Secondaires */
-  --color-terrain:   #F0F5FB;   /* Fond clair — surfaces */
-  --color-pine:      #1A8A4A;   /* Vert forêt — succès, validation */
-  --color-amber:     #C97A00;   /* Ambre soleil — warning, attention */
-  --color-storm:     #C03030;   /* Rouge orage — erreur */
+  /* Déclinaisons */
+  --color-copper-deep: #A64E30;   /* copper lisible sur fond clair */
+  --color-gold-deep:   #E8A83D;   /* hover CTA */
+  --color-ridge:       #4A4A55;   /* textes secondaires */
+  --color-terrain:     #EAF4FB;   /* surfaces claires */
+  --color-cloud:       #F6FAFD;   /* fond de page */
 
-  /* Neutres */
-  --color-snow:      #FFFFFF;
-  --color-mist:      #D0DCE8;   /* Bordures */
-  --color-fog:       #8AA0B8;   /* Placeholders */
+  /* Sémantiques & neutres */
+  --color-pine:        #1A8A4A;   /* succès */
+  --color-amber:       #C97A00;   /* warning */
+  --color-storm:       #C03030;   /* erreur */
+  --color-snow:        #FFFFFF;
+  --color-mist:        #B9D8EA;   /* bordures */
+  --color-fog:         #6E7480;   /* placeholders */
 }
 ```
 
@@ -346,15 +354,19 @@ PhotoOverlay      — photo + données IA superposées (les 3 trips)
 module.exports = {
   theme: {
     extend: {
+      // NOTE : Tailwind v4 — les tokens vivent dans apps/web/src/styles.css
+      // (@theme). Ce bloc est indicatif.
       colors: {
-        summit:  '#1A6BDB',
-        trail:   '#0D1B2A',
-        ridge:   '#3A5068',
-        terrain: '#F0F5FB',
+        summit:  '#C86341',
+        trail:   '#1E1E24',
+        gold:    '#FAC05E',
+        sky:     '#CDE6F5',
+        ridge:   '#4A4A55',
+        terrain: '#EAF4FB',
         pine:    '#1A8A4A',
         amber:   '#C97A00',
         storm:   '#C03030',
-        mist:    '#D0DCE8',
+        mist:    '#B9D8EA',
       },
       fontFamily: {
         display: ['DM Sans', 'system-ui', 'sans-serif'],
