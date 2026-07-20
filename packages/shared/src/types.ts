@@ -77,6 +77,62 @@ export interface ChatMessage {
   content: string;
 }
 
+/** Type d'un lieu de la base de connaissance TRIPTIC. */
+export type PlaceKind =
+  | 'peak'
+  | 'pass'
+  | 'lake'
+  | 'waterfall'
+  | 'gorge'
+  | 'glacier'
+  | 'viewpoint'
+  | 'refuge'
+  | 'camp'
+  | 'castle'
+  | 'village'
+  | 'museum'
+  | 'attraction'
+  | 'poi';
+
+/** Régions couvertes par la base (pilote : Alsace-Vosges + arc alpin). */
+export type PlaceRegion = 'alsace-vosges' | 'alpes-fr' | 'alpes-ch' | 'alpes-it';
+
+/**
+ * Lieu réel compact envoyé au moteur IA pour l'ancrage (grounding) —
+ * quelques dizaines de lignes au lieu de milliers de tokens.
+ */
+export interface ShortlistPlace {
+  name: string;
+  lat: number;
+  lng: number;
+  kind: PlaceKind;
+  notoriety: number;
+  summary?: string | null;
+}
+
+/**
+ * Un lieu de la base de connaissance : POI réel, sourcé, scoré.
+ * notoriety 0-100 : ≥60 incontournable, ≤35 pépite candidate.
+ * confidence 0-100 : fiabilité de la donnée (OSM > web > ajout user non modéré).
+ */
+export interface Place {
+  id: string;
+  name: string;
+  kind: PlaceKind;
+  lat: number;
+  lng: number;
+  region: PlaceRegion | null;
+  elevation_m: number | null;
+  tags: string[];
+  summary: string | null;
+  notoriety: number;
+  confidence: number;
+  status: 'active' | 'pending' | 'rejected';
+  source: string;
+  source_url: string | null;
+  created_at: string;
+}
+
 /** Trip persisté. */
 export interface Trip {
   id: string;

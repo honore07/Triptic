@@ -92,6 +92,29 @@ export async function saveTrip(
   return res.json();
 }
 
+export interface SubmitPlaceInput {
+  name: string;
+  kind: string;
+  lat: number;
+  lng: number;
+  summary?: string;
+}
+
+/**
+ * POST /api/places — proposition d'un lieu par l'utilisateur.
+ * 'pending' = enregistré (modération), 'merged' = déjà connu de la base.
+ */
+export async function submitPlace(input: SubmitPlaceInput): Promise<'pending' | 'merged'> {
+  const res = await fetch(`${API_URL}/api/places`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new Error(`submitPlace failed: ${res.status}`);
+  const data = (await res.json()) as { status: 'pending' | 'merged' };
+  return data.status;
+}
+
 export async function fetchPublicTrip(slug: string): Promise<Trip | null> {
   const res = await fetch(`${API_URL}/api/public/trips/${slug}`);
   return res.ok ? res.json() : null;

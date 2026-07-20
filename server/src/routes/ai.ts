@@ -5,6 +5,8 @@ import { PLANS } from '@triptic/shared';
 import { logger } from '../logger.js';
 import { findTripPhoto } from '../services/photos.js';
 import type { QuotaService } from '../services/quota.js';
+import type { PgPlaceRepo } from '../repo/places.js';
+import type { EnrichmentService } from '../services/enrichment.js';
 
 const tuningValue = z.union([
   z.literal(1),
@@ -48,7 +50,12 @@ function sseWrite(res: Response, event: string, data: unknown): void {
  *   event: error    {error}
  *   event: done     {}
  */
-export function createAiRouter(provider: LlmProvider, quota: QuotaService): Router {
+export function createAiRouter(
+  provider: LlmProvider,
+  quota: QuotaService,
+  placeRepo?: PgPlaceRepo,
+  enrichment?: EnrichmentService,
+): Router {
   const router = Router();
 
   router.post('/generate-trips', async (req, res) => {
@@ -78,6 +85,13 @@ export function createAiRouter(provider: LlmProvider, quota: QuotaService): Rout
         lang,
         maxProposals: limits.trip_proposals,
         tuning,
+        // Ancrage sur la base de lieux (PostGIS) quand elle est disponible
+        getShortlist: placeRepo
+          ? (points) =>
+              placeRepo.shortlistForCorridor(points, {
+                ...(tuning ? { discovery: tuning.discovery } : {}),
+              })
+          : undefined,
         onEvent: (event) => {
           if (event.kind === 'status') sseWrite(res, 'status', { step: event.step });
         },
@@ -101,8 +115,24 @@ export function createAiRouter(provider: LlmProvider, quota: QuotaService): Rout
           },
           locked_proposals: result.generation.trips.length - visible.length,
           validated: result.validated,
+          grounded: result.grounding.applied,
           remaining: quota.remaining(userId, plan),
         });
+        logger.info(
+          {
+            grounded: result.grounding.applied,
+            shortlistSize: result.grounding.shortlistSize,
+            validated: result.validated,
+          },
+          'Trip generation metrics',
+        );
+        // Zone sous-couverte → enrichissement OSM en tâche de fond (phase D)
+        if (enrichment) {
+          const allPoints = result.generation.trips.flatMap((t) =>
+            t.waypoints.map((w) => ({ lat: w.lat, lng: w.lng })),
+          );
+          enrichment.maybeEnrich(allPoints, result.grounding.shortlistSize);
+        }
       }
     } catch (error) {
       logger.error({ error, context: 'generate-trips' }, 'Trip generation failed');

@@ -23,6 +23,7 @@
     "status_generating": "Die 3 Routen werden generiert…",
     "status_validating": "Geografische Prüfung durch den Korrektur-Agenten…",
     "status_retrying": "Routen werden korrigiert…",
+    "status_grounding": "Verankerung an echten Orten aus der TRIPTIC-Basis…",
     "status_photos": "Fotos werden gesucht…",
     "error_generation": "Generierung fehlgeschlagen. Versuche es gleich noch einmal.",
     "error_quota": "Du hast deine 3 kostenlosen Generierungen diesen Monat aufgebraucht."
@@ -98,5 +99,32 @@
   },
   "lang": {
     "label": "Sprache"
+  },
+  "places": {
+    "nav": "Ort hinzufügen",
+    "title": "Teile einen Geheimtipp",
+    "hint": "Du kennst einen Ort, der einen Umweg wert ist? Füge ihn zur TRIPTIC-Basis hinzu — er wird vor der Veröffentlichung geprüft.",
+    "name_label": "Name des Ortes",
+    "name_placeholder": "Z. B.: Frankenthal-Wasserfall",
+    "kind_label": "Art des Ortes",
+    "lat_label": "Breitengrad",
+    "lng_label": "Längengrad",
+    "use_location": "Meinen Standort verwenden",
+    "summary_label": "Beschreibung (optional)",
+    "summary_placeholder": "In einem Satz: Warum lohnt sich dieser Ort?",
+    "submit": "Ort vorschlagen",
+    "sending": "Wird gesendet…",
+    "success_pending": "Danke! Dein Ort ist gespeichert und wird vor der Veröffentlichung geprüft.",
+    "success_merged": "Dieser Ort ist bereits in der Basis — trotzdem danke!",
+    "error": "Senden fehlgeschlagen. Versuche es gleich noch einmal.",
+    "kind_peak": "Gipfel",
+    "kind_lake": "See",
+    "kind_waterfall": "Wasserfall",
+    "kind_viewpoint": "Aussichtspunkt",
+    "kind_refuge": "Berghütte",
+    "kind_camp": "Campingplatz / Übernachtungsspot",
+    "kind_castle": "Burg / Schloss",
+    "kind_village": "Dorf",
+    "kind_poi": "Anderer Geheimtipp"
   }
 }
