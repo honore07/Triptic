@@ -45,17 +45,28 @@ async function main(): Promise<void> {
   }
 
   let total = 0;
+  let failures = 0;
   for (const region of regions) {
     for (const category of categories) {
       let regionCategoryCount = 0;
       for (const bbox of region.bboxes) {
-        const query = buildOverpassQuery(category, bbox);
-        const elements = await fetchOverpass(query);
-        const places = elements
-          .map((el) => osmElementToPlace(el, category, region.id))
-          .filter((p): p is PlaceInput => p !== null);
-        if (places.length > 0) await repo.bulkUpsert(places);
-        regionCategoryCount += places.length;
+        // Un échec Overpass (saturation 429…) ne doit jamais tuer l'import :
+        // on logge, on continue — le script est relançable (upsert idempotent).
+        try {
+          const query = buildOverpassQuery(category, bbox);
+          const elements = await fetchOverpass(query);
+          const places = elements
+            .map((el) => osmElementToPlace(el, category, region.id))
+            .filter((p): p is PlaceInput => p !== null);
+          if (places.length > 0) await repo.bulkUpsert(places);
+          regionCategoryCount += places.length;
+        } catch (error) {
+          failures += 1;
+          logger.warn(
+            { region: region.id, kind: category.kind, bbox, error: String(error) },
+            'Import OSM — bbox échouée, on continue (relancer le script plus tard)',
+          );
+        }
         await sleep(PAUSE_MS);
       }
       total += regionCategoryCount;
@@ -67,7 +78,13 @@ async function main(): Promise<void> {
   }
 
   const stats = await repo.stats();
-  logger.info({ total, stats }, 'Import OSM terminé');
+  logger.info({ total, failures, stats }, 'Import OSM terminé');
+  if (failures > 0) {
+    logger.warn(
+      { failures },
+      'Des zones ont échoué (saturation Overpass ?) — relancer pnpm import:osm pour les compléter',
+    );
+  }
   process.exit(0);
 }
 

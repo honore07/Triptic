@@ -16,9 +16,10 @@ interface OverpassResponse {
 const MIRRORS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
 ];
 
-const MAX_ATTEMPTS = 4;
+const MAX_ATTEMPTS = 6;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -43,7 +44,8 @@ export async function fetchOverpass(
       });
       if (response.status === 429 || response.status === 504) {
         lastError = new Error(`Overpass ${response.status} on ${mirror}`);
-        await sleep(15000 * (attempt + 1));
+        // 429 = rate limit par IP : attendre longtemps avant de retenter
+        await sleep(30000 * (attempt + 1));
         continue;
       }
       if (!response.ok) {
