@@ -21,6 +21,12 @@ function makeApp(overrides: Partial<PlacesApi> = {}): {
     ]),
     submitUserPlace: vi.fn(async () => 'pending' as const),
     addReview: vi.fn(async () => true),
+    statsSummary: vi.fn(async () => ({
+      total: 114,
+      pending: 2,
+      by_region: [{ region: 'alpes-it', count: 73 }],
+      by_source: [{ source: 'wikidata', count: 113 }],
+    })),
     ...overrides,
   };
   const app = express();
@@ -29,6 +35,17 @@ function makeApp(overrides: Partial<PlacesApi> = {}): {
   app.use('/api/places', createPlacesRouter(api));
   return { app, api };
 }
+
+describe('GET /api/places/stats', () => {
+  it('expose la santé de la base pour le monitoring n8n', async () => {
+    const { app } = makeApp();
+    const res = await request(app).get('/api/places/stats');
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(114);
+    expect(res.body.pending).toBe(2);
+    expect(res.body.by_source[0].source).toBe('wikidata');
+  });
+});
 
 describe('GET /api/places/nearby', () => {
   it('retourne les lieux actifs autour du point', async () => {

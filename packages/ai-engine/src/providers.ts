@@ -40,6 +40,14 @@ async function withNetworkRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<
   throw lastError;
 }
 
+/**
+ * Modèles Deepseek — gamme v4 depuis juillet 2026 (deepseek-chat et
+ * deepseek-reasoner retirés par Deepseek). Surchargeables par env pour
+ * survivre au prochain renommage sans redéploiement de code.
+ */
+const DEEPSEEK_CHAT_MODEL = process.env['DEEPSEEK_CHAT_MODEL'] ?? 'deepseek-v4-flash';
+const DEEPSEEK_REASONER_MODEL = process.env['DEEPSEEK_REASONER_MODEL'] ?? 'deepseek-v4-pro';
+
 export function createDeepseekProvider(apiKey: string): LlmProvider {
   const client = new OpenAI({ baseURL: DEEPSEEK_BASE_URL, apiKey });
 
@@ -57,8 +65,8 @@ export function createDeepseekProvider(apiKey: string): LlmProvider {
 
   return {
     name: 'deepseek',
-    complete: (opts) => call('deepseek-chat', opts),
-    correct: (opts) => call('deepseek-reasoner', opts),
+    complete: (opts) => call(DEEPSEEK_CHAT_MODEL, opts),
+    correct: (opts) => call(DEEPSEEK_REASONER_MODEL, opts),
   };
 }
 

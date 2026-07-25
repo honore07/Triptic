@@ -14,12 +14,16 @@ interface OverpassResponse {
 
 /** Miroirs publics — on alterne en cas d'erreur ou de saturation (429/504). */
 const MIRRORS = [
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
 ];
 
 const MAX_ATTEMPTS = 6;
+
+/** Les instances publiques pénalisent les clients sans User-Agent identifiable. */
+const USER_AGENT = 'TRIPTIC/0.1 (import base de lieux; https://triptic.app; contact@triptic.app)';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,7 +43,10 @@ export async function fetchOverpass(
     try {
       const response = await fetchImpl(mirror, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': USER_AGENT,
+        },
         body: `data=${encodeURIComponent(query)}`,
       });
       if (response.status === 429 || response.status === 504) {

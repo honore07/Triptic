@@ -1,0 +1,45 @@
+{
+  "name": "TRIPTIC — Zone auto-enrichie",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "triptic-enrich",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "b1000000-0000-4000-8000-000000000001",
+      "name": "Webhook enrichissement",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "webhookId": "triptic-enrich"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Événement envoyé par server/src/services/enrichment.ts après remplissage\n// automatique d'une zone sous-couverte (event: zone_enriched).\nconst body = $input.first().json.body ?? $input.first().json;\nreturn [{ json: {\n  event: body.event ?? 'zone_enriched',\n  zone: body.zone ?? 'inconnue',\n  lieux_ajoutes: body.added ?? 0,\n  horodatage: new Date().toISOString(),\n} }];"
+      },
+      "id": "b1000000-0000-4000-8000-000000000002",
+      "name": "Formater l'événement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Webhook enrichissement": {
+      "main": [
+        [
+          {
+            "node": "Formater l'événement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
