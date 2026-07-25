@@ -17,7 +17,7 @@ import { fetchOverpass } from './overpassClient.js';
 import { osmElementToPlace } from './mapElement.js';
 
 /** Pause de politesse entre requêtes Overpass (instances publiques partagées). */
-const PAUSE_MS = 3000;
+const PAUSE_MS = 8000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
