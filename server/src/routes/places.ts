@@ -62,16 +62,32 @@ export interface PlacesApi {
     rating: number,
     comment: string | null,
   ): Promise<boolean>;
+  statsSummary(): Promise<{
+    total: number;
+    pending: number;
+    by_region: { region: string | null; count: number }[];
+    by_source: { source: string; count: number }[];
+  }>;
 }
 
 /**
- * Contributions utilisateurs (phase E) :
+ * Contributions utilisateurs (phase E) + monitoring :
+ *   GET  /api/places/stats             santé de la base (n8n, rapport hebdo)
  *   GET  /api/places/nearby            lieux actifs autour d'un point
  *   POST /api/places                   proposer un lieu (statut pending, modéré)
  *   POST /api/places/:id/reviews       noter un lieu (fait évoluer sa confiance)
  */
 export function createPlacesRouter(repo: PlacesApi): Router {
   const router = Router();
+
+  router.get('/stats', async (_req, res) => {
+    try {
+      res.json(await repo.statsSummary());
+    } catch (error) {
+      logger.error({ error, context: 'places-stats' }, 'Places stats failed');
+      res.status(500).json({ error: 'places_unavailable' });
+    }
+  });
 
   router.get('/nearby', async (req, res) => {
     const parsed = nearbySchema.safeParse(req.query);

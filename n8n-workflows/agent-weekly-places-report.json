@@ -1,0 +1,72 @@
+{
+  "name": "TRIPTIC — Rapport hebdo base de lieux",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyWeek",
+              "hour": 9,
+              "minute": 0,
+              "weekday": 1
+            }
+          ]
+        }
+      },
+      "id": "c2000000-0000-4000-8000-000000000001",
+      "name": "Chaque lundi 09:00",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://82.25.118.185:3001/api/places/stats",
+        "options": {}
+      },
+      "id": "c2000000-0000-4000-8000-000000000002",
+      "name": "Stats base de lieux",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Rapport Markdown hebdo — brancher un nœud Email (Resend) ou Telegram\n// à la suite quand les clés seront disponibles.\nconst s = $input.first().json;\nconst regions = (s.by_region ?? []).map(r => `- ${r.region ?? 'hors périmètre'} : ${r.count}`).join('\\n');\nconst sources = (s.by_source ?? []).map(r => `- ${r.source} : ${r.count}`).join('\\n');\nconst rapport = `# TRIPTIC — Base de lieux (${new Date().toLocaleDateString('fr-FR')})\\n\\n` +\n  `**Total : ${s.total} lieux** · en modération : ${s.pending}\\n\\n` +\n  `## Par région\\n${regions}\\n\\n## Par source\\n${sources}\\n`;\nreturn [{ json: { rapport, total: s.total, pending: s.pending } }];"
+      },
+      "id": "c2000000-0000-4000-8000-000000000003",
+      "name": "Formater le rapport",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "Chaque lundi 09:00": {
+      "main": [
+        [
+          {
+            "node": "Stats base de lieux",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stats base de lieux": {
+      "main": [
+        [
+          {
+            "node": "Formater le rapport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

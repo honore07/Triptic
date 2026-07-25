@@ -326,4 +326,31 @@ export class PgPlaceRepo {
       .groupBy(places.region, places.kind);
     return rows;
   }
+
+  /** Résumé de santé de la base — monitoring (n8n, rapport hebdo). */
+  async statsSummary(): Promise<{
+    total: number;
+    pending: number;
+    by_region: { region: string | null; count: number }[];
+    by_source: { source: string; count: number }[];
+  }> {
+    const totals = await this.db.execute(sql`
+      SELECT count(*)::int AS total,
+             count(*) FILTER (WHERE status = 'pending')::int AS pending
+      FROM places
+    `);
+    const byRegion = await this.db.execute(sql`
+      SELECT region, count(*)::int AS count FROM places GROUP BY region ORDER BY count DESC
+    `);
+    const bySource = await this.db.execute(sql`
+      SELECT source, count(*)::int AS count FROM places GROUP BY source ORDER BY count DESC
+    `);
+    const t = (totals as unknown as { total: number; pending: number }[])[0];
+    return {
+      total: t?.total ?? 0,
+      pending: t?.pending ?? 0,
+      by_region: byRegion as unknown as { region: string | null; count: number }[],
+      by_source: bySource as unknown as { source: string; count: number }[],
+    };
+  }
 }
