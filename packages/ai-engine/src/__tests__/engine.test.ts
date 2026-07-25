@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sanitizeUserInput } from '../sanitize.js';
 import { buildSystemPrompt } from '../prompts.js';
-import { engineOutputSchema, extractJson } from '../schema.js';
+import { coerceDifficulty, engineOutputSchema, extractJson } from '../schema.js';
 import { generateTrips, type LlmProvider } from '../index.js';
 
 const VALID_TRIP = {
@@ -98,6 +98,29 @@ describe('engineOutputSchema', () => {
   it('rejects an output with only 2 trips', () => {
     const bad = { ...TRIPS_OUTPUT, trips: TRIPS_OUTPUT.trips.slice(0, 2) };
     expect(() => engineOutputSchema.parse(bad)).toThrow();
+  });
+
+  it('normalise les difficultés fantaisistes des LLM (observé avec Deepseek v4)', () => {
+    expect(coerceDifficulty('medium-hard')).toBe('hard'); // arrondi vers le haut
+    expect(coerceDifficulty('easy-medium')).toBe('medium');
+    expect(coerceDifficulty('Modéré')).toBe('medium');
+    expect(coerceDifficulty('easy')).toBe('easy');
+    expect(coerceDifficulty('inconnu')).toBe('inconnu'); // Zod rejettera derrière
+
+    const drifted = {
+      ...TRIPS_OUTPUT,
+      request: { ...TRIPS_OUTPUT.request, difficulty: 'easy-medium' },
+      trips: [
+        { ...VALID_TRIP, difficulty: 'medium-hard' },
+        { ...VALID_TRIP, duration_days: 4 },
+        { ...VALID_TRIP, difficulty: 'easy' },
+      ],
+    };
+    const parsed = engineOutputSchema.parse(drifted);
+    if (parsed.type === 'trips') {
+      expect(parsed.request.difficulty).toBe('medium');
+      expect(parsed.trips[0].difficulty).toBe('hard');
+    }
   });
 });
 

@@ -1,11 +1,29 @@
 import { z } from 'zod';
 
+/**
+ * Les LLM dérivent parfois des enums stricts ("medium-hard", "modéré"…) —
+ * observé avec Deepseek v4. On normalise vers le palier connu le plus proche,
+ * en arrondissant vers le HAUT (surestimer une difficulté est moins risqué
+ * sur le terrain que la sous-estimer). Zod re-valide derrière.
+ */
+export function coerceDifficulty(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  const s = value.toLowerCase().trim();
+  if (s === 'easy' || s === 'medium' || s === 'hard') return s;
+  if (/hard|difficile|expert|schwer/.test(s)) return 'hard';
+  if (/medium|moderate|modéré|moyen|mittel/.test(s)) return 'medium';
+  if (/easy|facile|leicht/.test(s)) return 'easy';
+  return value;
+}
+
+const difficultySchema = z.preprocess(coerceDifficulty, z.enum(['easy', 'medium', 'hard']));
+
 export const tripRequestSchema = z.object({
   departure: z.string(),
   destination: z.string().optional(),
   duration_days: z.number().int().min(1).max(60),
   modes: z.array(z.enum(['roadtrip', 'trek', 'bikepacking'])).min(1),
-  difficulty: z.enum(['easy', 'medium', 'hard']),
+  difficulty: difficultySchema,
   group_type: z.enum(['solo', 'couple', 'group', 'family']),
   vehicle: z.enum(['van', 'car', 'moto', 'none']).optional(),
   avoid_crowds: z.boolean(),
@@ -31,7 +49,7 @@ export const tripProposalSchema = z.object({
   duration_days: z.number().int().min(1),
   distance_km: z.number().min(0),
   elevation_gain_m: z.number().min(0),
-  difficulty: z.enum(['easy', 'medium', 'hard']),
+  difficulty: difficultySchema,
   ambiance: z.string(),
   summary: z.string(),
   daily_distance_km: z.number().min(0),

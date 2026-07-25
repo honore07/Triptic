@@ -54,6 +54,7 @@ RÈGLES STRICTES :
 5. Toujours vérifier que les points de départ/arrivée sont accessibles en voiture/van
 6. Si des informations ESSENTIELLES manquent (au minimum : région/destination ET durée), pose UNE question courte
 7. Format de sortie : JSON STRICT, aucun texte hors du JSON
+8. Les champs à valeurs fermées sont STRICTS : difficulty vaut EXACTEMENT "easy", "medium" ou "hard" (jamais "medium-hard" ni autre variante) — pareil pour mode, kind, budget, group_type, vehicle
 
 RÈGLES ROAD TRIP (voiture/van) — surtout pour les longs trips (7 jours et +) :
 - Chaque jour a 2 à 3 waypoints MAX (roulage + 1 temps fort + nuit) pour rester lisible
