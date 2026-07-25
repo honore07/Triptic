@@ -85,11 +85,12 @@ Logs         : Pino (JSON structured logging)
 
 ### IA & Agents
 ```
-Runtime app  : Deepseek V3 API (génération itinéraires, chat)
+Runtime app  : Deepseek V4 API (génération itinéraires, chat)
               → endpoint : https://api.deepseek.com/v1
-              → modèle   : deepseek-chat (V3)
-Correction   : Deepseek R1 (validation logique géographique)
-              → modèle   : deepseek-reasoner
+              → modèle   : deepseek-v4-flash (rapide/cheap — env DEEPSEEK_CHAT_MODEL)
+Correction   : Deepseek V4 Pro (validation logique géographique)
+              → modèle   : deepseek-v4-pro (env DEEPSEEK_REASONER_MODEL)
+              (gamme v3 deepseek-chat/deepseek-reasoner retirée par Deepseek en juillet 2026)
 Fallback     : Anthropic Claude API (claude-sonnet-4-6)
 Orchestration: Hermes Agent (déjà déployé sur VPS)
 Workflows    : n8n Community Edition (déjà déployé sur VPS)
