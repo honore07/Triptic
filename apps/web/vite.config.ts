@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // Le .env vit à la racine du monorepo (cf. .env.example) — sans envDir,
+  // Vite ne lirait que apps/web/.env et VITE_MAPBOX_PUBLIC_TOKEN resterait vide.
+  envDir: '../../',
   plugins: [
     react(),
     tailwindcss(),
