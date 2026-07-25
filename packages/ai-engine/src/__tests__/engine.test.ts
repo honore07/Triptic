@@ -120,6 +120,95 @@ describe('buildSystemPrompt — tuning', () => {
   });
 });
 
+describe('generateTrips — grounding (base de lieux)', () => {
+  const SHORTLIST = [
+    { name: 'Le Hohneck', lat: 48.0403, lng: 7.0086, kind: 'peak' as const, notoriety: 75 },
+    { name: 'Lac Blanc', lat: 48.1364, lng: 7.0942, kind: 'lake' as const, notoriety: 60 },
+    { name: 'Ferme du Kastelberg', lat: 48.02, lng: 7.03, kind: 'refuge' as const, notoriety: 30 },
+    { name: 'Grand Ballon', lat: 47.9014, lng: 7.0994, kind: 'peak' as const, notoriety: 80 },
+    { name: 'Cascade du Stolz', lat: 48.09, lng: 7.15, kind: 'waterfall' as const, notoriety: 25 },
+  ];
+
+  it('révise les trips avec la shortlist quand la zone est couverte', async () => {
+    const revisedOutput = {
+      ...TRIPS_OUTPUT,
+      differentiator: 'Révisé avec les lieux réels.',
+    };
+    let completeCalls = 0;
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async () => {
+        completeCalls += 1;
+        return JSON.stringify(completeCalls === 1 ? TRIPS_OUTPUT : revisedOutput);
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const shortlistCalls: { lat: number; lng: number }[][] = [];
+    const result = await generateTrips(
+      provider,
+      [{ role: 'user', content: '3 jours de trek dans les Vosges' }],
+      {
+        lang: 'fr',
+        maxProposals: 3,
+        getShortlist: async (points) => {
+          shortlistCalls.push(points);
+          return SHORTLIST;
+        },
+      },
+    );
+    expect(completeCalls).toBe(2); // génération + révision grounding
+    expect(shortlistCalls[0]!.length).toBe(9); // 3 trips × 3 waypoints
+    if (result.type === 'trips') {
+      expect(result.grounding).toEqual({ applied: true, shortlistSize: 5 });
+      expect(result.generation.differentiator).toBe('Révisé avec les lieux réels.');
+    }
+  });
+
+  it('saute le grounding quand la zone est trop peu couverte', async () => {
+    let completeCalls = 0;
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async () => {
+        completeCalls += 1;
+        return JSON.stringify(TRIPS_OUTPUT);
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const result = await generateTrips(
+      provider,
+      [{ role: 'user', content: 'un trip en Slovénie' }],
+      { lang: 'fr', maxProposals: 3, getShortlist: async () => SHORTLIST.slice(0, 2) },
+    );
+    expect(completeCalls).toBe(1);
+    if (result.type === 'trips') {
+      expect(result.grounding).toEqual({ applied: false, shortlistSize: 2 });
+    }
+  });
+
+  it("n'échoue pas si la passe de grounding plante", async () => {
+    let completeCalls = 0;
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async () => {
+        completeCalls += 1;
+        if (completeCalls === 2) throw new Error('timeout');
+        return JSON.stringify(TRIPS_OUTPUT);
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const result = await generateTrips(
+      provider,
+      [{ role: 'user', content: '3 jours dans les Vosges' }],
+      { lang: 'fr', maxProposals: 3, getShortlist: async () => SHORTLIST },
+    );
+    expect(result.type).toBe('trips');
+    if (result.type === 'trips') {
+      expect(result.grounding.applied).toBe(false);
+      expect(result.validated).toBe(true);
+    }
+  });
+});
+
 describe('generateTrips', () => {
   it('returns a question when the model asks for clarification', async () => {
     const provider = mockProvider(

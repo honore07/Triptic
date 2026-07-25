@@ -865,6 +865,30 @@ Le MVP est considéré fonctionnel quand :
 
 ---
 
+## 4bis. BASE DE CONNAISSANCE DES LIEUX (décision d'architecture, juillet 2026)
+
+La génération ne repose plus uniquement sur la mémoire du LLM : une table
+`places` (PostGIS) agrège des POI réels multi-sources et ancre les trips.
+
+- **Sources** : OSM/Overpass (socle, confiance 90), DATAtourisme (offices de
+  tourisme FR, flux sur le compte de Jules, `DATATOURISME_WEBSERVICE_URL`),
+  Wikidata (villages classés FR/IT + score de notoriété par sitelinks),
+  utilisateurs (statut `pending`, modération). Scraping AllTrails/Komoot :
+  INTERDIT (CGU) — viser des partenariats.
+- **Scores** : `notoriety` 0-100 (≥60 incontournable, ≤35 pépite),
+  `confidence` 0-100 (fiabilité, évolue avec les avis).
+- **Grounding (packages/ai-engine)** : génération → shortlist PostGIS
+  (`shortlistForCorridor`, couloir 20 km, ~60 lieux, part de pépites pilotée
+  par le curseur Exploration) → passe de révision avec coordonnées exactes →
+  agent correcteur. Zone sous-couverte (< 5 lieux) : pas de révision, et
+  enrichissement OSM automatique en tâche de fond (`services/enrichment.ts`,
+  file en mémoire ; migration BullMQ quand Redis sera installé).
+- **Région pilote** : Alsace-Vosges + Alpes FR/CH/IT (`import/osm/regions.ts`).
+  Extension Europe prévue à la sortie de l'app.
+- **Imports** (server/) : `pnpm import:osm | import:datatourisme |
+  import:villages | enrich:wikidata` — tous idempotents (upsert source/source_id,
+  dédoublonnage inter-sources nom normalisé + 150 m).
+
 ## RÈGLES TRIPTIC SPÉCIFIQUES (toujours actives)
 
 ### Sur le moteur IA

@@ -1,4 +1,4 @@
-# TRIPTIC — Passation de session (2026-07-17, mise à jour session 2)
+# TRIPTIC — Passation de session (2026-07-20, mise à jour session 4 : base de lieux)
 
 > À lire en début de session avec le CLAUDE.md. Résume ce qui est FAIT, où tout se trouve, et ce qui reste.
 
@@ -18,7 +18,8 @@
 | `packages/map-utils` | Export GPX 1.1 |
 | `server/` | Express 5 : SSE `/api/ai/generate-trips`, CRUD trips, lien public par slug, GPX gated par plan (402), quota free 3/mois (in-memory), rate limiting, Pino, schéma Drizzle PostGIS + migration `server/src/db/migrations/0000_init.sql`, PgTripRepo (Drizzle + PostGIS, actif si `DATABASE_URL` défini, sinon MemoryTripRepo) |
 | `apps/web/` | PWA React 19 + Vite 6 + Tailwind v4 : chat SSE, TripCompare (cartes verrouillées → PaywallModal), régénération auto après upgrade de plan, MapView (Mapbox si `VITE_MAPBOX_PUBLIC_TOKEN`, sinon aperçu SVG), i18n fr/en/de complet, service worker Workbox |
-| `deploy/` | `vps-setup.sh` (idempotent), `nginx-triptic.conf` (pas utilisé pour l'instant) |
+| `server/src/repo/places.ts` + `server/src/import/` | **Base de connaissance des lieux (session 4)** : table `places` (PostGIS, migration `0001`), imports OSM (Overpass, région pilote Alsace-Vosges + Alpes FR/CH/IT), DATAtourisme (flux créé sur le compte de Jules, URL+clé dans `.env` : `DATATOURISME_WEBSERVICE_URL`), villages classés + notoriété Wikidata. Grounding : `generateTrips` révise les trips avec la shortlist PostGIS (`shortlistForCorridor`, mix incontournables/pépites selon curseur Exploration). Auto-enrichissement zones pauvres (`services/enrichment.ts`, file mémoire — BullMQ quand Redis sera posé). Contributions : `POST /api/places` (pending/modération, migration `0002`), avis, page web `/contribute` |
+| `deploy/` | `vps-setup.sh` (idempotent, applique toutes les migrations `*.sql`), `nginx-triptic.conf` (pas utilisé pour l'instant) |
 | `.claude/skills/` | 19 skills installés + 4 créés (guide : `.claude/SKILLS_GUIDE.md`) |
 
 ## Particularités du VPS (importantes, découvertes à la main)
@@ -31,6 +32,12 @@
 - `.env` du VPS : `/opt/triptic/.env` — contient la clé Anthropic de Jules + **`ALLOW_PLAN_OVERRIDE=true` (MODE DÉMO : le paywall débloque les plans sans paiement — À RETIRER quand Stripe/Supabase seront branchés)**
 - Mise à jour : `cd /opt/triptic && git pull && pnpm install --frozen-lockfile && pnpm build && pm2 restart triptic-api --update-env`
 - Terminal navigateur Hostinger : la **première frappe après chargement est toujours perdue** (taper un `echo test` sacrificiel d'abord) ; les builds longs figent l'onglet → toujours lancer en `nohup ... > /var/log/xxx.log`
+
+## Base de lieux — état & commandes (session 4)
+
+- Imports à lancer sur le VPS depuis `/opt/triptic/server` (voir README) : `pnpm import:osm` (long : lancer en nohup), `pnpm import:villages`, `pnpm enrich:wikidata`, puis `pnpm import:datatourisme` **quand le flux sera généré** (créé le 2026-07-20 sur le compte DATAtourisme de Jules ; génération quotidienne côté plateforme → disponible sous 24 h)
+- La modération des lieux `pending` (contributions users) se fait en SQL pour l'instant : `UPDATE places SET status='active' WHERE id='…'` — interface admin à prévoir
+- Villages suisses : pas de liste structurée sur Wikidata (associations FR Q1010307 et IT Q127107 importées)
 
 ## Prochaines étapes (par priorité)
 

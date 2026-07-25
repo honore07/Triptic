@@ -23,6 +23,7 @@
     "status_generating": "Generating the 3 routes…",
     "status_validating": "Geographic validation by the corrector agent…",
     "status_retrying": "Fixing the routes…",
+    "status_grounding": "Anchoring on real places from the TRIPTIC base…",
     "status_photos": "Finding photos…",
     "error_generation": "Generation failed. Try again in a moment.",
     "error_quota": "You have used your 3 free generations this month."
@@ -98,5 +99,32 @@
   },
   "lang": {
     "label": "Language"
+  },
+  "places": {
+    "nav": "Add a place",
+    "title": "Share a hidden gem",
+    "hint": "Know a place worth the detour? Add it to the TRIPTIC base — it will be reviewed before publication.",
+    "name_label": "Place name",
+    "name_placeholder": "E.g.: Frankenthal waterfall",
+    "kind_label": "Type of place",
+    "lat_label": "Latitude",
+    "lng_label": "Longitude",
+    "use_location": "Use my location",
+    "summary_label": "Description (optional)",
+    "summary_placeholder": "One sentence: why is this place worth it?",
+    "submit": "Submit this place",
+    "sending": "Sending…",
+    "success_pending": "Thanks! Your place is saved and will be reviewed before publication.",
+    "success_merged": "This place is already in the base — thanks anyway!",
+    "error": "Submission failed. Try again in a moment.",
+    "kind_peak": "Summit",
+    "kind_lake": "Lake",
+    "kind_waterfall": "Waterfall",
+    "kind_viewpoint": "Viewpoint",
+    "kind_refuge": "Mountain hut",
+    "kind_camp": "Campsite / overnight spot",
+    "kind_castle": "Castle",
+    "kind_village": "Village",
+    "kind_poi": "Other gem"
   }
 }

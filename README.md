@@ -12,6 +12,8 @@ packages/shared/     Types & plans tarifaires partagés
 packages/ai-engine/  Moteur IA : Deepseek V3 (principal) + fallback Anthropic, agent correcteur, sanitization
 packages/map-utils/  Export GPX, helpers géo
 server/              API Express 5 : SSE /api/ai/generate-trips, trips CRUD, GPX, quotas, Drizzle + PostGIS
+                     + base de connaissance des lieux (places) : imports OSM/DATAtourisme/Wikidata,
+                     grounding des générations, auto-enrichissement, contributions utilisateurs
 deploy/              Config Nginx VPS
 ```
 
@@ -34,10 +36,27 @@ pnpm build       # typecheck strict + build Vite + service worker PWA
 
 ## Déploiement VPS (Hostinger)
 
-1. `psql -d triptic_db -f server/src/db/migrations/0000_init.sql` (PostGIS requis)
+1. Migrations (idempotentes, PostGIS requis) :
+   `for f in server/src/db/migrations/*.sql; do sudo -u postgres psql -d triptic_db -f "$f"; done`
 2. `pm2 start ecosystem.config.cjs --env production`
 3. Nginx : `deploy/nginx-triptic.conf`
 4. CI/CD : `.github/workflows/ci.yml` (déploiement SSH activable via `DEPLOY_ENABLED`)
+
+## Base de connaissance des lieux (places)
+
+Imports à lancer depuis `server/` sur le VPS (région pilote : Alsace-Vosges + Alpes FR/CH/IT) :
+
+```bash
+pnpm import:osm                  # POI outdoor OpenStreetMap (~20-40 min, relançable)
+pnpm import:villages             # villages classés (Wikidata, FR + IT)
+pnpm import:datatourisme         # offices de tourisme FR (DATATOURISME_WEBSERVICE_URL dans .env)
+pnpm enrich:wikidata             # recalcul notoriété (incontournable vs pépite)
+```
+
+Tous idempotents (upsert par source). La génération de trips s'ancre automatiquement
+sur cette base quand `DATABASE_URL` est défini ; zone non couverte → enrichissement
+OSM automatique en tâche de fond. Contributions : `POST /api/places` (modération)
+et `POST /api/places/:id/reviews`.
 
 ## Plans
 

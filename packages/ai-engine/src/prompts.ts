@@ -1,4 +1,4 @@
-import type { Lang, TripTuning } from '@triptic/shared';
+import type { Lang, ShortlistPlace, TripTuning } from '@triptic/shared';
 
 const LANG_NAMES: Record<Lang, string> = {
   fr: 'français',
@@ -85,6 +85,35 @@ Les 3 trips doivent donner envie de tous les faire — le choix doit être diffi
       ? "\n\nNOTE PLAN GRATUIT : l'utilisateur ne verra que le premier trip. Mets le meilleur en premier."
       : ''
   }`;
+}
+
+/** Une ligne compacte par lieu — l'économie de tokens vient d'ici. */
+export function formatShortlist(places: ShortlistPlace[]): string {
+  return places
+    .map((p) => {
+      const statut =
+        p.notoriety >= 60 ? 'incontournable' : p.notoriety <= 35 ? 'pépite' : 'connu';
+      const note = p.summary ? ` | ${p.summary}` : '';
+      return `- ${p.name} | ${p.lat.toFixed(4)},${p.lng.toFixed(4)} | ${p.kind} | ${statut}${note}`;
+    })
+    .join('\n');
+}
+
+/**
+ * Message de révision (grounding) : après une première génération, on fournit
+ * les lieux RÉELS de la base TRIPTIC autour du tracé et on demande au modèle
+ * d'ancrer ses waypoints dessus (coordonnées exactes, pépites incluses).
+ */
+export function buildGroundingMessage(places: ShortlistPlace[]): string {
+  return `Voici des lieux RÉELS et VÉRIFIÉS (base TRIPTIC) proches de ton itinéraire, au format "nom | lat,lng | type | statut | note" :
+${formatShortlist(places)}
+
+RÉVISE tes 3 trips en t'ancrant sur ces lieux :
+1. Si un de tes waypoints correspond à un lieu de la liste, reprends EXACTEMENT son nom et ses coordonnées
+2. Remplace les waypoints douteux par des lieux pertinents de la liste (respecte le mode, le rythme, les réglages)
+3. Intègre 1 à 2 pépites de la liste par trip quand c'est cohérent avec l'itinéraire
+4. Ne change ni la structure, ni la durée, ni ce qui distingue les 3 trips
+Réponds avec le même format JSON strict complet (type "trips").`;
 }
 
 export function buildCorrectorPrompt(): string {

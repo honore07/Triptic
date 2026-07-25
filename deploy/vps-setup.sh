@@ -72,7 +72,11 @@ fi
 # Base + migration (idempotente) + droits applicatifs
 sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='triptic_db'" | grep -q 1 \
   || sudo -u postgres createdb triptic_db
-sudo -u postgres psql -d triptic_db -f server/src/db/migrations/0000_init.sql
+# Toutes les migrations, dans l'ordre (idempotentes)
+for migration in server/src/db/migrations/*.sql; do
+  echo "  → migration $(basename "$migration")"
+  sudo -u postgres psql -d triptic_db -f "$migration"
+done
 sudo -u postgres psql -d triptic_db -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO triptic_user;
   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO triptic_user;"
 

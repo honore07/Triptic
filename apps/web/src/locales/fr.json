@@ -23,6 +23,7 @@
     "status_generating": "Génération des 3 itinéraires…",
     "status_validating": "Validation géographique par l'agent correcteur…",
     "status_retrying": "Correction des itinéraires…",
+    "status_grounding": "Ancrage sur les lieux réels de la base TRIPTIC…",
     "status_photos": "Recherche des photos…",
     "error_generation": "La génération a échoué. Réessaie dans un instant.",
     "error_quota": "Tu as utilisé tes 3 générations gratuites ce mois-ci."
@@ -98,5 +99,32 @@
   },
   "lang": {
     "label": "Langue"
+  },
+  "places": {
+    "nav": "Ajouter un lieu",
+    "title": "Partage une pépite",
+    "hint": "Tu connais un lieu qui mérite le détour ? Ajoute-le à la base TRIPTIC — il sera vérifié avant publication.",
+    "name_label": "Nom du lieu",
+    "name_placeholder": "Ex. : Cascade du Frankenthal",
+    "kind_label": "Type de lieu",
+    "lat_label": "Latitude",
+    "lng_label": "Longitude",
+    "use_location": "Utiliser ma position",
+    "summary_label": "Description (optionnelle)",
+    "summary_placeholder": "En une phrase : pourquoi ce lieu vaut le détour ?",
+    "submit": "Proposer ce lieu",
+    "sending": "Envoi…",
+    "success_pending": "Merci ! Ton lieu est enregistré et sera vérifié avant publication.",
+    "success_merged": "Ce lieu est déjà dans la base — merci quand même !",
+    "error": "L'envoi a échoué. Réessaie dans un instant.",
+    "kind_peak": "Sommet",
+    "kind_lake": "Lac",
+    "kind_waterfall": "Cascade",
+    "kind_viewpoint": "Point de vue",
+    "kind_refuge": "Refuge",
+    "kind_camp": "Camping / spot nuit",
+    "kind_castle": "Château",
+    "kind_village": "Village",
+    "kind_poi": "Autre pépite"
   }
 }
