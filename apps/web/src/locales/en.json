@@ -127,5 +127,42 @@
     "kind_castle": "Castle",
     "kind_village": "Village",
     "kind_poi": "Other gem"
+  },
+  "request": {
+    "title": "Detected settings",
+    "hint": "One tap to fix — your 3 trips will follow.",
+    "tap_to_change": "tap to change",
+    "regenerate": "Regenerate with these settings",
+    "duration": "Duration",
+    "duration_minus": "One day less",
+    "duration_plus": "One day more",
+    "difficulty": "Difficulty",
+    "group": "Group",
+    "group_solo": "Solo",
+    "group_couple": "Couple",
+    "group_family": "Family",
+    "group_group": "With friends",
+    "vehicle": "Vehicle",
+    "vehicle_van": "Van",
+    "vehicle_car": "Car",
+    "vehicle_moto": "Motorbike",
+    "vehicle_none": "No vehicle",
+    "budget": "Budget",
+    "budget_low": "Tight",
+    "budget_medium": "Medium",
+    "budget_high": "Comfort",
+    "camping": "Camping / bivouac",
+    "crowds": "Avoid crowds"
+  },
+  "budget": {
+    "title": "Estimated budget",
+    "fuel": "Fuel",
+    "tolls": "Tolls & vignettes (to confirm)",
+    "nights": "Nights",
+    "meals": "Meals",
+    "activities": "Activities & visits",
+    "total": "Estimated total",
+    "co2": "Carbon footprint",
+    "note": "Indicative, adjustable estimates. CO₂: ADEME Base Carbone (well-to-wheel); fuel: average prices per country."
   }
 }

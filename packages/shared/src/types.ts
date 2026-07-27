@@ -105,6 +105,25 @@ export interface TripDay {
   segments?: TripSegment[] | undefined;
 }
 
+/** Fourchette de coût en EUR [min, max]. */
+export type EurRange = [number, number];
+
+/**
+ * Budget itemisé d'un trip (roadmap 1.3) — heuristiques ajustables, carburant
+ * depuis les segments routés + prix pays. Fourchettes assumées : jamais de
+ * fausse précision.
+ */
+export interface TripBudget {
+  fuel_eur: number;
+  /** Péages/vignettes — heuristique « à confirmer sur place ». */
+  tolls_eur: EurRange;
+  nights_eur: EurRange;
+  meals_eur: EurRange;
+  /** Somme des cost_estimate d'activités (hors nuits). */
+  activities_eur: number;
+  total_eur: EurRange;
+}
+
 /** Une des 3 propositions générées par l'IA. */
 export interface TripProposal {
   title: string;
@@ -119,6 +138,10 @@ export interface TripProposal {
   waypoints: Waypoint[];
   /** Structure jours → activités (roadmap 0.1). Absente sur les anciens trips. */
   days?: TripDay[] | undefined;
+  /** CO₂e total estimé (ADEME Base Carbone, well-to-wheel) — roadmap 1.2. */
+  co2_kg?: number | undefined;
+  /** Budget itemisé estimé — roadmap 1.3. */
+  budget?: TripBudget | undefined;
   photo_keywords: string[];
   photo_url?: string | undefined;
 }

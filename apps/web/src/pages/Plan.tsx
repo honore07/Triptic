@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
 import { ChatBubble, TypingBubble } from '../components/ChatBubble';
+import { RequestChips } from '../components/RequestChips';
 import { TripCompare } from '../components/TripCompare';
 import { TripTuner } from '../components/TripTuner';
 import { useChatStore } from '../store/chatStore';
@@ -14,8 +15,18 @@ export function Plan() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { initialQuery?: string } };
-  const { messages, status, error, result, tuning, begin, confirmTuning, send, regenerate } =
-    useChatStore();
+  const {
+    messages,
+    status,
+    error,
+    result,
+    tuning,
+    begin,
+    confirmTuning,
+    send,
+    regenerate,
+    applyOverrides,
+  } = useChatStore();
   const { plan, openPaywall, setRemaining } = useUserStore();
   const selectTrip = useTripStore((s) => s.select);
   const [input, setInput] = useState('');
@@ -131,13 +142,20 @@ export function Plan() {
       )}
 
       {result && (
-        <TripCompare
-          trips={result.generation.trips}
-          lockedCount={result.locked_proposals}
-          differentiator={result.generation.differentiator}
-          onChoose={onChoose}
-          onUnlock={openPaywall}
-        />
+        <>
+          <RequestChips
+            request={result.generation.request}
+            busy={busy}
+            onRegenerate={(patch) => void applyOverrides(patch, lang, plan)}
+          />
+          <TripCompare
+            trips={result.generation.trips}
+            lockedCount={result.locked_proposals}
+            differentiator={result.generation.differentiator}
+            onChoose={onChoose}
+            onUnlock={openPaywall}
+          />
+        </>
       )}
     </main>
   );

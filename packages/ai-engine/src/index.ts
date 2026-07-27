@@ -3,9 +3,15 @@ import type {
   Lang,
   ShortlistPlace,
   TripGeneration,
+  TripRequest,
   TripTuning,
 } from '@triptic/shared';
-import { buildCorrectorPrompt, buildGroundingMessage, buildSystemPrompt } from './prompts.js';
+import {
+  buildCorrectorPrompt,
+  buildGroundingMessage,
+  buildOverridesMessage,
+  buildSystemPrompt,
+} from './prompts.js';
 import {
   correctorOutputSchema,
   engineOutputSchema,
@@ -35,6 +41,11 @@ export interface GenerateOptions {
   maxProposals: 1 | 3;
   /** Curseurs 1-5 du TripTuner — hyper-personnalisation du prompt. */
   tuning?: TripTuning | undefined;
+  /**
+   * Onboarding hybride (1.1) : valeurs d'enum TripRequest confirmées via les
+   * puces de l'UI — prioritaires sur l'extraction de la conversation.
+   */
+  requestOverrides?: Partial<TripRequest> | undefined;
   /**
    * Lieux réels (base places) autour des points donnés — active la passe de
    * grounding. Si absent ou si la zone est vide, comportement historique.
@@ -76,6 +87,10 @@ export async function generateTrips(
   const cleanMessages: ChatMessage[] = messages.map((m) =>
     m.role === 'user' ? { ...m, content: sanitizeUserInput(m.content) } : m,
   );
+  if (opts.requestOverrides && Object.keys(opts.requestOverrides).length > 0) {
+    // Valeurs d'enum déjà validées par Zod côté route — pas de sanitization
+    cleanMessages.push({ role: 'user', content: buildOverridesMessage(opts.requestOverrides) });
+  }
   const system = buildSystemPrompt(opts.lang, opts.maxProposals, opts.tuning);
 
   emit({ kind: 'status', step: 'generating' });

@@ -127,5 +127,42 @@
     "kind_castle": "Burg / Schloss",
     "kind_village": "Dorf",
     "kind_poi": "Anderer Geheimtipp"
+  },
+  "request": {
+    "title": "Erkannte Einstellungen",
+    "hint": "Ein Tipp zum Korrigieren — deine 3 Trips folgen.",
+    "tap_to_change": "zum Ändern tippen",
+    "regenerate": "Mit diesen Einstellungen neu generieren",
+    "duration": "Dauer",
+    "duration_minus": "Ein Tag weniger",
+    "duration_plus": "Ein Tag mehr",
+    "difficulty": "Schwierigkeit",
+    "group": "Gruppe",
+    "group_solo": "Solo",
+    "group_couple": "Zu zweit",
+    "group_family": "Familie",
+    "group_group": "Mit Freunden",
+    "vehicle": "Fahrzeug",
+    "vehicle_van": "Van",
+    "vehicle_car": "Auto",
+    "vehicle_moto": "Motorrad",
+    "vehicle_none": "Ohne Fahrzeug",
+    "budget": "Budget",
+    "budget_low": "Knapp",
+    "budget_medium": "Mittel",
+    "budget_high": "Komfort",
+    "camping": "Camping / Biwak",
+    "crowds": "Menschenmassen meiden"
+  },
+  "budget": {
+    "title": "Geschätztes Budget",
+    "fuel": "Kraftstoff",
+    "tolls": "Maut & Vignetten (zu bestätigen)",
+    "nights": "Übernachtungen",
+    "meals": "Mahlzeiten",
+    "activities": "Aktivitäten & Besichtigungen",
+    "total": "Geschätzte Summe",
+    "co2": "CO₂-Fußabdruck",
+    "note": "Richtwerte, anpassbar. CO₂: ADEME Base Carbone (Well-to-Wheel); Kraftstoff: Durchschnittspreise pro Land."
   }
 }

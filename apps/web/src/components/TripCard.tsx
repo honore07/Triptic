@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Clock, Mountain, Route } from 'lucide-react';
+import { Clock, Leaf, Mountain, Route, Wallet } from 'lucide-react';
 import type { TripProposal } from '@triptic/shared';
 import { DifficultyBadge } from './DifficultyBadge';
 import { RoutePreview } from './RoutePreview';
@@ -70,6 +70,22 @@ export function TripCard({ trip, onChoose, index = 0 }: Props) {
               {t('trips.elevation')} {Math.round(trip.elevation_gain_m)} m
             </dd>
           </div>
+          {trip.budget && (
+            <div className="flex items-center gap-1.5">
+              <Wallet size={14} aria-hidden="true" />
+              <dt className="sr-only">{t('budget.title')}</dt>
+              <dd>
+                {trip.budget.total_eur[0]}–{trip.budget.total_eur[1]} €
+              </dd>
+            </div>
+          )}
+          {trip.co2_kg !== undefined && trip.co2_kg > 0 && (
+            <div className="flex items-center gap-1.5">
+              <Leaf size={14} aria-hidden="true" />
+              <dt className="sr-only">{t('budget.co2')}</dt>
+              <dd>≈ {trip.co2_kg} kg CO₂e</dd>
+            </div>
+          )}
         </dl>
 
         <button

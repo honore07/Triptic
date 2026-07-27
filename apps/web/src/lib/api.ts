@@ -5,6 +5,7 @@ import type {
   Trip,
   TripGeneration,
   TripProposal,
+  TripRequest,
   TripTuning,
 } from '@triptic/shared';
 
@@ -40,11 +41,19 @@ export async function generateTripsStream(
   plan: PlanId,
   onEvent: (event: GenerateEvent) => void,
   tuning?: TripTuning | null,
+  requestOverrides?: Partial<TripRequest> | null,
 ): Promise<void> {
   const res = await fetch(`${API_URL}/api/ai/generate-trips`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
-    body: JSON.stringify({ messages, lang, ...(tuning ? { tuning } : {}) }),
+    body: JSON.stringify({
+      messages,
+      lang,
+      ...(tuning ? { tuning } : {}),
+      ...(requestOverrides && Object.keys(requestOverrides).length > 0
+        ? { request_overrides: requestOverrides }
+        : {}),
+    }),
   });
   if (!res.ok || !res.body) {
     throw new Error(`generate-trips failed: ${res.status}`);

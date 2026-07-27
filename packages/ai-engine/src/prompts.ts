@@ -1,4 +1,4 @@
-import type { Lang, ShortlistPlace, TripTuning } from '@triptic/shared';
+import type { Lang, ShortlistPlace, TripRequest, TripTuning } from '@triptic/shared';
 
 const LANG_NAMES: Record<Lang, string> = {
   fr: 'français',
@@ -89,6 +89,17 @@ Les 3 trips doivent donner envie de tous les faire — le choix doit être diffi
       ? "\n\nNOTE PLAN GRATUIT : l'utilisateur ne verra que le premier trip. Mets le meilleur en premier."
       : ''
   }`;
+}
+
+/**
+ * Onboarding hybride (roadmap 1.1) : les puces/curseurs de l'UI sont liés aux
+ * valeurs d'enum TripRequest — jamais de texte re-parsé. Ce message injecte
+ * les valeurs confirmées par l'utilisateur, prioritaires sur l'extraction.
+ */
+export function buildOverridesMessage(overrides: Partial<TripRequest>): string {
+  return `PARAMÈTRES CONFIRMÉS PAR L'UTILISATEUR (valeurs exactes, prioritaires sur tout le reste de la conversation, ne pas les re-déduire) :
+${JSON.stringify(overrides)}
+Applique-les strictement au champ "request" et aux 3 trips.`;
 }
 
 /** Une ligne compacte par lieu — l'économie de tokens vient d'ici. */

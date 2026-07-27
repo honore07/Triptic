@@ -301,6 +301,46 @@ describe('generateTrips — grounding (base de lieux)', () => {
   });
 });
 
+describe('generateTrips — overrides des puces (onboarding hybride 1.1)', () => {
+  it('injecte les valeurs confirmées comme message prioritaire', async () => {
+    let capturedContent = '';
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async ({ messages }) => {
+        capturedContent = messages.map((m) => m.content).join('\n');
+        return JSON.stringify(TRIPS_OUTPUT);
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    await generateTrips(provider, [{ role: 'user', content: '3 jours dans les Vosges' }], {
+      lang: 'fr',
+      maxProposals: 3,
+      requestOverrides: { difficulty: 'hard', duration_days: 4 },
+    });
+    expect(capturedContent).toContain('PARAMÈTRES CONFIRMÉS PAR L\'UTILISATEUR');
+    expect(capturedContent).toContain('"difficulty":"hard"');
+    expect(capturedContent).toContain('"duration_days":4');
+  });
+
+  it('n’ajoute rien sans overrides', async () => {
+    let capturedContent = '';
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async ({ messages }) => {
+        capturedContent = messages.map((m) => m.content).join('\n');
+        return JSON.stringify(TRIPS_OUTPUT);
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    await generateTrips(provider, [{ role: 'user', content: '3 jours' }], {
+      lang: 'fr',
+      maxProposals: 3,
+      requestOverrides: {},
+    });
+    expect(capturedContent).not.toContain('PARAMÈTRES CONFIRMÉS');
+  });
+});
+
 describe('generateTrips', () => {
   it('returns a question when the model asks for clarification', async () => {
     const provider = mockProvider(

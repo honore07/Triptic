@@ -127,5 +127,42 @@
     "kind_castle": "Château",
     "kind_village": "Village",
     "kind_poi": "Autre pépite"
+  },
+  "request": {
+    "title": "Paramètres détectés",
+    "hint": "Un tap pour corriger — tes 3 trips suivront.",
+    "tap_to_change": "toucher pour changer",
+    "regenerate": "Régénérer avec ces réglages",
+    "duration": "Durée",
+    "duration_minus": "Un jour de moins",
+    "duration_plus": "Un jour de plus",
+    "difficulty": "Difficulté",
+    "group": "Groupe",
+    "group_solo": "Solo",
+    "group_couple": "En couple",
+    "group_family": "En famille",
+    "group_group": "Entre amis",
+    "vehicle": "Véhicule",
+    "vehicle_van": "Van",
+    "vehicle_car": "Voiture",
+    "vehicle_moto": "Moto",
+    "vehicle_none": "Sans véhicule",
+    "budget": "Budget",
+    "budget_low": "Serré",
+    "budget_medium": "Moyen",
+    "budget_high": "Confort",
+    "camping": "Camping / bivouac",
+    "crowds": "Éviter la foule"
+  },
+  "budget": {
+    "title": "Budget estimé",
+    "fuel": "Carburant",
+    "tolls": "Péages & vignettes (à confirmer)",
+    "nights": "Nuits",
+    "meals": "Repas",
+    "activities": "Activités & visites",
+    "total": "Total estimé",
+    "co2": "Empreinte carbone",
+    "note": "Estimations indicatives et ajustables. CO₂ : ADEME Base Carbone (well-to-wheel) ; carburant : prix moyens par pays."
   }
 }

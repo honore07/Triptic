@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Bookmark, Share2 } from 'lucide-react';
+import { ArrowLeft, Bookmark, Leaf, Share2, Wallet } from 'lucide-react';
 import { saveTrip } from '../lib/api';
 import { DifficultyBadge } from '../components/DifficultyBadge';
 import { GPXExportButton } from '../components/GPXExportButton';
@@ -91,6 +91,65 @@ export function TripPage() {
           {copied ? t('trips.copied') : t('trips.share')}
         </button>
       </div>
+
+      {(selected.budget || (selected.co2_kg !== undefined && selected.co2_kg > 0)) && (
+        <section
+          aria-labelledby="budget-title"
+          className="flex flex-col gap-3 rounded-trip border border-mist bg-snow p-5"
+        >
+          <h2 id="budget-title" className="flex items-center gap-2 font-display text-xl font-bold text-trail">
+            <Wallet size={18} className="text-summit" aria-hidden="true" />
+            {t('budget.title')}
+          </h2>
+          {selected.budget && (
+            <dl className="flex flex-col gap-1.5 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.fuel')}</dt>
+                <dd className="font-mono text-trail">{selected.budget.fuel_eur} €</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.tolls')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.tolls_eur[0]}–{selected.budget.tolls_eur[1]} €
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.nights')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.nights_eur[0]}–{selected.budget.nights_eur[1]} €
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.meals')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.meals_eur[0]}–{selected.budget.meals_eur[1]} €
+                </dd>
+              </div>
+              {selected.budget.activities_eur > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-ridge">{t('budget.activities')}</dt>
+                  <dd className="font-mono text-trail">{selected.budget.activities_eur} €</dd>
+                </div>
+              )}
+              <div className="mt-1 flex justify-between border-t border-mist pt-2 font-semibold">
+                <dt className="text-trail">{t('budget.total')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.total_eur[0]}–{selected.budget.total_eur[1]} €
+                </dd>
+              </div>
+            </dl>
+          )}
+          {selected.co2_kg !== undefined && selected.co2_kg > 0 && (
+            <p className="flex items-center gap-1.5 text-sm text-ridge">
+              <Leaf size={15} className="text-pine" aria-hidden="true" />
+              <span>
+                {t('budget.co2')} : <strong className="font-mono">≈ {selected.co2_kg} kg CO₂e</strong>
+              </span>
+            </p>
+          )}
+          <p className="text-xs text-fog">{t('budget.note')}</p>
+        </section>
+      )}
 
       <section aria-labelledby="waypoints-title" className="flex flex-col gap-2">
         <h2 id="waypoints-title" className="font-display text-xl font-bold text-trail">

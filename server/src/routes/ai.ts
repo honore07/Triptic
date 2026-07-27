@@ -1,8 +1,9 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { generateTrips, type LlmProvider } from '@triptic/ai-engine';
-import { PLANS } from '@triptic/shared';
+import { PLANS, type TripRequest } from '@triptic/shared';
 import { logger } from '../logger.js';
+import { applyTripEstimates } from '../services/budget.js';
 import { findTripPhoto } from '../services/photos.js';
 import { enrichTripSegments } from '../services/segments.js';
 import type { QuotaService } from '../services/quota.js';
@@ -17,6 +18,23 @@ const tuningValue = z.union([
   z.literal(4),
   z.literal(5),
 ]);
+
+/**
+ * Onboarding hybride (1.1) : puces UI liées aux enums TripRequest — validées
+ * strictement ici, jamais re-parsées depuis du texte libre.
+ */
+const requestOverridesSchema = z
+  .object({
+    duration_days: z.number().int().min(1).max(60),
+    modes: z.array(z.enum(['roadtrip', 'trek', 'bikepacking'])).min(1),
+    difficulty: z.enum(['easy', 'medium', 'hard']),
+    group_type: z.enum(['solo', 'couple', 'group', 'family']),
+    vehicle: z.enum(['van', 'car', 'moto', 'none']),
+    avoid_crowds: z.boolean(),
+    camping: z.boolean(),
+    budget: z.enum(['low', 'medium', 'high']),
+  })
+  .partial();
 
 const generateBodySchema = z.object({
   messages: z
@@ -38,6 +56,7 @@ const generateBodySchema = z.object({
       discovery: tuningValue,
     })
     .optional(),
+  request_overrides: requestOverridesSchema.optional(),
 });
 
 function sseWrite(res: Response, event: string, data: unknown): void {
@@ -67,7 +86,13 @@ export function createAiRouter(
       res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
       return;
     }
-    const { messages, lang, tuning } = parsed.data;
+    const { messages, lang, tuning, request_overrides } = parsed.data;
+    // exactOptionalPropertyTypes : on retire les clés explicitement undefined
+    const overrides = request_overrides
+      ? (Object.fromEntries(
+          Object.entries(request_overrides).filter(([, v]) => v !== undefined),
+        ) as Partial<TripRequest>)
+      : undefined;
     const { id: userId, plan } = req.user;
     const limits = PLANS[plan].limits;
 
@@ -88,6 +113,7 @@ export function createAiRouter(
         lang,
         maxProposals: limits.trip_proposals,
         tuning,
+        requestOverrides: overrides,
         // Ancrage sur la base de lieux (PostGIS) quand elle est disponible
         getShortlist: placeRepo
           ? (points) =>
@@ -119,6 +145,10 @@ export function createAiRouter(
             },
             'Segment routing metrics',
           );
+        }
+        // CO₂ (ADEME) + budget itemisé — depuis les segments routés si dispo
+        for (const trip of visible) {
+          applyTripEstimates(trip, result.generation.request);
         }
         sseWrite(res, 'status', { step: 'photos' });
         await Promise.all(
