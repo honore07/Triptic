@@ -126,7 +126,16 @@
     "kind_camp": "Camping / spot nuit",
     "kind_castle": "Château",
     "kind_village": "Village",
-    "kind_poi": "Autre pépite"
+    "kind_poi": "Autre pépite",
+    "kind_pass": "Col",
+    "kind_gorge": "Gorges",
+    "kind_glacier": "Glacier",
+    "kind_museum": "Musée",
+    "kind_attraction": "Site à visiter",
+    "kind_restaurant": "Restaurant",
+    "kind_cafe": "Café",
+    "kind_bar": "Bar",
+    "kind_fast_food": "Snack"
   },
   "request": {
     "title": "Paramètres détectés",
@@ -203,5 +212,29 @@
     "title": "Modifier par le chat",
     "placeholder": "Ex. : remplace le jour 3 matin par un trail de 20 km sportif…",
     "error": "La modification a échoué. Réessaie dans un instant."
+  },
+  "explore": {
+    "nav": "Explorer",
+    "title": "Explorer la zone",
+    "hint": "Décris ton envie du jour, déplace la carte, et cherche les lieux autour de toi.",
+    "prompt_placeholder": "Ex. : se baigner puis manger une tarte flambée…",
+    "parse": "Trouver",
+    "filters_label": "Filtres rapides",
+    "chip_nature": "Nature",
+    "chip_culture": "Culture & villages",
+    "chip_food": "Où manger",
+    "chip_night": "Spots de nuit",
+    "locate": "Autour de moi",
+    "search_area": "Chercher dans cette zone",
+    "searching": "Recherche…",
+    "map_label": "Carte de recherche par zone",
+    "results_title": "Résultats",
+    "no_results": "Aucun lieu trouvé dans cette zone avec ces filtres. Élargis la zone ou change de filtre.",
+    "must_see": "Incontournable",
+    "add_to_day": "Ajouter",
+    "added": "Ajouté",
+    "day_label": "Ajouter au :",
+    "coverage_note": "Données OSM & offices de tourisme (© OpenStreetMap contributors, DATAtourisme). Couverture inégale en zone rurale — un lieu absent ici peut exister sur place.",
+    "error": "La recherche a échoué. Réessaie dans un instant."
   }
 }

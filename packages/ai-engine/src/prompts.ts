@@ -132,6 +132,23 @@ Réponds avec le même format JSON strict complet (type "trips").`;
 }
 
 /**
+ * « Search this area » (roadmap 4.2) : convertit l'envie du jour en filtres
+ * structurés (kinds de la base places + mots-clés), jamais de texte re-parsé.
+ */
+export function buildFilterPrompt(lang: Lang, kinds: readonly string[]): string {
+  return `Tu convertis une envie d'activité du jour en filtres de recherche pour TRIPTIC (app outdoor).
+Langue de l'utilisateur : ${LANG_NAMES[lang]}.
+
+Kinds AUTORISÉS (valeurs STRICTES) : ${kinds.join(', ')}
+
+Réponds UNIQUEMENT avec un objet JSON :
+{"kinds": ["<kind pertinent>", …], "keywords": ["<mot-clé libre>", …]}
+
+Règles : 1 à 4 kinds maximum, les plus pertinents pour l'envie exprimée ; 0 à 3 keywords courts (lieu, ambiance) ; si l'envie est floue, kinds les plus proches plutôt que liste vide.
+Exemples : "on veut se baigner puis manger une tarte flambée" → {"kinds": ["lake", "waterfall", "restaurant"], "keywords": ["baignade", "tarte flambée"]} ; "un point de vue tranquille" → {"kinds": ["viewpoint", "peak"], "keywords": []}`;
+}
+
+/**
  * Édition conversationnelle (roadmap 3.2) : une phrase de l'utilisateur
  * modifie l'activité/le jour ciblé, le reste du trip reste identique.
  */

@@ -1,13 +1,16 @@
 import type {
   ChatMessage,
   Lang,
+  PlaceKind,
   PlanId,
+  SegmentMode,
   Trip,
   TripGeneration,
   TripProposal,
   TripRequest,
   TripTuning,
 } from '@triptic/shared';
+import type { ExplorePlace } from './explore';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -172,6 +175,52 @@ export async function saveTrip(
     }),
   });
   if (!res.ok) throw new Error(`saveTrip failed: ${res.status}`);
+  return res.json();
+}
+
+export interface ExploreBbox {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+/** GET /api/places/bbox — « search this area » (4.2). */
+export async function searchArea(
+  bbox: ExploreBbox,
+  kinds: PlaceKind[],
+  from: { lat: number; lng: number } | null,
+  travelMode: SegmentMode,
+): Promise<ExplorePlace[]> {
+  const params = new URLSearchParams({
+    south: String(bbox.south),
+    west: String(bbox.west),
+    north: String(bbox.north),
+    east: String(bbox.east),
+    travel_mode: travelMode,
+  });
+  if (kinds.length > 0) params.set('kinds', kinds.join(','));
+  if (from) {
+    params.set('from_lat', String(from.lat));
+    params.set('from_lng', String(from.lng));
+  }
+  const res = await fetch(`${API_URL}/api/places/bbox?${params}`);
+  if (!res.ok) throw new Error(`bbox search failed: ${res.status}`);
+  return ((await res.json()) as { places: ExplorePlace[] }).places;
+}
+
+/** POST /api/ai/parse-filters — « décris ton envie du jour » → kinds stricts. */
+export async function parseExploreFilters(
+  text: string,
+  lang: Lang,
+  plan: PlanId,
+): Promise<{ kinds: PlaceKind[]; keywords: string[] }> {
+  const res = await fetch(`${API_URL}/api/ai/parse-filters`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    body: JSON.stringify({ text, lang }),
+  });
+  if (!res.ok) return { kinds: [], keywords: [] };
   return res.json();
 }
 

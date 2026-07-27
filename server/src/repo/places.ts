@@ -314,6 +314,32 @@ export class PgPlaceRepo {
     return true;
   }
 
+  /**
+   * Lieux actifs dans la zone visible de la carte (« search this area », 4.1).
+   * Tri par notoriété — le temps de trajet est calculé par la route au-dessus.
+   */
+  async findInBbox(
+    bbox: { south: number; west: number; north: number; east: number },
+    kinds: PlaceKind[] | undefined,
+    limit: number,
+  ): Promise<(ShortlistPlace & { id: string })[]> {
+    const kindFilter = kinds && kinds.length > 0 ? sql`AND kind = ANY(${kinds})` : sql``;
+    const rows = await this.db.execute(sql`
+      SELECT id, name, kind, notoriety, summary,
+             ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
+      FROM places
+      WHERE status = 'active'
+        ${kindFilter}
+        AND ST_Intersects(
+          location,
+          ST_MakeEnvelope(${bbox.west}, ${bbox.south}, ${bbox.east}, ${bbox.north}, 4326)::geography
+        )
+      ORDER BY notoriety DESC
+      LIMIT ${limit}
+    `);
+    return rows as unknown as (ShortlistPlace & { id: string })[];
+  }
+
   /** Lieux actifs autour d'un point (affichage carte + aide à la contribution). */
   async findNearby(
     lat: number,

@@ -1,8 +1,16 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
-import { editTrip, generateTrips, tripDaySchema, type LlmProvider } from '@triptic/ai-engine';
+import {
+  buildFilterPrompt,
+  editTrip,
+  extractJson,
+  generateTrips,
+  tripDaySchema,
+  type LlmProvider,
+} from '@triptic/ai-engine';
 import { PLANS, type TripRequest } from '@triptic/shared';
 import { logger } from '../logger.js';
+import { SEARCHABLE_KINDS } from './places.js';
 import { recomputeTrip } from '../services/recompute.js';
 import { applyTripEstimates } from '../services/budget.js';
 import { findDayPhotos, findTripPhoto } from '../services/photos.js';
@@ -194,6 +202,40 @@ export function createAiRouter(
     }
     sseWrite(res, 'done', {});
     res.end();
+  });
+
+  const parseFiltersBodySchema = z.object({
+    text: z.string().min(2).max(500),
+    lang: z.enum(['fr', 'en', 'de']).default('fr'),
+  });
+  const filtersOutputSchema = z.object({
+    kinds: z.array(z.enum(SEARCHABLE_KINDS)).max(4).catch([]),
+    keywords: z.array(z.string().max(40)).max(3).catch([]),
+  });
+
+  /**
+   * POST /api/ai/parse-filters — « décris ton envie du jour » (4.2) :
+   * convertit le texte libre en filtres structurés pour la recherche bbox.
+   * Jamais bloquant : en cas d'échec LLM, filtres vides (le client cherche
+   * alors sans filtre de kind).
+   */
+  router.post('/parse-filters', async (req, res) => {
+    const parsed = parseFiltersBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const raw = await provider.complete({
+        system: buildFilterPrompt(parsed.data.lang, SEARCHABLE_KINDS),
+        messages: [{ role: 'user', content: parsed.data.text }],
+        maxTokens: 300,
+      });
+      res.json(filtersOutputSchema.parse(extractJson(raw)));
+    } catch (error) {
+      logger.warn({ error, context: 'parse-filters' }, 'Filter parsing failed');
+      res.json({ kinds: [], keywords: [] });
+    }
   });
 
   const editBodySchema = z.object({

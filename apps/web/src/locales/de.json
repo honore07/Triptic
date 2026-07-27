@@ -126,7 +126,16 @@
     "kind_camp": "Campingplatz / Übernachtungsspot",
     "kind_castle": "Burg / Schloss",
     "kind_village": "Dorf",
-    "kind_poi": "Anderer Geheimtipp"
+    "kind_poi": "Anderer Geheimtipp",
+    "kind_pass": "Pass",
+    "kind_gorge": "Schlucht",
+    "kind_glacier": "Gletscher",
+    "kind_museum": "Museum",
+    "kind_attraction": "Sehenswürdigkeit",
+    "kind_restaurant": "Restaurant",
+    "kind_cafe": "Café",
+    "kind_bar": "Bar",
+    "kind_fast_food": "Imbiss"
   },
   "request": {
     "title": "Erkannte Einstellungen",
@@ -203,5 +212,29 @@
     "title": "Per Chat bearbeiten",
     "placeholder": "Z. B.: ersetze Tag 3 morgens durch einen sportlichen 20-km-Trail…",
     "error": "Die Änderung ist fehlgeschlagen. Versuche es gleich noch einmal."
+  },
+  "explore": {
+    "nav": "Erkunden",
+    "title": "Umgebung erkunden",
+    "hint": "Beschreibe deine Lust für heute, bewege die Karte und suche in deiner Umgebung.",
+    "prompt_placeholder": "Z. B.: baden gehen, dann regional essen…",
+    "parse": "Finden",
+    "filters_label": "Schnellfilter",
+    "chip_nature": "Natur",
+    "chip_culture": "Kultur & Dörfer",
+    "chip_food": "Essen & Trinken",
+    "chip_night": "Übernachtungsplätze",
+    "locate": "In meiner Nähe",
+    "search_area": "In diesem Bereich suchen",
+    "searching": "Suche…",
+    "map_label": "Karte für die Bereichssuche",
+    "results_title": "Ergebnisse",
+    "no_results": "Keine Orte in diesem Bereich mit diesen Filtern. Bereich vergrößern oder Filter ändern.",
+    "must_see": "Highlight",
+    "add_to_day": "Hinzufügen",
+    "added": "Hinzugefügt",
+    "day_label": "Hinzufügen zu:",
+    "coverage_note": "OSM- & Tourismusdaten (© OpenStreetMap contributors, DATAtourisme). Abdeckung auf dem Land uneinheitlich — fehlende Orte können trotzdem existieren.",
+    "error": "Suche fehlgeschlagen. Versuche es gleich noch einmal."
   }
 }

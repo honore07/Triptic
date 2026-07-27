@@ -126,7 +126,16 @@
     "kind_camp": "Campsite / overnight spot",
     "kind_castle": "Castle",
     "kind_village": "Village",
-    "kind_poi": "Other gem"
+    "kind_poi": "Other gem",
+    "kind_pass": "Pass",
+    "kind_gorge": "Gorge",
+    "kind_glacier": "Glacier",
+    "kind_museum": "Museum",
+    "kind_attraction": "Attraction",
+    "kind_restaurant": "Restaurant",
+    "kind_cafe": "Café",
+    "kind_bar": "Bar",
+    "kind_fast_food": "Snack"
   },
   "request": {
     "title": "Detected settings",
@@ -203,5 +212,29 @@
     "title": "Edit via chat",
     "placeholder": "E.g.: replace day 3 morning with a tough 20 km trail run…",
     "error": "The edit failed. Try again in a moment."
+  },
+  "explore": {
+    "nav": "Explore",
+    "title": "Explore the area",
+    "hint": "Describe what you feel like today, move the map, and search around you.",
+    "prompt_placeholder": "E.g.: a swim, then a good local restaurant…",
+    "parse": "Find",
+    "filters_label": "Quick filters",
+    "chip_nature": "Nature",
+    "chip_culture": "Culture & villages",
+    "chip_food": "Where to eat",
+    "chip_night": "Overnight spots",
+    "locate": "Around me",
+    "search_area": "Search this area",
+    "searching": "Searching…",
+    "map_label": "Area search map",
+    "results_title": "Results",
+    "no_results": "No places found in this area with these filters. Widen the area or change filters.",
+    "must_see": "Must-see",
+    "add_to_day": "Add",
+    "added": "Added",
+    "day_label": "Add to:",
+    "coverage_note": "OSM & tourist-office data (© OpenStreetMap contributors, DATAtourisme). Coverage is uneven in rural areas — a missing place may still exist.",
+    "error": "Search failed. Try again in a moment."
   }
 }

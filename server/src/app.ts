@@ -56,7 +56,7 @@ export function createApp({ provider, repo, quota, placeRepo, routing }: AppDeps
   app.use('/api/trips', createTripsRouter(tripRepo, routingService));
   app.use('/api/public', createPublicTripsRouter(tripRepo));
   if (placeRepo) {
-    app.use('/api/places', createPlacesRouter(placeRepo));
+    app.use('/api/places', createPlacesRouter(placeRepo, routingService));
   }
 
   // Production sans reverse proxy dédié (VPS : Traefik occupe 80/443) :

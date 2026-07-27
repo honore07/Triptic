@@ -19,6 +19,16 @@ function makeApp(overrides: Partial<PlacesApi> = {}): {
         notoriety: 75,
       },
     ]),
+    findInBbox: vi.fn(async () => [
+      {
+        id: 'p2',
+        name: 'Ferme-auberge du Kastelberg',
+        kind: 'restaurant' as const,
+        lat: 48.02,
+        lng: 7.03,
+        notoriety: 40,
+      },
+    ]),
     submitUserPlace: vi.fn(async () => 'pending' as const),
     addReview: vi.fn(async () => true),
     statsSummary: vi.fn(async () => ({
@@ -59,6 +69,38 @@ describe('GET /api/places/nearby', () => {
   it('400 sur coordonnées invalides', async () => {
     const { app } = makeApp();
     const res = await request(app).get('/api/places/nearby?lat=999&lng=7');
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/places/bbox (search this area, 4.1/4.2)', () => {
+  it('retourne les lieux de la zone visible avec filtre de kinds', async () => {
+    const { app, api } = makeApp();
+    const res = await request(app).get(
+      '/api/places/bbox?south=47.9&west=6.9&north=48.1&east=7.2&kinds=restaurant,cafe',
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.places[0].name).toBe('Ferme-auberge du Kastelberg');
+    expect(api.findInBbox).toHaveBeenCalledWith(
+      { south: 47.9, west: 6.9, north: 48.1, east: 7.2 },
+      ['restaurant', 'cafe'],
+      50,
+    );
+  });
+
+  it('400 sur bbox incohérente (sud ≥ nord)', async () => {
+    const { app } = makeApp();
+    const res = await request(app).get(
+      '/api/places/bbox?south=48.1&west=6.9&north=47.9&east=7.2',
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('400 sur kind inconnu', async () => {
+    const { app } = makeApp();
+    const res = await request(app).get(
+      '/api/places/bbox?south=47.9&west=6.9&north=48.1&east=7.2&kinds=pizzeria',
+    );
     expect(res.status).toBe(400);
   });
 });
