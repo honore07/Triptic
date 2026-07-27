@@ -890,6 +890,29 @@ La génération ne repose plus uniquement sur la mémoire du LLM : une table
   import:villages | enrich:wikidata` — tous idempotents (upsert source/source_id,
   dédoublonnage inter-sources nom normalisé + 150 m).
 
+## 4ter. ROADMAP AMÉLIORATIONS — ÉTAT (juillet 2026)
+
+Phases 0-6 de la roadmap implémentées (PR `claude/triptic-roadmap-improvements-eb50d9`) :
+
+- **Modèle** : Trip → `days[]` → `activities[]`/`segments[]` (types partagés,
+  Zod, JSONB `days_json`, waypoints dérivés pour compat carte/GPX).
+- **Routing** : GraphHopper self-hosted (`deploy/graphhopper*`), profils
+  `car_scenic` (belles routes)/`foot`/`bike`, round-trip. Client :
+  `server/src/services/routing.ts` (`GRAPHHOPPER_URL`). Résultats OSM/ODbL
+  stockables — Mapbox reste affichage seul.
+- **Estimations** : CO₂ ADEME (`services/co2.ts`) + budget itemisé
+  (`services/budget.ts`, prix carburant par pays) sur segments routés.
+- **Édition** : manuelle (DayEditor + `POST /api/trips/recompute`) et
+  conversationnelle (`editTrip` + `POST /api/ai/edit-trip`), undo, recalcul live.
+- **Explore** : `/explore` — bbox PostGIS, envie → filtres (`parse-filters`),
+  temps de trajet, ajout 1 tap, boucles rando (Geotrek/OSM + round-trip),
+  élévation OpenTopoData (`OPENTOPODATA_URL`, `deploy/opentopodata*`).
+- **TDM blogs (Agent 5)** : `services/blogMining.ts` + gate
+  `agents/complianceAgent.ts` (règles versionnées, audit Pino), registre
+  `tdm_sources`, LIA dans `docs/legal/LIA-tdm.md`. ⛔ Aucune fiche web
+  `active` sans l'agent. ⛔ GR®/GRP® FFRP exclus des imports trails.
+- **Mise en service VPS** : suivre `deploy/RUNBOOK-roadmap.md`.
+
 ## RÈGLES TRIPTIC SPÉCIFIQUES (toujours actives)
 
 ### Sur le moteur IA
