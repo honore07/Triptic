@@ -44,3 +44,25 @@ export async function findTripPhoto(keywords: string[]): Promise<string | null> 
 
   return null;
 }
+
+/**
+ * Photo par étape (roadmap 2.3) : une requête par jour, mots-clés = temps
+ * fort du jour + région du trip. Appelé pour UN SEUL trip (le premier
+ * visible) afin de rester dans les quotas Unsplash/Pexels. Sans clé API,
+ * findTripPhoto répond null immédiatement — fallback dégradé côté UI.
+ */
+export async function findDayPhotos(
+  days: { title: string; activities: { type: string; title: string }[]; photo_url?: string | undefined }[],
+  baseKeywords: string[],
+): Promise<void> {
+  const region = baseKeywords[0] ?? '';
+  await Promise.all(
+    days.map(async (day) => {
+      const highlight =
+        day.activities.find((a) => a.type === 'hike' || a.type === 'visit') ??
+        day.activities[0];
+      if (!highlight) return;
+      day.photo_url = (await findTripPhoto([region, highlight.title])) ?? undefined;
+    }),
+  );
+}

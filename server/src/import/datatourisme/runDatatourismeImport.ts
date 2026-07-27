@@ -11,14 +11,40 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
+import { parseTrace } from '@triptic/map-utils';
 import { logger } from '../../logger.js';
 import { env } from '../../env.js';
 import { PgPlaceRepo, type PlaceInput } from '../../repo/places.js';
-import { datatourismeToPlace } from './parse.js';
+import { datatourismeToPlace, extractTraceUrl } from './parse.js';
 
 function parseArg(name: string): string | undefined {
   const prefix = `--${name}=`;
   return process.argv.find((a) => a.startsWith(prefix))?.slice(prefix.length);
+}
+
+/** Taille max d'un fichier de trace téléchargé (les GPX d'offices < 2 Mo). */
+const TRACE_MAX_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Télécharge et parse la trace GPX/KML d'un tour (roadmap 0.4 : on ne jette
+ * plus ces traces). Jamais bloquant : toute erreur → null, l'import continue.
+ */
+async function fetchTraceCoords(url: string): Promise<[number, number][] | null> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!response.ok) return null;
+    const length = Number(response.headers.get('content-length') ?? 0);
+    if (length > TRACE_MAX_BYTES) return null;
+    const content = await response.text();
+    if (content.length > TRACE_MAX_BYTES) return null;
+    const coords = parseTrace(content, url);
+    return coords.length >= 2 ? coords : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Fichiers POI d'une archive extraite sur disque (objects/**.json). */
@@ -70,6 +96,7 @@ async function main(): Promise<void> {
   let skipped = 0;
   let inserted = 0;
   let merged = 0;
+  let traced = 0;
 
   const flush = async (): Promise<void> => {
     if (batch.length === 0) return;
@@ -92,12 +119,21 @@ async function main(): Promise<void> {
       continue;
     }
     parsed += 1;
+    // Trace GPX/KML jointe (tours rando/vélo) — couverture partielle attendue
+    const traceUrl = extractTraceUrl(obj);
+    if (traceUrl) {
+      const coords = await fetchTraceCoords(traceUrl);
+      if (coords) {
+        place.trace = coords;
+        traced += 1;
+      }
+    }
     batch.push(place);
     if (batch.length >= 200) await flush();
   }
   await flush();
 
-  logger.info({ parsed, skipped, inserted, merged }, 'Import DATAtourisme terminé');
+  logger.info({ parsed, skipped, inserted, merged, traced }, 'Import DATAtourisme terminé');
   process.exit(0);
 }
 

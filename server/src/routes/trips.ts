@@ -1,9 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
+import { tripDaySchema } from '@triptic/ai-engine';
 import { buildGpx } from '@triptic/map-utils';
 import { PLANS } from '@triptic/shared';
 import type { TripRepo } from '../repo/trips.js';
+import { recomputeTrip } from '../services/recompute.js';
+import type { RoutingService } from '../services/routing.js';
 
 const waypointSchema = z.object({
   name: z.string(),
@@ -19,12 +22,45 @@ const saveTripSchema = z.object({
   mode: z.enum(['roadtrip', 'trek', 'bikepacking']),
   metadata: z.record(z.unknown()),
   waypoints: z.array(waypointSchema).min(2),
+  days: z.array(tripDaySchema).min(1).nullable().default(null),
   cover_photo: z.string().url().nullable().default(null),
   is_public: z.boolean().default(false),
 });
 
-export function createTripsRouter(repo: TripRepo): Router {
+const recomputeRequestSchema = z.object({
+  vehicle: z.enum(['van', 'car', 'moto', 'none']).optional(),
+  group_type: z.enum(['solo', 'couple', 'group', 'family']).optional(),
+  camping: z.boolean().optional(),
+});
+
+const recomputeSchema = z.object({
+  mode: z.enum(['roadtrip', 'trek', 'bikepacking']),
+  duration_days: z.number().int().min(1).max(60),
+  days: z.array(tripDaySchema).min(1).max(60),
+  request: recomputeRequestSchema.optional(),
+});
+
+export function createTripsRouter(repo: TripRepo, routing?: RoutingService): Router {
   const router = Router();
+
+  /**
+   * POST /api/trips/recompute — recalcul live après édition (3.1) :
+   * segments routés + totaux + budget + CO₂ depuis la structure days[].
+   * Stateless (le trip n'a pas besoin d'être sauvegardé).
+   */
+  router.post('/recompute', async (req, res) => {
+    if (!routing) {
+      res.status(503).json({ error: 'routing_unavailable' });
+      return;
+    }
+    const parsed = recomputeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
+      return;
+    }
+    const { mode, duration_days, days, request } = parsed.data;
+    res.json(await recomputeTrip({ mode, duration_days, days, request }, routing));
+  });
 
   router.post('/', async (req, res) => {
     const parsed = saveTripSchema.safeParse(req.body);
@@ -42,6 +78,7 @@ export function createTripsRouter(repo: TripRepo): Router {
       status: 'saved',
       metadata: body.metadata as never,
       waypoints: body.waypoints,
+      days: body.days,
       cover_photo: body.cover_photo,
     });
     res.status(201).json(trip);

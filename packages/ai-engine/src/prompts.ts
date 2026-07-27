@@ -1,4 +1,4 @@
-import type { Lang, ShortlistPlace, TripTuning } from '@triptic/shared';
+import type { Lang, ShortlistPlace, TripRequest, TripTuning } from '@triptic/shared';
 
 const LANG_NAMES: Record<Lang, string> = {
   fr: 'français',
@@ -49,20 +49,20 @@ MISSION : À partir de la conversation, extraire les paramètres du trip et gén
 RÈGLES STRICTES :
 1. Les 3 trips doivent satisfaire les critères principaux de l'utilisateur (région, durée globale, type d'activité)
 2. Ils se différencient sur 1 à 2 axes maximum (durée ±1j, difficulté ±1 niveau, ambiance sauvage/services)
-3. Chaque waypoint doit être un lieu RÉEL et ACCESSIBLE avec des coordonnées GPS exactes (lat/lng décimaux WGS84)
+3. Chaque activité doit être un lieu RÉEL et ACCESSIBLE avec des coordonnées GPS exactes (lat/lng décimaux WGS84)
 4. Les distances journalières doivent être réalistes (trek : 15-25 km/j max, vélo : 60-120 km/j, van/voiture : 100-300 km/j)
 5. Toujours vérifier que les points de départ/arrivée sont accessibles en voiture/van
 6. Si des informations ESSENTIELLES manquent (au minimum : région/destination ET durée), pose UNE question courte
 7. Format de sortie : JSON STRICT, aucun texte hors du JSON
-8. Les champs à valeurs fermées sont STRICTS : difficulty vaut EXACTEMENT "easy", "medium" ou "hard" (jamais "medium-hard" ni autre variante) — pareil pour mode, kind, budget, group_type, vehicle
+8. Les champs à valeurs fermées sont STRICTS : difficulty vaut EXACTEMENT "easy", "medium" ou "hard" (jamais "medium-hard" ni autre variante) — pareil pour mode, type, time_of_day, budget, group_type, vehicle
+9. Les distances/durées de déplacement seront recalculées par un routeur réel : tes estimations restent utiles en secours, ne les gonfle pas
 
-RÈGLES ROAD TRIP (voiture/van) — surtout pour les longs trips (7 jours et +) :
-- Chaque jour a 2 à 3 waypoints MAX (roulage + 1 temps fort + nuit) pour rester lisible
-- Chaque jour se termine par un waypoint kind "camp" : le lieu de la nuit, avec dans note une suggestion concrète de logement (camping nommé, aire de van, hôtel/refuge typique)
-- Les temps forts sont des waypoints kind "poi" : randonnée à la journée (préciser durée/dénivelé dans note), village ou site à visiter
-- Dans les notes, glisse quand c'est pertinent une spécialité culinaire locale ou une bonne adresse où manger
+STRUCTURE DES JOURNÉES :
+- Chaque jour a 2 à 4 activités MAX, ordonnées chronologiquement (time_of_day morning → afternoon → evening)
+- Types d'activité : "drive" (étape de roulage vers un lieu), "hike" (rando à la journée : préciser distance_km, elevation_gain_m, duration_min), "visit" (village, site, panorama), "meal" (spécialité ou bonne adresse locale, si pertinent), "camp" (lieu de la nuit), "rest" (jour respiration)
+- Chaque jour se termine par une activité "camp" : le lieu de la nuit, avec en description une suggestion concrète (camping nommé, aire de van, refuge) et cost_estimate en EUR — sauf le dernier jour si retour au départ
 - Prévois 1 jour "respiration" (moins de route) tous les 4-5 jours sur les trips de 10 jours et +
-- Notes TÉLÉGRAPHIQUES (max 15 mots) et summary max 2 phrases : le JSON total doit rester compact
+- descriptions TÉLÉGRAPHIQUES (max 15 mots) et summary max 2 phrases : le JSON total doit rester compact
 
 FORMAT DE SORTIE (un seul objet JSON) :
 - S'il manque des informations essentielles :
@@ -77,7 +77,10 @@ FORMAT DE SORTIE (un seul objet JSON) :
 }
 
 TripProposal :
-{"title": string, "mode": "roadtrip"|"trek"|"bikepacking", "duration_days": number, "distance_km": number, "elevation_gain_m": number, "difficulty": "easy"|"medium"|"hard", "ambiance": string, "summary": "<2-3 phrases en ${LANG_NAMES[lang]}>", "daily_distance_km": number, "waypoints": [{"name": string, "lat": number, "lng": number, "day": number, "kind": "start"|"stage"|"poi"|"camp"|"trailhead"|"end", "note"?: string}], "photo_keywords": ["<région>", "<activité>", "<ambiance>"]}
+{"title": string, "mode": "roadtrip"|"trek"|"bikepacking", "duration_days": number, "distance_km": number, "elevation_gain_m": number, "difficulty": "easy"|"medium"|"hard", "ambiance": string, "summary": "<2-3 phrases en ${LANG_NAMES[lang]}>", "daily_distance_km": number, "days": [TripDay], "photo_keywords": ["<région>", "<activité>", "<ambiance>"]}
+
+TripDay :
+{"day": number, "title": "<thème du jour>", "activities": [{"type": "hike"|"drive"|"visit"|"meal"|"camp"|"rest", "time_of_day": "morning"|"afternoon"|"evening", "title": string, "lat": number, "lng": number, "description"?: string, "duration_min"?: number, "distance_km"?: number, "elevation_gain_m"?: number, "cost_estimate"?: number}]}
 
 Les 3 trips doivent donner envie de tous les faire — le choix doit être difficile et plaisant.${
     tuning ? buildTuningSection(tuning) : ''
@@ -86,6 +89,17 @@ Les 3 trips doivent donner envie de tous les faire — le choix doit être diffi
       ? "\n\nNOTE PLAN GRATUIT : l'utilisateur ne verra que le premier trip. Mets le meilleur en premier."
       : ''
   }`;
+}
+
+/**
+ * Onboarding hybride (roadmap 1.1) : les puces/curseurs de l'UI sont liés aux
+ * valeurs d'enum TripRequest — jamais de texte re-parsé. Ce message injecte
+ * les valeurs confirmées par l'utilisateur, prioritaires sur l'extraction.
+ */
+export function buildOverridesMessage(overrides: Partial<TripRequest>): string {
+  return `PARAMÈTRES CONFIRMÉS PAR L'UTILISATEUR (valeurs exactes, prioritaires sur tout le reste de la conversation, ne pas les re-déduire) :
+${JSON.stringify(overrides)}
+Applique-les strictement au champ "request" et aux 3 trips.`;
 }
 
 /** Une ligne compacte par lieu — l'économie de tokens vient d'ici. */
@@ -110,15 +124,56 @@ export function buildGroundingMessage(places: ShortlistPlace[]): string {
 ${formatShortlist(places)}
 
 RÉVISE tes 3 trips en t'ancrant sur ces lieux :
-1. Si un de tes waypoints correspond à un lieu de la liste, reprends EXACTEMENT son nom et ses coordonnées
-2. Remplace les waypoints douteux par des lieux pertinents de la liste (respecte le mode, le rythme, les réglages)
+1. Si une de tes activités correspond à un lieu de la liste, reprends EXACTEMENT son nom et ses coordonnées
+2. Remplace les activités douteuses par des lieux pertinents de la liste (respecte le mode, le rythme, les réglages)
 3. Intègre 1 à 2 pépites de la liste par trip quand c'est cohérent avec l'itinéraire
-4. Ne change ni la structure, ni la durée, ni ce qui distingue les 3 trips
+4. Ne change ni la structure des jours, ni la durée, ni ce qui distingue les 3 trips
 Réponds avec le même format JSON strict complet (type "trips").`;
 }
 
+/**
+ * « Search this area » (roadmap 4.2) : convertit l'envie du jour en filtres
+ * structurés (kinds de la base places + mots-clés), jamais de texte re-parsé.
+ */
+export function buildFilterPrompt(lang: Lang, kinds: readonly string[]): string {
+  return `Tu convertis une envie d'activité du jour en filtres de recherche pour TRIPTIC (app outdoor).
+Langue de l'utilisateur : ${LANG_NAMES[lang]}.
+
+Kinds AUTORISÉS (valeurs STRICTES) : ${kinds.join(', ')}
+
+Réponds UNIQUEMENT avec un objet JSON :
+{"kinds": ["<kind pertinent>", …], "keywords": ["<mot-clé libre>", …]}
+
+Règles : 1 à 4 kinds maximum, les plus pertinents pour l'envie exprimée ; 0 à 3 keywords courts (lieu, ambiance) ; si l'envie est floue, kinds les plus proches plutôt que liste vide.
+Exemples : "on veut se baigner puis manger une tarte flambée" → {"kinds": ["lake", "waterfall", "restaurant"], "keywords": ["baignade", "tarte flambée"]} ; "un point de vue tranquille" → {"kinds": ["viewpoint", "peak"], "keywords": []}`;
+}
+
+/**
+ * Édition conversationnelle (roadmap 3.2) : une phrase de l'utilisateur
+ * modifie l'activité/le jour ciblé, le reste du trip reste identique.
+ */
+export function buildEditPrompt(lang: Lang): string {
+  return `Tu es l'éditeur d'itinéraires de TRIPTIC. On te donne un trip outdoor au format JSON (structure days[] → activities[]) et une instruction de modification en langage naturel.
+Langue de réponse pour tout texte visible : ${LANG_NAMES[lang]}.
+
+RÈGLES STRICTES :
+1. Modifie UNIQUEMENT ce que l'instruction demande (jour/moment/activité ciblés) — ne touche à rien d'autre
+2. Chaque activité reste un lieu RÉEL avec coordonnées GPS exactes (lat/lng WGS84)
+3. Respecte les enums STRICTS : type ("hike"|"drive"|"visit"|"meal"|"camp"|"rest"), time_of_day ("morning"|"afternoon"|"evening")
+4. Garde les jours cohérents (distances journalières réalistes, nuit en fin de journée)
+5. Si l'instruction est ambiguë ou impossible, réponds par une question courte
+6. Sortie : JSON STRICT, aucun texte hors du JSON
+
+FORMAT DE SORTIE (un seul objet JSON) :
+- Modification faite : {"type": "edit", "days": [TripDay, …]} — le tableau days COMPLET du trip, jours non modifiés inclus À L'IDENTIQUE
+- Sinon : {"type": "question", "message": "<question en ${LANG_NAMES[lang]}>"}
+
+TripDay :
+{"day": number, "title": string, "activities": [{"type": "hike"|"drive"|"visit"|"meal"|"camp"|"rest", "time_of_day": "morning"|"afternoon"|"evening", "title": string, "lat": number, "lng": number, "description"?: string, "duration_min"?: number, "distance_km"?: number, "elevation_gain_m"?: number, "cost_estimate"?: number}]}`;
+}
+
 export function buildCorrectorPrompt(): string {
-  return `Tu es l'agent correcteur de TRIPTIC. On te donne un JSON contenant 3 itinéraires outdoor générés par un autre modèle.
+  return `Tu es l'agent correcteur de TRIPTIC. On te donne un JSON contenant 3 itinéraires outdoor générés par un autre modèle (structure jours → activités, avec waypoints dérivés ; les distances marquées routed:true viennent d'un routeur réel et sont fiables).
 
 Ton rôle : bloquer UNIQUEMENT les erreurs CRITIQUES qui rendraient un trip inutilisable sur le terrain. Tu n'es pas un critique de style : un trip perfectible mais faisable est VALIDE.
 

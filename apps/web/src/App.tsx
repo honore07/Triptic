@@ -1,10 +1,11 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MapPinPlus } from 'lucide-react';
+import { Compass, MapPinPlus } from 'lucide-react';
 import { LangSwitcher } from './components/LangSwitcher';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
 import { Contribute } from './pages/Contribute';
+import { Explore } from './pages/Explore';
 import { Home } from './pages/Home';
 import { Plan } from './pages/Plan';
 import { PublicTrip } from './pages/PublicTrip';
@@ -20,6 +21,14 @@ export function App() {
           TRIP<span className="text-summit">TIC</span>
         </Link>
         <nav className="flex items-center gap-4">
+          <Link
+            to="/explore"
+            className="flex items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+          >
+            <Compass size={15} aria-hidden="true" />
+            <span className="hidden sm:inline">{t('explore.nav')}</span>
+            <span className="sr-only sm:hidden">{t('explore.nav')}</span>
+          </Link>
           <Link
             to="/contribute"
             className="flex items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
@@ -37,6 +46,7 @@ export function App() {
         <Route path="/trip" element={<TripPage />} />
         <Route path="/trip/:slug" element={<PublicTrip />} />
         <Route path="/contribute" element={<Contribute />} />
+        <Route path="/explore" element={<Explore />} />
       </Routes>
       <PaywallModal />
     </BrowserRouter>

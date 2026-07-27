@@ -2,14 +2,24 @@ import type {
   ChatMessage,
   Lang,
   ShortlistPlace,
+  TripDay,
   TripGeneration,
+  TripRequest,
   TripTuning,
 } from '@triptic/shared';
-import { buildCorrectorPrompt, buildGroundingMessage, buildSystemPrompt } from './prompts.js';
+import {
+  buildCorrectorPrompt,
+  buildEditPrompt,
+  buildGroundingMessage,
+  buildOverridesMessage,
+  buildSystemPrompt,
+} from './prompts.js';
 import {
   correctorOutputSchema,
+  editOutputSchema,
   engineOutputSchema,
   extractJson,
+  type EditOutput,
   type EngineOutput,
 } from './schema.js';
 import { sanitizeUserInput } from './sanitize.js';
@@ -35,6 +45,11 @@ export interface GenerateOptions {
   maxProposals: 1 | 3;
   /** Curseurs 1-5 du TripTuner — hyper-personnalisation du prompt. */
   tuning?: TripTuning | undefined;
+  /**
+   * Onboarding hybride (1.1) : valeurs d'enum TripRequest confirmées via les
+   * puces de l'UI — prioritaires sur l'extraction de la conversation.
+   */
+  requestOverrides?: Partial<TripRequest> | undefined;
   /**
    * Lieux réels (base places) autour des points donnés — active la passe de
    * grounding. Si absent ou si la zone est vide, comportement historique.
@@ -76,6 +91,10 @@ export async function generateTrips(
   const cleanMessages: ChatMessage[] = messages.map((m) =>
     m.role === 'user' ? { ...m, content: sanitizeUserInput(m.content) } : m,
   );
+  if (opts.requestOverrides && Object.keys(opts.requestOverrides).length > 0) {
+    // Valeurs d'enum déjà validées par Zod côté route — pas de sanitization
+    cleanMessages.push({ role: 'user', content: buildOverridesMessage(opts.requestOverrides) });
+  }
   const system = buildSystemPrompt(opts.lang, opts.maxProposals, opts.tuning);
 
   emit({ kind: 'status', step: 'generating' });
@@ -151,6 +170,89 @@ export async function generateTrips(
     issues,
     grounding,
   };
+}
+
+export interface EditTripOptions {
+  lang: Lang;
+  onEvent?: (event: EngineEvent) => void;
+}
+
+export type EditTripResult =
+  | { type: 'question'; message: string }
+  | { type: 'edit'; days: TripDay[]; validated: boolean; issues: string[] };
+
+/**
+ * Édition conversationnelle d'un trip (roadmap 3.2) : une instruction en
+ * langage naturel modifie l'activité/le jour ciblé dans la structure days[].
+ * Toujours validé par l'agent correcteur (règle qualité #5), 1 retry max.
+ */
+export async function editTrip(
+  provider: LlmProvider,
+  trip: { title: string; mode: string; days: unknown },
+  instruction: string,
+  opts: EditTripOptions,
+): Promise<EditTripResult> {
+  const emit = opts.onEvent ?? (() => {});
+  const messages: ChatMessage[] = [
+    {
+      role: 'user',
+      content: `TRIP ACTUEL :\n${JSON.stringify({ title: trip.title, mode: trip.mode, days: trip.days })}\n\nINSTRUCTION :\n${sanitizeUserInput(instruction)}`,
+    },
+  ];
+  const system = buildEditPrompt(opts.lang);
+
+  emit({ kind: 'status', step: 'generating' });
+  const raw = await provider.complete({ system, messages, maxTokens: 32000 });
+  let output: EditOutput = editOutputSchema.parse(extractJson(raw));
+  if (output.type === 'question') {
+    return { type: 'question', message: output.message };
+  }
+
+  emit({ kind: 'status', step: 'validating' });
+  let issues = await correctDays(provider, output.days);
+  const correctorDown = issues.length === 1 && issues[0] === CORRECTOR_UNAVAILABLE;
+
+  if (issues.length > 0 && !correctorDown) {
+    emit({ kind: 'status', step: 'retrying' });
+    const retried = await provider.complete({
+      system,
+      messages: [
+        ...messages,
+        { role: 'assistant', content: JSON.stringify(output) },
+        {
+          role: 'user',
+          content: `L'agent de validation a détecté ces problèmes : ${issues.join('; ')}. Corrige, même format JSON strict.`,
+        },
+      ],
+      maxTokens: 32000,
+    });
+    const reparsed = editOutputSchema.parse(extractJson(retried));
+    if (reparsed.type === 'edit') {
+      output = reparsed;
+      issues = await correctDays(provider, output.days);
+    }
+  }
+
+  return {
+    type: 'edit',
+    days: output.days,
+    validated: issues.length === 0,
+    issues,
+  };
+}
+
+async function correctDays(provider: LlmProvider, days: unknown): Promise<string[]> {
+  try {
+    const raw = await provider.correct({
+      system: buildCorrectorPrompt(),
+      messages: [{ role: 'user', content: JSON.stringify({ trips: [{ days }] }) }],
+      maxTokens: 2000,
+    });
+    const verdict = correctorOutputSchema.parse(extractJson(raw));
+    return verdict.valid ? [] : verdict.issues;
+  } catch {
+    return [CORRECTOR_UNAVAILABLE];
+  }
 }
 
 async function completeAndParse(

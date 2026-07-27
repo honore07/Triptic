@@ -94,6 +94,32 @@ function toNumber(value: JsonValue): number | null {
   return typeof n === 'number' && Number.isFinite(n) ? n : null;
 }
 
+/**
+ * URL de la trace GPX/KML jointe en média (WalkingTour/CyclingTour) —
+ * roadmap 0.4 : on ne jette plus ces traces. Couverture attendue PARTIELLE :
+ * DATAtourisme est « au point », la trace n'est qu'une pièce jointe optionnelle.
+ * Parcourt hasRepresentation/hasMainRepresentation → ebucore:hasRelatedResource
+ * → ebucore:locator.
+ */
+export function extractTraceUrl(obj: JsonObject): string | null {
+  const representations = [obj['hasMainRepresentation'], obj['hasRepresentation']]
+    .flatMap((value) => (Array.isArray(value) ? value : value ? [value] : []));
+  for (const repr of representations) {
+    if (!repr || typeof repr !== 'object') continue;
+    const resource = (repr as JsonObject)['ebucore:hasRelatedResource'];
+    const resources = Array.isArray(resource) ? resource : resource ? [resource] : [];
+    for (const res of resources) {
+      if (!res || typeof res !== 'object') continue;
+      const locator = (res as JsonObject)['ebucore:locator'];
+      const locators = Array.isArray(locator) ? locator : locator ? [locator] : [];
+      for (const url of locators) {
+        if (typeof url === 'string' && /\.(gpx|kml)(\?|$)/i.test(url)) return url;
+      }
+    }
+  }
+  return null;
+}
+
 /** Coordonnées d'un POI DATAtourisme (isLocatedAt → schema:geo). */
 export function extractGeo(obj: JsonObject): { lat: number; lng: number } | null {
   const located = firstOf(obj['isLocatedAt']);

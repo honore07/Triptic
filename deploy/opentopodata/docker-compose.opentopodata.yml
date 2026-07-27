@@ -1,0 +1,15 @@
+# TRIPTIC — OpenTopoData auto-hébergé (roadmap 5.3)
+# Élévation : Copernicus DEM GLO-30 (© Union européenne, Copernicus — usage
+# commercial autorisé avec attribution). IGN RGE ALTI (France, Etalab) pourra
+# être ajouté comme dataset prioritaire plus tard.
+# Port lié à 127.0.0.1 : consommé par le serveur TRIPTIC uniquement.
+services:
+  opentopodata:
+    image: ghcr.io/ajnisbet/opentopodata:latest
+    container_name: triptic-opentopodata
+    volumes:
+      - /opt/opentopodata/data:/app/data:ro
+      - /opt/opentopodata/config.yaml:/app/config.yaml:ro
+    ports:
+      - "127.0.0.1:5000:5000"
+    restart: unless-stopped

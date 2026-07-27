@@ -1,0 +1,70 @@
+{
+  "name": "TRIPTIC — Agent 5 : rapport hebdo de conformité TDM",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyWeek",
+              "hour": 9,
+              "minute": 30,
+              "weekday": 1
+            }
+          ]
+        }
+      },
+      "id": "c5000000-0000-4000-8000-000000000001",
+      "name": "Chaque lundi 09:30",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://82.25.118.185:3001/api/places/stats",
+        "options": {}
+      },
+      "id": "c5000000-0000-4000-8000-000000000002",
+      "name": "Stats conformité",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Rapport de conformité TDM (roadmap 6.7) — brancher Email (Resend) +\n// Telegram à la suite quand les clés seront disponibles.\n// L'audit trail détaillé (décision par fiche) est dans les logs Pino\n// (grep '\"agent\":\"compliance\"' sur le VPS).\nconst s = $input.first().json;\nconst t = s.tdm ?? {};\nconst rapport = `# TRIPTIC — Conformité TDM (${new Date().toLocaleDateString('fr-FR')})\\n\\n` +\n  `**Fiches web actives : ${t.web_active ?? 0}** · en quarantaine (revue Jules) : ${t.web_pending ?? 0}\\n\\n` +\n  `Sources suivies : ${t.sources_total ?? 0} · opt-out détectés et exclus : ${t.sources_opted_out ?? 0}\\n\\n` +\n  `Rappels : aucune fiche web n'est publiée sans l'agent de conformité ;\\n` +\n  `les opt-outs sont re-vérifiés à chaque fetch ; audit trail complet dans Pino.\\n`;\nreturn [{ json: { rapport, ...t } }];"
+      },
+      "id": "c5000000-0000-4000-8000-000000000003",
+      "name": "Formater le rapport",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "Chaque lundi 09:30": {
+      "main": [
+        [
+          {
+            "node": "Stats conformité",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stats conformité": {
+      "main": [
+        [
+          {
+            "node": "Formater le rapport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

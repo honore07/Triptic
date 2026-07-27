@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   datatourismeToPlace,
   extractGeo,
+  extractTraceUrl,
   matchKind,
   pickLang,
 } from '../import/datatourisme/parse.js';
@@ -44,6 +45,42 @@ describe('matchKind / extractGeo', () => {
     };
     expect(extractGeo(obj)).toEqual({ lat: 48.2494, lng: 7.3444 });
     expect(extractGeo({})).toBeNull();
+  });
+});
+
+describe('extractTraceUrl (roadmap 0.4 — on ne jette plus les GPX joints)', () => {
+  it('trouve une URL .gpx dans hasRepresentation → ebucore', () => {
+    const obj = {
+      hasRepresentation: [
+        {
+          'ebucore:hasRelatedResource': [
+            { 'ebucore:locator': 'https://cdn.example.fr/photo.jpg' },
+            { 'ebucore:locator': 'https://cdn.example.fr/circuit-cretes.gpx' },
+          ],
+        },
+      ],
+    };
+    expect(extractTraceUrl(obj)).toBe('https://cdn.example.fr/circuit-cretes.gpx');
+  });
+
+  it('accepte .kml, les locators non listés, et hasMainRepresentation', () => {
+    const obj = {
+      hasMainRepresentation: {
+        'ebucore:hasRelatedResource': { 'ebucore:locator': 'https://x.fr/t.KML?v=2' },
+      },
+    };
+    expect(extractTraceUrl(obj)).toBe('https://x.fr/t.KML?v=2');
+  });
+
+  it('retourne null sans média trace (cas courant — couverture partielle)', () => {
+    expect(extractTraceUrl({})).toBeNull();
+    expect(
+      extractTraceUrl({
+        hasRepresentation: [
+          { 'ebucore:hasRelatedResource': [{ 'ebucore:locator': 'https://x.fr/photo.webp' }] },
+        ],
+      }),
+    ).toBeNull();
   });
 });
 

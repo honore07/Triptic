@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import type { PlaceKind, PlaceRegion, ShortlistPlace } from '@triptic/shared';
+import { FOOD_KINDS, type PlaceKind, type PlaceRegion, type ShortlistPlace } from '@triptic/shared';
 import { placeReviews, places } from '../db/schema.js';
 
 /** Forme d'insertion d'un lieu (imports + ajouts). */
@@ -23,11 +23,22 @@ export interface PlaceInput {
   source_url?: string | null;
   wikidata_id?: string | null;
   wikipedia?: string | null;
+  /** Tracé complet [lng, lat][] (tours DATAtourisme, rando phase 5). */
+  trace?: [number, number][] | null;
+  /** Provenance TDM (phase 6) — obligatoire pour source='web'. */
+  opt_out_status?: string | null;
+  fetch_date?: Date | null;
 }
 
 /** WKT d'un point pour PostGIS (ordre lon lat — pas lat lng). */
 export function toPointWkt(lat: number, lng: number): string {
   return `POINT(${lng} ${lat})`;
+}
+
+/** WKT d'un tracé [lng, lat][] pour PostGIS. null si moins de 2 points. */
+export function toTraceWkt(coords: [number, number][] | null | undefined): string | null {
+  if (!coords || coords.length < 2) return null;
+  return `LINESTRING(${coords.map(([lng, lat]) => `${lng} ${lat}`).join(', ')})`;
 }
 
 /** Nom normalisé pour le dédoublonnage inter-sources (minuscule, sans accents). */
@@ -115,6 +126,11 @@ export class PgPlaceRepo {
             source_url: p.source_url ?? null,
             wikidata_id: p.wikidata_id ?? null,
             wikipedia: p.wikipedia ?? null,
+            opt_out_status: p.opt_out_status ?? null,
+            fetch_date: p.fetch_date ?? null,
+            ...(toTraceWkt(p.trace)
+              ? { trace: sql`ST_GeogFromText(${toTraceWkt(p.trace)})` }
+              : {}),
           })),
         )
         .onConflictDoUpdate({
@@ -131,6 +147,8 @@ export class PgPlaceRepo {
             notoriety: sql`excluded.notoriety`,
             wikidata_id: sql`excluded.wikidata_id`,
             wikipedia: sql`excluded.wikipedia`,
+            // Une trace connue n'est jamais écrasée par un import sans trace
+            trace: sql`COALESCE(excluded.trace, places.trace)`,
             updated_at: sql`now()`,
           },
         });
@@ -159,11 +177,13 @@ export class PgPlaceRepo {
       `);
       const match = (existing as unknown as { id: string }[])[0];
       if (match) {
+        const traceWkt = toTraceWkt(p.trace);
         await this.db.execute(sql`
           UPDATE places SET
             summary     = COALESCE(summary, ${p.summary ?? null}),
             notoriety   = GREATEST(notoriety, ${p.notoriety ?? 20}),
             wikidata_id = COALESCE(wikidata_id, ${p.wikidata_id ?? null}),
+            trace       = COALESCE(trace, ${traceWkt ? sql`ST_GeogFromText(${traceWkt})` : null}),
             updated_at  = now()
           WHERE id = ${match.id}
         `);
@@ -191,11 +211,15 @@ export class PgPlaceRepo {
     const radius = opts.radiusM ?? 20000;
     const { majors, gems } = splitShortlistLimits(opts.limit ?? 60, opts.discovery ?? 3);
 
+    // Les food (restos, cafés…) sont exclus du grounding : nombreux et proches
+    // de tout, ils noieraient les vraies pépites. Ils restent interrogeables
+    // via findNearby/bbox (« search this area », phase 4).
     const majorRows = await this.db.execute(sql`
       SELECT name, kind, notoriety, summary,
              ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
       FROM places
       WHERE status = 'active' AND notoriety >= 50
+        AND kind <> ALL(${FOOD_KINDS as string[]})
         AND ST_DWithin(location, ST_GeogFromText(${wkt}), ${radius})
       ORDER BY notoriety DESC, ST_Distance(location, ST_GeogFromText(${wkt})) ASC
       LIMIT ${majors}
@@ -205,6 +229,7 @@ export class PgPlaceRepo {
              ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
       FROM places
       WHERE status = 'active' AND notoriety < 50 AND confidence >= 70
+        AND kind <> ALL(${FOOD_KINDS as string[]})
         AND ST_DWithin(location, ST_GeogFromText(${wkt}), ${radius})
       ORDER BY ST_Distance(location, ST_GeogFromText(${wkt})) ASC
       LIMIT ${gems}
@@ -294,6 +319,82 @@ export class PgPlaceRepo {
     return true;
   }
 
+  /**
+   * Lieux actifs dans la zone visible de la carte (« search this area », 4.1).
+   * Tri par notoriété — le temps de trajet est calculé par la route au-dessus.
+   */
+  async findInBbox(
+    bbox: { south: number; west: number; north: number; east: number },
+    kinds: PlaceKind[] | undefined,
+    limit: number,
+  ): Promise<(ShortlistPlace & { id: string })[]> {
+    const kindFilter = kinds && kinds.length > 0 ? sql`AND kind = ANY(${kinds})` : sql``;
+    const rows = await this.db.execute(sql`
+      SELECT id, name, kind, notoriety, summary,
+             ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
+      FROM places
+      WHERE status = 'active'
+        ${kindFilter}
+        AND ST_Intersects(
+          location,
+          ST_MakeEnvelope(${bbox.west}, ${bbox.south}, ${bbox.east}, ${bbox.north}, 4326)::geography
+        )
+      ORDER BY notoriety DESC
+      LIMIT ${limit}
+    `);
+    return rows as unknown as (ShortlistPlace & { id: string })[];
+  }
+
+  /**
+   * Boucles rando mappées proches d'un point (roadmap 5.2) : traces réelles
+   * (Geotrek/OSM/DATAtourisme), longueur PostGIS, classées par proximité de
+   * la distance cible puis notoriété. targetKm null = toutes longueurs.
+   */
+  async findTrailsNear(
+    lat: number,
+    lng: number,
+    radiusM: number,
+    targetKm: number | null,
+    limit: number,
+  ): Promise<
+    {
+      id: string;
+      name: string;
+      summary: string | null;
+      notoriety: number;
+      source: string;
+      distance_km: number;
+      geometry: [number, number][];
+    }[]
+  > {
+    const wkt = toPointWkt(lat, lng);
+    const rows = await this.db.execute(sql`
+      SELECT id, name, summary, notoriety, source,
+             ROUND((ST_Length(trace) / 1000)::numeric, 1)::float AS distance_km,
+             ST_AsGeoJSON(trace::geometry) AS geojson
+      FROM places
+      WHERE status = 'active' AND kind = 'trail' AND trace IS NOT NULL
+        AND ST_DWithin(trace, ST_GeogFromText(${wkt}), ${radiusM})
+      ORDER BY
+        ${targetKm !== null ? sql`ABS(ST_Length(trace) / 1000 - ${targetKm}) ASC,` : sql``}
+        notoriety DESC
+      LIMIT ${limit}
+    `);
+    return (rows as unknown as (Record<string, unknown> & { geojson: string })[]).map(
+      ({ geojson, ...rest }) => ({
+        ...(rest as {
+          id: string;
+          name: string;
+          summary: string | null;
+          notoriety: number;
+          source: string;
+          distance_km: number;
+        }),
+        geometry: (JSON.parse(geojson) as { coordinates: [number, number][] }).coordinates,
+      }),
+    );
+  }
+
   /** Lieux actifs autour d'un point (affichage carte + aide à la contribution). */
   async findNearby(
     lat: number,
@@ -333,6 +434,13 @@ export class PgPlaceRepo {
     pending: number;
     by_region: { region: string | null; count: number }[];
     by_source: { source: string; count: number }[];
+    /** Conformité TDM (phase 6) — rapport hebdo de l'agent 5. */
+    tdm: {
+      web_active: number;
+      web_pending: number;
+      sources_total: number;
+      sources_opted_out: number;
+    };
   }> {
     const totals = await this.db.execute(sql`
       SELECT count(*)::int AS total,
@@ -346,11 +454,42 @@ export class PgPlaceRepo {
       SELECT source, count(*)::int AS count FROM places GROUP BY source ORDER BY count DESC
     `);
     const t = (totals as unknown as { total: number; pending: number }[])[0];
+
+    // Conformité TDM — tables/colonnes phase 6 : tolérant si la migration
+    // 0005 n'est pas encore passée (rapport à zéro plutôt qu'erreur).
+    let tdm = { web_active: 0, web_pending: 0, sources_total: 0, sources_opted_out: 0 };
+    try {
+      const webRows = await this.db.execute(sql`
+        SELECT count(*) FILTER (WHERE status = 'active')::int AS web_active,
+               count(*) FILTER (WHERE status = 'pending')::int AS web_pending
+        FROM places WHERE source = 'web'
+      `);
+      const sourceRows = await this.db.execute(sql`
+        SELECT count(*)::int AS sources_total,
+               count(*) FILTER (WHERE opt_out_status = 'opted_out')::int AS sources_opted_out
+        FROM tdm_sources
+      `);
+      const web = (webRows as unknown as { web_active: number; web_pending: number }[])[0];
+      const src = (sourceRows as unknown as {
+        sources_total: number;
+        sources_opted_out: number;
+      }[])[0];
+      tdm = {
+        web_active: web?.web_active ?? 0,
+        web_pending: web?.web_pending ?? 0,
+        sources_total: src?.sources_total ?? 0,
+        sources_opted_out: src?.sources_opted_out ?? 0,
+      };
+    } catch {
+      // migration 0005 absente : rapport TDM vide
+    }
+
     return {
       total: t?.total ?? 0,
       pending: t?.pending ?? 0,
       by_region: byRegion as unknown as { region: string | null; count: number }[],
       by_source: bySource as unknown as { source: string; count: number }[],
+      tdm,
     };
   }
 }

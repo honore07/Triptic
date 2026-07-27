@@ -46,6 +46,7 @@ export const trips = pgTable('trips', {
   metadata: jsonb('metadata'),
   waypoints: geographyLineString('waypoints'),
   waypoints_json: jsonb('waypoints_json'), // détail app (noms, jours, types)
+  days_json: jsonb('days_json'), // structure jours → activités → segments (0.1)
   gpx_url: text('gpx_url'),
   cover_photo: text('cover_photo'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -93,8 +94,27 @@ export const places = pgTable('places', {
   source_url: text('source_url'),
   wikidata_id: text('wikidata_id'),
   wikipedia: text('wikipedia'),
+  trace: geographyLineString('trace'), // tracé complet (tours DATAtourisme, rando phase 5)
+  // Provenance TDM (phase 6) — obligatoire pour source='web'
+  opt_out_status: text('opt_out_status'), // allowed | opted_out | unknown
+  fetch_date: timestamp('fetch_date', { withTimezone: true }),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+/**
+ * Registre des sources web du pipeline TDM (phase 6) : statut d'opt-out
+ * re-vérifiable, liste d'exclusion, plafond anti-mirroring par source.
+ */
+export const tdmSources = pgTable('tdm_sources', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  origin: text('origin').unique().notNull(),
+  opt_out_status: text('opt_out_status').notNull(), // allowed | opted_out | unknown
+  opt_out_detail: text('opt_out_detail'),
+  excluded: boolean('excluded').default(false).notNull(),
+  extracted_count: integer('extracted_count').default(0).notNull(),
+  last_checked_at: timestamp('last_checked_at', { withTimezone: true }).defaultNow(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 /** Avis utilisateurs sur les lieux — fait évoluer la confiance des lieux. */

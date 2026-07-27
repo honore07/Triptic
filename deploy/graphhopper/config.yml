@@ -1,0 +1,46 @@
+# TRIPTIC — configuration GraphHopper (roadmap 0.2)
+# 3 profils : car_scenic (belles routes), foot, bike — élévation activée.
+# Le round-trip (boucles rando, phase 5) utilise les profils flexibles
+# foot/bike (pas de CH dessus) : algorithm=round_trip dans la requête.
+graphhopper:
+  datareader.file: /data/triptic.osm.pbf
+  graph.location: /data/graph-cache
+
+  # Élévation : SRTM CGIAR (téléchargé automatiquement, ~90 m de résolution).
+  # OpenTopoData (Copernicus GLO-30 + RGE ALTI) arrive en phase 5.3 pour les
+  # profils fins ; ici l'élévation sert aux durées et dénivelés de segment.
+  graph.elevation.provider: cgiar
+  graph.elevation.cache_dir: /data/elevation-cache
+
+  # KVM 2 (8 Go) : stockage MMAP pour tenir l'import + le service en RAM bornée
+  graph.dataaccess.default_type: MMAP_STORE
+
+  graph.encoded_values: car_access, car_average_speed, foot_access, foot_average_speed, foot_priority, bike_access, bike_average_speed, bike_priority, road_class, road_environment, roundabout, average_slope
+
+  custom_models.directory: /data/custom_models
+
+  profiles:
+    # Voiture « scenic » : pénalise autoroutes/voies rapides/primaires et
+    # tunnels → favorise tertiaires, cols et routes de forêt (décision Jules).
+    - name: car_scenic
+      custom_model_files: [car.json, car_scenic.json]
+    - name: foot
+      custom_model_files: [foot.json, foot_elevation.json]
+    - name: bike
+      custom_model_files: [bike.json, bike_elevation.json]
+
+  # CH (contraction hierarchies) uniquement sur la voiture : requêtes longues
+  # distances instantanées. foot/bike restent flexibles → round_trip possible.
+  profiles_ch:
+    - profile: car_scenic
+  profiles_lm: []
+
+  routing.non_ch.max_waypoint_distance: 1000000
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: 0.0.0.0
+  request_log:
+    appenders: []

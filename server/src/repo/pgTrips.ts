@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import type { Trip, TripMode, Waypoint } from '@triptic/shared';
+import type { Trip, TripDay, TripMode, Waypoint } from '@triptic/shared';
 import { trips } from '../db/schema.js';
 import type { TripRepo, TripPatch } from './trips.js';
 
@@ -27,6 +27,7 @@ const tripColumns = {
   status: trips.status,
   metadata: trips.metadata,
   waypoints_json: trips.waypoints_json,
+  days_json: trips.days_json,
   cover_photo: trips.cover_photo,
   created_at: trips.created_at,
   updated_at: trips.updated_at,
@@ -42,6 +43,7 @@ type TripRow = {
   status: string;
   metadata: unknown;
   waypoints_json: unknown;
+  days_json: unknown;
   cover_photo: string | null;
   created_at: Date | null;
   updated_at: Date | null;
@@ -69,6 +71,7 @@ export function rowToTrip(row: TripRow): Trip {
     status: row.status as Trip['status'],
     metadata: row.metadata as Trip['metadata'],
     waypoints: (row.waypoints_json ?? []) as Waypoint[],
+    days: (row.days_json ?? null) as TripDay[] | null,
     cover_photo: row.cover_photo,
     created_at: (row.created_at ?? new Date()).toISOString(),
     updated_at: (row.updated_at ?? new Date()).toISOString(),
@@ -104,6 +107,7 @@ export class PgTripRepo implements TripRepo {
         status: input.status,
         metadata: input.metadata,
         waypoints_json: input.waypoints,
+        days_json: input.days,
         ...(wkt ? { waypoints: sql`ST_GeogFromText(${wkt})` } : {}),
         cover_photo: input.cover_photo,
       })
@@ -145,6 +149,7 @@ export class PgTripRepo implements TripRepo {
     if (patch.mode !== undefined) set['mode'] = patch.mode;
     if (patch.metadata !== undefined) set['metadata'] = patch.metadata;
     if (patch.cover_photo !== undefined) set['cover_photo'] = patch.cover_photo;
+    if (patch.days !== undefined) set['days_json'] = patch.days;
     if (patch.waypoints !== undefined) {
       set['waypoints_json'] = patch.waypoints;
       const wkt = toLineStringWkt(patch.waypoints);

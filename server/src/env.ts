@@ -12,5 +12,7 @@ export const env = {
   appUrl: process.env['APP_URL'] ?? 'http://localhost:5173',
   databaseUrl: process.env['DATABASE_URL'],
   jwtSecret: process.env['JWT_SECRET'],
+  /** GraphHopper self-hosted (VPS) — null = routing désactivé, fallback LLM. */
+  graphhopperUrl: process.env['GRAPHHOPPER_URL'] ?? null,
   isProd: (process.env['NODE_ENV'] ?? 'development') === 'production',
 };

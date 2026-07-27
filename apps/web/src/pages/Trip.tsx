@@ -1,19 +1,44 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Bookmark, Share2 } from 'lucide-react';
-import { saveTrip } from '../lib/api';
+import { ArrowLeft, Bookmark, Leaf, Pencil, Share2, Undo2, Wallet } from 'lucide-react';
+import type { Lang, TripDay } from '@triptic/shared';
+import { saveTrip, updateTrip } from '../lib/api';
+import { DayCards } from '../components/DayCards';
+import { DayEditor } from '../components/DayEditor';
 import { DifficultyBadge } from '../components/DifficultyBadge';
 import { GPXExportButton } from '../components/GPXExportButton';
 import { MapView } from '../components/MapView';
+import { TripEditChat } from '../components/TripEditChat';
 import { useTripStore } from '../store/tripStore';
 import { useUserStore } from '../store/userStore';
 
 export function TripPage() {
-  const { t } = useTranslation();
-  const { selected, saved, setSaved } = useTripStore();
+  const { t, i18n } = useTranslation();
+  const {
+    selected,
+    saved,
+    setSaved,
+    history,
+    recomputing,
+    applyDays,
+    applyRecomputed,
+    pushHistory,
+    undo,
+  } = useTripStore();
   const { plan } = useUserStore();
   const [copied, setCopied] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
+  const lang = (i18n.language as Lang) ?? 'fr';
+
+  /** Édition (manuelle ou chat) → recalcul live + sync du trip sauvegardé. */
+  const onDaysChange = (days: TripDay[]) => {
+    void applyDays(days, plan).then(() => {
+      const current = useTripStore.getState().selected;
+      if (saved && current) void updateTrip(saved.id, current, plan);
+    });
+  };
 
   if (!selected) {
     return (
@@ -69,7 +94,12 @@ export function TripPage() {
         </p>
       </header>
 
-      <MapView waypoints={selected.waypoints} />
+      <MapView
+        waypoints={selected.waypoints}
+        days={selected.days}
+        selectedDay={selectedDay}
+        onSelectDay={setSelectedDay}
+      />
 
       <div className="flex flex-wrap gap-2">
         <button
@@ -92,6 +122,119 @@ export function TripPage() {
         </button>
       </div>
 
+      {(selected.budget || (selected.co2_kg !== undefined && selected.co2_kg > 0)) && (
+        <section
+          aria-labelledby="budget-title"
+          className="flex flex-col gap-3 rounded-trip border border-mist bg-snow p-5"
+        >
+          <h2 id="budget-title" className="flex items-center gap-2 font-display text-xl font-bold text-trail">
+            <Wallet size={18} className="text-summit" aria-hidden="true" />
+            {t('budget.title')}
+          </h2>
+          {selected.budget && (
+            <dl className="flex flex-col gap-1.5 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.fuel')}</dt>
+                <dd className="font-mono text-trail">{selected.budget.fuel_eur} €</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.tolls')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.tolls_eur[0]}–{selected.budget.tolls_eur[1]} €
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.nights')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.nights_eur[0]}–{selected.budget.nights_eur[1]} €
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.meals')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.meals_eur[0]}–{selected.budget.meals_eur[1]} €
+                </dd>
+              </div>
+              {selected.budget.activities_eur > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-ridge">{t('budget.activities')}</dt>
+                  <dd className="font-mono text-trail">{selected.budget.activities_eur} €</dd>
+                </div>
+              )}
+              <div className="mt-1 flex justify-between border-t border-mist pt-2 font-semibold">
+                <dt className="text-trail">{t('budget.total')}</dt>
+                <dd className="font-mono text-trail">
+                  {selected.budget.total_eur[0]}–{selected.budget.total_eur[1]} €
+                </dd>
+              </div>
+            </dl>
+          )}
+          {selected.co2_kg !== undefined && selected.co2_kg > 0 && (
+            <p className="flex items-center gap-1.5 text-sm text-ridge">
+              <Leaf size={15} className="text-pine" aria-hidden="true" />
+              <span>
+                {t('budget.co2')} : <strong className="font-mono">≈ {selected.co2_kg} kg CO₂e</strong>
+              </span>
+            </p>
+          )}
+          <p className="text-xs text-fog">{t('budget.note')}</p>
+        </section>
+      )}
+
+      {selected.days && selected.days.length > 0 && (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setEditing(!editing)}
+              aria-pressed={editing}
+              className={`flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                editing
+                  ? 'border-summit bg-summit/10 text-copper-deep'
+                  : 'border-mist text-trail hover:border-summit'
+              }`}
+            >
+              <Pencil size={15} aria-hidden="true" />
+              {editing ? t('editor.done') : t('editor.edit')}
+            </button>
+            {history.length > 0 && (
+              <button
+                type="button"
+                onClick={undo}
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-mist px-4 py-2.5 text-sm font-semibold text-trail transition-colors hover:border-summit"
+              >
+                <Undo2 size={15} aria-hidden="true" />
+                {t('editor.undo')}
+              </button>
+            )}
+            {recomputing && (
+              <span className="text-xs text-fog" aria-live="polite">
+                {t('editor.recomputing')}
+              </span>
+            )}
+          </div>
+
+          {editing ? (
+            <DayEditor days={selected.days} busy={recomputing} onChange={onDaysChange} />
+          ) : (
+            <DayCards days={selected.days} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+          )}
+
+          <TripEditChat
+            trip={selected}
+            lang={lang}
+            plan={plan}
+            onBeforeApply={pushHistory}
+            onApply={(payload) => {
+              applyRecomputed(payload);
+              const current = useTripStore.getState().selected;
+              if (saved && current) void updateTrip(saved.id, current, plan);
+            }}
+          />
+        </>
+      )}
+
+      {(!selected.days || selected.days.length === 0) && (
       <section aria-labelledby="waypoints-title" className="flex flex-col gap-2">
         <h2 id="waypoints-title" className="font-display text-xl font-bold text-trail">
           {t('trips.waypoints_title')}
@@ -114,6 +257,7 @@ export function TripPage() {
           ))}
         </ol>
       </section>
+      )}
     </main>
   );
 }

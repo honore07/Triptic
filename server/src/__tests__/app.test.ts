@@ -45,6 +45,59 @@ const mockProvider: LlmProvider = {
   correct: async () => '{"valid": true, "issues": []}',
 };
 
+const EDIT_DAYS = [
+  {
+    day: 1,
+    title: 'Crêtes',
+    activities: [
+      { type: 'hike', time_of_day: 'morning', title: 'Hohneck', lat: 48.04, lng: 7.01 },
+      { type: 'camp', time_of_day: 'evening', title: 'Refuge', lat: 48.02, lng: 7.03 },
+    ],
+  },
+];
+
+describe('POST /api/trips/recompute (3.1 — recalcul live)', () => {
+  it('recalcule totaux, segments, budget et CO₂ depuis days[]', async () => {
+    const app = createApp({ provider: mockProvider });
+    const res = await request(app)
+      .post('/api/trips/recompute')
+      .send({ mode: 'roadtrip', duration_days: 1, days: EDIT_DAYS, request: { vehicle: 'van' } });
+    expect(res.status).toBe(200);
+    expect(res.body.waypoints).toHaveLength(2);
+    expect(res.body.distance_km).toBeGreaterThan(0); // estimation fallback sans GraphHopper
+    expect(res.body.days[0].segments).toHaveLength(1);
+    expect(res.body.budget.total_eur[1]).toBeGreaterThan(0);
+  });
+
+  it('rejette un body invalide', async () => {
+    const app = createApp({ provider: mockProvider });
+    const res = await request(app).post('/api/trips/recompute').send({ mode: 'roadtrip' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('POST /api/ai/edit-trip (3.2 — édition conversationnelle)', () => {
+  it('modifie le trip et renvoie un event trip recalculé', async () => {
+    const editProvider: LlmProvider = {
+      name: 'mock',
+      complete: async () => JSON.stringify({ type: 'edit', days: EDIT_DAYS }),
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const app = createApp({ provider: editProvider });
+    const res = await request(app).post('/api/ai/edit-trip').send({
+      title: 'Crêtes des Vosges',
+      mode: 'trek',
+      duration_days: 1,
+      days: EDIT_DAYS,
+      instruction: 'passe la rando du matin à 20 km',
+    });
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('event: trip');
+    expect(res.text).toContain('"validated":true');
+    expect(res.text).toContain('event: done');
+  });
+});
+
 describe('TRIPTIC API', () => {
   it('GET /health returns ok', async () => {
     const app = createApp({ provider: mockProvider });

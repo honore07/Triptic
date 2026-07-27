@@ -35,6 +35,13 @@ export function buildSummary(tags: Record<string, string>, kind: string): string
       return 'Glacier';
     case 'waterfall':
       return 'Cascade';
+    case 'restaurant':
+    case 'cafe':
+    case 'bar':
+    case 'fast_food': {
+      const cuisine = tags['cuisine'];
+      return cuisine ? `Cuisine : ${cuisine.replace(/;/g, ', ').slice(0, 100)}` : null;
+    }
     default: {
       const description = tags['description:fr'] ?? tags['description'];
       if (description && description.length <= 120) return description;
