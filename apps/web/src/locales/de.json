@@ -135,7 +135,8 @@
     "kind_restaurant": "Restaurant",
     "kind_cafe": "Café",
     "kind_bar": "Bar",
-    "kind_fast_food": "Imbiss"
+    "kind_fast_food": "Imbiss",
+    "kind_trail": "Rundwanderung"
   },
   "request": {
     "title": "Erkannte Einstellungen",
@@ -235,6 +236,9 @@
     "added": "Hinzugefügt",
     "day_label": "Hinzufügen zu:",
     "coverage_note": "OSM- & Tourismusdaten (© OpenStreetMap contributors, DATAtourisme). Abdeckung auf dem Land uneinheitlich — fehlende Orte können trotzdem existieren.",
-    "error": "Suche fehlgeschlagen. Versuche es gleich noch einmal."
+    "error": "Suche fehlgeschlagen. Versuche es gleich noch einmal.",
+    "chip_trails": "Rundwanderungen",
+    "target_km": "Ziel-Distanz:",
+    "generated_loop": "Auf dem Wegenetz generierte Runde (keine kartierte Runde hier)"
   }
 }

@@ -340,6 +340,56 @@ export class PgPlaceRepo {
     return rows as unknown as (ShortlistPlace & { id: string })[];
   }
 
+  /**
+   * Boucles rando mappées proches d'un point (roadmap 5.2) : traces réelles
+   * (Geotrek/OSM/DATAtourisme), longueur PostGIS, classées par proximité de
+   * la distance cible puis notoriété. targetKm null = toutes longueurs.
+   */
+  async findTrailsNear(
+    lat: number,
+    lng: number,
+    radiusM: number,
+    targetKm: number | null,
+    limit: number,
+  ): Promise<
+    {
+      id: string;
+      name: string;
+      summary: string | null;
+      notoriety: number;
+      source: string;
+      distance_km: number;
+      geometry: [number, number][];
+    }[]
+  > {
+    const wkt = toPointWkt(lat, lng);
+    const rows = await this.db.execute(sql`
+      SELECT id, name, summary, notoriety, source,
+             ROUND((ST_Length(trace) / 1000)::numeric, 1)::float AS distance_km,
+             ST_AsGeoJSON(trace::geometry) AS geojson
+      FROM places
+      WHERE status = 'active' AND kind = 'trail' AND trace IS NOT NULL
+        AND ST_DWithin(trace, ST_GeogFromText(${wkt}), ${radiusM})
+      ORDER BY
+        ${targetKm !== null ? sql`ABS(ST_Length(trace) / 1000 - ${targetKm}) ASC,` : sql``}
+        notoriety DESC
+      LIMIT ${limit}
+    `);
+    return (rows as unknown as (Record<string, unknown> & { geojson: string })[]).map(
+      ({ geojson, ...rest }) => ({
+        ...(rest as {
+          id: string;
+          name: string;
+          summary: string | null;
+          notoriety: number;
+          source: string;
+          distance_km: number;
+        }),
+        geometry: (JSON.parse(geojson) as { coordinates: [number, number][] }).coordinates,
+      }),
+    );
+  }
+
   /** Lieux actifs autour d'un point (affichage carte + aide à la contribution). */
   async findNearby(
     lat: number,

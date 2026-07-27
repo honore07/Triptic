@@ -11,6 +11,8 @@ const DEFAULT_CENTER: [number, number] = [7.1, 48.05];
 
 interface Props {
   results: ExplorePlace[];
+  /** Tracé de boucle rando à dessiner (5.2) — null pour effacer. */
+  trace?: [number, number][] | null;
   /** Recentrage demandé (géoloc « autour de moi »). */
   center: [number, number] | null;
   onBoundsChange: (bbox: ExploreBbox) => void;
@@ -22,7 +24,7 @@ interface Props {
  * résultats. Mapbox = affichage uniquement. Sans token : message d'info,
  * l'écran reste utilisable via la zone par défaut.
  */
-export function ExploreMap({ results, center, onBoundsChange }: Props) {
+export function ExploreMap({ results, trace = null, center, onBoundsChange }: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import('mapbox-gl').Map | null>(null);
@@ -82,6 +84,36 @@ export function ExploreMap({ results, center, onBoundsChange }: Props) {
   useEffect(() => {
     if (center) mapRef.current?.flyTo({ center, zoom: 12, duration: 800 });
   }, [center]);
+
+  // Tracé de boucle rando sélectionnée (pointillé pine, comme les segments trail)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    if (map.getLayer('trail-trace')) map.removeLayer('trail-trace');
+    if (map.getSource('trail-trace')) map.removeSource('trail-trace');
+    if (!trace || trace.length < 2) return;
+    map.addSource('trail-trace', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'LineString', coordinates: trace },
+      },
+    });
+    map.addLayer({
+      id: 'trail-trace',
+      type: 'line',
+      source: 'trail-trace',
+      paint: { 'line-color': '#1A8A4A', 'line-width': 3, 'line-dasharray': [0.5, 1.5] },
+    });
+    void import('mapbox-gl').then(({ default: mapboxgl }) => {
+      const bounds = trace.reduce(
+        (b, c) => b.extend(c),
+        new mapboxgl.LngLatBounds(trace[0]!, trace[0]!),
+      );
+      map.fitBounds(bounds, { padding: 48, duration: 600 });
+    });
+  }, [trace]);
 
   if (!hasToken) {
     return (

@@ -178,6 +178,7 @@ export type PlaceKind =
   | 'cafe'
   | 'bar'
   | 'fast_food'
+  | 'trail'
   | 'poi';
 
 /** Types food — exclus de la shortlist de grounding des trips (bruit), mais

@@ -29,6 +29,20 @@ function makeApp(overrides: Partial<PlacesApi> = {}): {
         notoriety: 40,
       },
     ]),
+    findTrailsNear: vi.fn(async () => [
+      {
+        id: 't1',
+        name: 'Tour du Hohneck',
+        summary: '12.5 km · 520 m D+',
+        notoriety: 50,
+        source: 'geotrek-pnr-ballons-vosges',
+        distance_km: 12.5,
+        geometry: [
+          [7.01, 48.04],
+          [7.02, 48.05],
+        ] as [number, number][],
+      },
+    ]),
     submitUserPlace: vi.fn(async () => 'pending' as const),
     addReview: vi.fn(async () => true),
     statsSummary: vi.fn(async () => ({
@@ -101,6 +115,29 @@ describe('GET /api/places/bbox (search this area, 4.1/4.2)', () => {
     const res = await request(app).get(
       '/api/places/bbox?south=47.9&west=6.9&north=48.1&east=7.2&kinds=pizzeria',
     );
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/places/trails (boucles rando, 5.2)', () => {
+  it('renvoie les boucles mappées avec durée Naismith', async () => {
+    const { app, api } = makeApp();
+    const res = await request(app).get(
+      '/api/places/trails?lat=48.04&lng=7.01&target_km=12',
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.trails[0]).toMatchObject({
+      name: 'Tour du Hohneck',
+      distance_km: 12.5,
+      generated: false,
+    });
+    expect(res.body.trails[0].duration_min).toBe(Math.round((12.5 / 4.5) * 60));
+    expect(api.findTrailsNear).toHaveBeenCalledWith(48.04, 7.01, 10000, 12, 10);
+  });
+
+  it('400 sur une cible aberrante', async () => {
+    const { app } = makeApp();
+    const res = await request(app).get('/api/places/trails?lat=48&lng=7&target_km=500');
     expect(res.status).toBe(400);
   });
 });

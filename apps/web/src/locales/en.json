@@ -135,7 +135,8 @@
     "kind_restaurant": "Restaurant",
     "kind_cafe": "Café",
     "kind_bar": "Bar",
-    "kind_fast_food": "Snack"
+    "kind_fast_food": "Snack",
+    "kind_trail": "Hiking loop"
   },
   "request": {
     "title": "Detected settings",
@@ -235,6 +236,9 @@
     "added": "Added",
     "day_label": "Add to:",
     "coverage_note": "OSM & tourist-office data (© OpenStreetMap contributors, DATAtourisme). Coverage is uneven in rural areas — a missing place may still exist.",
-    "error": "Search failed. Try again in a moment."
+    "error": "Search failed. Try again in a moment.",
+    "chip_trails": "Hiking loops",
+    "target_km": "Target distance:",
+    "generated_loop": "Loop generated on the trail network (no mapped loop here)"
   }
 }

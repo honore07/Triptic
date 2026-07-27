@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, Crosshair, Plus, Search, Sparkles } from 'lucide-react';
+import { Clock, Crosshair, Footprints, Mountain, Plus, Search, Sparkles } from 'lucide-react';
 import type { Lang, PlaceKind } from '@triptic/shared';
-import { parseExploreFilters, searchArea, type ExploreBbox } from '../lib/api';
+import {
+  parseExploreFilters,
+  searchArea,
+  searchTrails,
+  type ExploreBbox,
+  type TrailResult,
+} from '../lib/api';
 import {
   activityFromPlace,
   addActivityToDay,
@@ -39,6 +45,11 @@ export function Explore() {
   const [searched, setSearched] = useState(false);
   const [targetDay, setTargetDay] = useState(1);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  // Mode boucles rando (5.2) : distance cible + tracé sélectionné sur la carte
+  const [trailMode, setTrailMode] = useState(false);
+  const [targetKm, setTargetKm] = useState(12);
+  const [trails, setTrails] = useState<TrailResult[]>([]);
+  const [selectedTrail, setSelectedTrail] = useState<TrailResult | null>(null);
 
   const toggleChip = (kinds: PlaceKind[]) => {
     setActiveKinds((prev) => {
@@ -55,8 +66,20 @@ export function Explore() {
   const runSearch = async (kinds: Set<PlaceKind> = activeKinds) => {
     setStatus('searching');
     try {
-      const mode = selected?.mode === 'bikepacking' ? 'bike' : selected?.mode === 'trek' ? 'foot' : 'car';
-      setResults(await searchArea(bbox, [...kinds], from, mode));
+      if (trailMode) {
+        const center = {
+          lat: (bbox.south + bbox.north) / 2,
+          lng: (bbox.west + bbox.east) / 2,
+        };
+        setTrails(await searchTrails(from ?? center, 10000, targetKm));
+        setResults([]);
+      } else {
+        const mode =
+          selected?.mode === 'bikepacking' ? 'bike' : selected?.mode === 'trek' ? 'foot' : 'car';
+        setResults(await searchArea(bbox, [...kinds], from, mode));
+        setTrails([]);
+        setSelectedTrail(null);
+      }
       setSearched(true);
       setStatus('idle');
     } catch {
@@ -150,6 +173,23 @@ export function Explore() {
         })}
         <button
           type="button"
+          aria-pressed={trailMode}
+          disabled={busy}
+          onClick={() => {
+            setTrailMode(!trailMode);
+            setSelectedTrail(null);
+          }}
+          className={`flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-colors ${
+            trailMode
+              ? 'border-pine bg-pine/10 text-pine'
+              : 'border-mist bg-snow text-ridge hover:border-summit'
+          }`}
+        >
+          <Footprints size={15} aria-hidden="true" />
+          {t('explore.chip_trails')}
+        </button>
+        <button
+          type="button"
           onClick={locate}
           className="ml-auto flex min-h-11 items-center gap-1.5 rounded-full border border-mist bg-snow px-4 text-sm font-semibold text-ridge transition-colors hover:border-summit"
         >
@@ -158,8 +198,29 @@ export function Explore() {
         </button>
       </div>
 
+      {trailMode && (
+        <label className="flex items-center gap-2 text-sm font-semibold text-ridge">
+          {t('explore.target_km')}
+          <input
+            type="number"
+            min={1}
+            max={60}
+            value={targetKm}
+            disabled={busy}
+            onChange={(e) => setTargetKm(Number(e.target.value) || 12)}
+            className="min-h-10 w-20 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
+          />
+          km
+        </label>
+      )}
+
       <div className="relative">
-        <ExploreMap results={results} center={center} onBoundsChange={setBbox} />
+        <ExploreMap
+          results={results}
+          trace={selectedTrail?.geometry ?? null}
+          center={center}
+          onBoundsChange={setBbox}
+        />
         <button
           type="button"
           disabled={busy}
@@ -197,11 +258,52 @@ export function Explore() {
       )}
 
       <section aria-label={t('explore.results_title')} className="flex flex-col gap-1.5">
-        {searched && results.length === 0 && status === 'idle' && (
-          <p className="rounded-xl bg-terrain px-4 py-3 text-sm text-ridge">
-            {t('explore.no_results')}
-          </p>
-        )}
+        {searched &&
+          results.length === 0 &&
+          (!trailMode || trails.length === 0) &&
+          status === 'idle' && (
+            <p className="rounded-xl bg-terrain px-4 py-3 text-sm text-ridge">
+              {t('explore.no_results')}
+            </p>
+          )}
+        {trailMode &&
+          trails.map((trail) => (
+            <button
+              key={trail.id}
+              type="button"
+              onClick={() => setSelectedTrail(trail)}
+              aria-pressed={selectedTrail?.id === trail.id}
+              className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-left text-sm shadow-sm transition-colors ${
+                selectedTrail?.id === trail.id
+                  ? 'border-pine bg-pine/5'
+                  : 'border-transparent bg-snow hover:border-mist'
+              }`}
+            >
+              <Footprints size={16} className="shrink-0 text-pine" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium text-trail">
+                  {trail.generated ? t('explore.generated_loop') : trail.name}
+                </span>
+                {trail.summary && (
+                  <span className="block truncate text-xs text-fog">{trail.summary}</span>
+                )}
+              </span>
+              <span className="flex shrink-0 items-center gap-3 font-mono text-xs text-ridge">
+                <span>{trail.distance_km} km</span>
+                <span className="flex items-center gap-1">
+                  <Clock size={13} aria-hidden="true" />≈{' '}
+                  {Math.floor(trail.duration_min / 60)}h
+                  {String(trail.duration_min % 60).padStart(2, '0')}
+                </span>
+                {trail.elevation_gain_m !== undefined && (
+                  <span className="flex items-center gap-1">
+                    <Mountain size={13} aria-hidden="true" />
+                    {trail.elevation_gain_m} m
+                  </span>
+                )}
+              </span>
+            </button>
+          ))}
         {results.map((place) => (
           <article
             key={place.id}

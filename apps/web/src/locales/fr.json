@@ -135,7 +135,8 @@
     "kind_restaurant": "Restaurant",
     "kind_cafe": "Café",
     "kind_bar": "Bar",
-    "kind_fast_food": "Snack"
+    "kind_fast_food": "Snack",
+    "kind_trail": "Boucle rando"
   },
   "request": {
     "title": "Paramètres détectés",
@@ -235,6 +236,9 @@
     "added": "Ajouté",
     "day_label": "Ajouter au :",
     "coverage_note": "Données OSM & offices de tourisme (© OpenStreetMap contributors, DATAtourisme). Couverture inégale en zone rurale — un lieu absent ici peut exister sur place.",
-    "error": "La recherche a échoué. Réessaie dans un instant."
+    "error": "La recherche a échoué. Réessaie dans un instant.",
+    "chip_trails": "Boucles rando",
+    "target_km": "Distance visée :",
+    "generated_loop": "Boucle générée sur les sentiers (aucune boucle référencée ici)"
   }
 }

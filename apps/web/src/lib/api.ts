@@ -209,6 +209,37 @@ export async function searchArea(
   return ((await res.json()) as { places: ExplorePlace[] }).places;
 }
 
+/** Boucle rando renvoyée par GET /api/places/trails (5.2). */
+export interface TrailResult {
+  id: string;
+  name: string | null;
+  summary: string | null;
+  notoriety: number;
+  source: string;
+  distance_km: number;
+  duration_min: number;
+  elevation_gain_m?: number;
+  geometry: [number, number][];
+  generated: boolean;
+}
+
+/** GET /api/places/trails — boucles mappées d'abord, générée en fallback. */
+export async function searchTrails(
+  center: { lat: number; lng: number },
+  radiusM: number,
+  targetKm: number | null,
+): Promise<TrailResult[]> {
+  const params = new URLSearchParams({
+    lat: String(center.lat),
+    lng: String(center.lng),
+    radius: String(radiusM),
+  });
+  if (targetKm !== null) params.set('target_km', String(targetKm));
+  const res = await fetch(`${API_URL}/api/places/trails?${params}`);
+  if (!res.ok) throw new Error(`trails search failed: ${res.status}`);
+  return ((await res.json()) as { trails: TrailResult[] }).trails;
+}
+
 /** POST /api/ai/parse-filters — « décris ton envie du jour » → kinds stricts. */
 export async function parseExploreFilters(
   text: string,

@@ -55,6 +55,35 @@ export class RoutingService {
   }
 
   /**
+   * Boucle aller-retour d'une longueur cible depuis un point (roadmap 5.2 —
+   * zones sans boucle mappée). GraphHopper algorithm=round_trip sur le
+   * réseau OSM piéton/vélo (profils flexibles, sans CH).
+   */
+  async roundTrip(
+    from: LatLng,
+    targetKm: number,
+    mode: Exclude<SegmentMode, 'car'> = 'foot',
+  ): Promise<RoutedLeg | null> {
+    if (!this.enabled) return null;
+    const key = `rt:${mode}:${from.lat.toFixed(4)},${from.lng.toFixed(4)}:${targetKm}`;
+    const cached = this.cache.get(key);
+    if (cached) return cached;
+    const leg = await this.request({
+      points: [[from.lng, from.lat]],
+      profile: PROFILE_BY_MODE[mode],
+      algorithm: 'round_trip',
+      'round_trip.distance': Math.round(targetKm * 1000),
+      'ch.disable': true,
+      elevation: true,
+      points_encoded: false,
+      instructions: false,
+      calc_points: true,
+    });
+    if (leg) this.remember(key, leg);
+    return leg;
+  }
+
+  /**
    * Route entre deux points (ou plus, dans l'ordre). Retourne null si le
    * service est désactivé ou en erreur — l'appelant garde son estimation.
    */
@@ -63,34 +92,40 @@ export class RoutingService {
     const key = cacheKey(points, mode);
     const cached = this.cache.get(key);
     if (cached) return cached;
+    const leg = await this.request({
+      points: points.map((p) => [p.lng, p.lat]),
+      profile: PROFILE_BY_MODE[mode],
+      elevation: true,
+      points_encoded: false,
+      instructions: false,
+      calc_points: true,
+    });
+    if (leg) this.remember(key, leg);
+    return leg;
+  }
 
+  /** POST /route GraphHopper → RoutedLeg. Jamais de throw : null en erreur. */
+  private async request(body: Record<string, unknown>): Promise<RoutedLeg | null> {
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
       const response = await this.fetchImpl(`${this.baseUrl}/route`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          points: points.map((p) => [p.lng, p.lat]),
-          profile: PROFILE_BY_MODE[mode],
-          elevation: true,
-          points_encoded: false,
-          instructions: false,
-          calc_points: true,
-        }),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
       clearTimeout(timer);
       if (!response.ok) {
-        logger.warn({ status: response.status, mode }, 'GraphHopper route failed');
+        logger.warn({ status: response.status }, 'GraphHopper route failed');
         return null;
       }
-      const body = (await response.json()) as { paths?: GraphHopperPath[] };
-      const path = body.paths?.[0];
+      const payload = (await response.json()) as { paths?: GraphHopperPath[] };
+      const path = payload.paths?.[0];
       if (!path || typeof path.distance !== 'number' || typeof path.time !== 'number') {
         return null;
       }
-      const leg: RoutedLeg = {
+      return {
         geometry: (path.points?.coordinates ?? []).map(
           // GH renvoie [lng, lat, ele] avec elevation:true — on garde lng/lat
           (c) => [c[0] ?? 0, c[1] ?? 0] as [number, number],
@@ -99,16 +134,18 @@ export class RoutingService {
         duration_min: Math.round(path.time / 60_000),
         elevation_gain_m: Math.round(path.ascend ?? 0),
       };
-      if (this.cache.size >= CACHE_MAX) {
-        const oldest = this.cache.keys().next().value;
-        if (oldest !== undefined) this.cache.delete(oldest);
-      }
-      this.cache.set(key, leg);
-      return leg;
     } catch (error) {
-      logger.warn({ error, mode }, 'GraphHopper unreachable');
+      logger.warn({ error }, 'GraphHopper unreachable');
       return null;
     }
+  }
+
+  private remember(key: string, leg: RoutedLeg): void {
+    if (this.cache.size >= CACHE_MAX) {
+      const oldest = this.cache.keys().next().value;
+      if (oldest !== undefined) this.cache.delete(oldest);
+    }
+    this.cache.set(key, leg);
   }
 }
 

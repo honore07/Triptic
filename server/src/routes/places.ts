@@ -22,13 +22,14 @@ const PLACE_KINDS: [PlaceKind, ...PlaceKind[]] = [
   'poi',
 ];
 
-/** Tous les kinds interrogeables en bbox (contributions + food du 0.4). */
+/** Tous les kinds interrogeables en bbox (contributions + food 0.4 + rando 5.1). */
 export const SEARCHABLE_KINDS: [PlaceKind, ...PlaceKind[]] = [
   ...PLACE_KINDS,
   'restaurant',
   'cafe',
   'bar',
   'fast_food',
+  'trail',
 ];
 
 const submitSchema = z.object({
@@ -73,6 +74,24 @@ const bboxSchema = z
 /** Nombre de résultats dont on calcule le temps de trajet (coût routing borné). */
 const TRAVEL_TIME_TOP = 12;
 
+/** Boucles rando près d'un point (5.2). */
+const trailsSchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  radius: z.coerce.number().min(500).max(30000).default(10000),
+  /** Distance journalière souhaitée (km) — tri par proximité de cette cible. */
+  target_km: z.coerce.number().min(1).max(60).optional(),
+  mode: z.enum(['foot', 'bike']).default('foot'),
+});
+
+/**
+ * Temps de marche estimé (Naismith grade-ajusté) : 4,5 km/h + 1 min/10 m D+.
+ * Utilisé pour les boucles mappées sans durée source.
+ */
+export function hikeDurationMin(distanceKm: number, elevationGainM: number): number {
+  return Math.round((distanceKm / 4.5) * 60 + elevationGainM / 10);
+}
+
 /** Interface du repo côté routes — PgPlaceRepo la satisfait structurellement. */
 export interface PlacesApi {
   findNearby(
@@ -86,6 +105,23 @@ export interface PlacesApi {
     kinds: PlaceKind[] | undefined,
     limit: number,
   ): Promise<(ShortlistPlace & { id: string })[]>;
+  findTrailsNear(
+    lat: number,
+    lng: number,
+    radiusM: number,
+    targetKm: number | null,
+    limit: number,
+  ): Promise<
+    {
+      id: string;
+      name: string;
+      summary: string | null;
+      notoriety: number;
+      source: string;
+      distance_km: number;
+      geometry: [number, number][];
+    }[]
+  >;
   submitUserPlace(input: {
     name: string;
     kind: PlaceKind;
@@ -150,6 +186,56 @@ export function createPlacesRouter(repo: PlacesApi, routing?: RoutingService): R
       res.json({ places });
     } catch (error) {
       logger.error({ error, context: 'places-bbox' }, 'Bbox search failed');
+      res.status(500).json({ error: 'places_unavailable' });
+    }
+  });
+
+  /**
+   * GET /api/places/trails — suggestion de boucles rando (5.2) :
+   * les vraies boucles mappées (Geotrek/OSM) d'abord, triées par proximité
+   * de la distance cible ; zone sous-couverte → boucle GÉNÉRÉE via
+   * GraphHopper round-trip (flaguée generated:true dans la réponse).
+   */
+  router.get('/trails', async (req, res) => {
+    const parsed = trailsSchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'invalid_query', details: parsed.error.flatten() });
+      return;
+    }
+    const { lat, lng, radius, target_km, mode } = parsed.data;
+    try {
+      const trails = await repo.findTrailsNear(lat, lng, radius, target_km ?? null, 10);
+      const withDuration = trails.map((trail) => ({
+        ...trail,
+        generated: false,
+        duration_min: hikeDurationMin(trail.distance_km, 0),
+      }));
+      if (withDuration.length > 0 || !routing?.enabled) {
+        res.json({ trails: withDuration });
+        return;
+      }
+      // Aucune boucle mappée ici : on en génère une sur le réseau OSM piéton
+      const loop = await routing.roundTrip({ lat, lng }, target_km ?? 12, mode);
+      res.json({
+        trails: loop
+          ? [
+              {
+                id: 'generated',
+                name: null,
+                summary: null,
+                notoriety: 0,
+                source: 'graphhopper',
+                distance_km: loop.distance_km,
+                duration_min: loop.duration_min,
+                elevation_gain_m: loop.elevation_gain_m,
+                geometry: loop.geometry,
+                generated: true,
+              },
+            ]
+          : [],
+      });
+    } catch (error) {
+      logger.error({ error, context: 'places-trails' }, 'Trails search failed');
       res.status(500).json({ error: 'places_unavailable' });
     }
   });
