@@ -84,7 +84,7 @@ export async function saveTrip(
   plan: PlanId,
   isPublic: boolean,
 ): Promise<Trip> {
-  const { waypoints, title, mode, ...metadata } = proposal;
+  const { waypoints, title, mode, days, ...metadata } = proposal;
   const res = await fetch(`${API_URL}/api/trips`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
@@ -93,6 +93,7 @@ export async function saveTrip(
       mode,
       metadata,
       waypoints,
+      days: days ?? null,
       cover_photo: proposal.photo_url ?? null,
       is_public: isPublic,
     }),

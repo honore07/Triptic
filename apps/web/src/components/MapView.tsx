@@ -1,22 +1,47 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Waypoint } from '@triptic/shared';
+import type { TripDay, Waypoint } from '@triptic/shared';
 import { RoutePreview } from './RoutePreview';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
 const hasToken = Boolean(MAPBOX_TOKEN && !MAPBOX_TOKEN.startsWith('pk.xxx'));
 
+interface Props {
+  waypoints: Waypoint[];
+  /** Jours structurés (0.1) : active les tracés routés + la synchro jour. */
+  days?: TripDay[] | undefined;
+  /** Jour sélectionné (cartes-étapes 2.2) — la carte se recentre dessus. */
+  selectedDay?: number | null | undefined;
+  /** Clic sur un marqueur → remonte le jour à la page (synchro inverse). */
+  onSelectDay?: ((day: number) => void) | undefined;
+}
+
+/** Géométrie d'un jour : segments routés bout à bout (2.1). */
+function dayCoordinates(day: TripDay): [number, number][] {
+  const coords: [number, number][] = [];
+  for (const segment of day.segments ?? []) {
+    if (segment.geometry) coords.push(...segment.geometry);
+  }
+  if (coords.length === 0) {
+    for (const activity of day.activities) coords.push([activity.lng, activity.lat]);
+  }
+  return coords;
+}
+
 /**
- * Carte du trip : Mapbox GL si un token est configuré,
- * sinon aperçu SVG du tracé (fonctionne offline, zéro dépendance réseau).
+ * Carte du trip : Mapbox GL si un token est configuré (affichage uniquement —
+ * jamais de stockage de tuiles), sinon aperçu SVG offline.
+ * Avec des segments routés (GraphHopper) : tracé réel, couleur par mode
+ * (voiture copper, pied/vélo pine pointillé) ; sans routing : trait droit
+ * pointillé historique.
  */
-export function MapView({ waypoints }: { waypoints: Waypoint[] }) {
+export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import('mapbox-gl').Map | null>(null);
 
   useEffect(() => {
     if (!hasToken || !containerRef.current || waypoints.length < 2) return;
-    let map: import('mapbox-gl').Map | undefined;
     let cancelled = false;
 
     void import('mapbox-gl').then(({ default: mapboxgl }) => {
@@ -30,45 +55,118 @@ export function MapView({ waypoints }: { waypoints: Waypoint[] }) {
           [sorted[0]!.lng, sorted[0]!.lat],
         ),
       );
-      map = new mapboxgl.Map({
+      const map = new mapboxgl.Map({
         container: containerRef.current,
         style: 'mapbox://styles/mapbox/outdoors-v12',
         bounds,
         fitBoundsOptions: { padding: 48 },
       });
+      mapRef.current = map;
       map.on('load', () => {
-        if (!map) return;
-        map.addSource('route', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: sorted.map((w) => [w.lng, w.lat]),
+        const segments = (days ?? []).flatMap((d) => d.segments ?? []);
+        const routed = segments.filter((s) => s.geometry && s.geometry.length > 1);
+
+        if (routed.length > 0) {
+          // Tracés réels GraphHopper — un feature par segment, stylé par mode
+          map.addSource('route', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: routed.map((s) => ({
+                type: 'Feature' as const,
+                properties: { mode: s.mode },
+                geometry: { type: 'LineString' as const, coordinates: s.geometry! },
+              })),
             },
-          },
-        });
-        map.addLayer({
-          id: 'route',
-          type: 'line',
-          source: 'route',
-          paint: { 'line-color': '#1A6BDB', 'line-width': 3, 'line-dasharray': [0.1, 2] },
-        });
+          });
+          map.addLayer({
+            id: 'route-car',
+            type: 'line',
+            source: 'route',
+            filter: ['==', ['get', 'mode'], 'car'],
+            paint: { 'line-color': '#C86341', 'line-width': 4, 'line-opacity': 0.9 },
+          });
+          map.addLayer({
+            id: 'route-trail',
+            type: 'line',
+            source: 'route',
+            filter: ['!=', ['get', 'mode'], 'car'],
+            paint: {
+              'line-color': '#1A8A4A',
+              'line-width': 3,
+              'line-dasharray': [0.5, 1.5],
+            },
+          });
+        } else {
+          // Fallback historique : trait droit pointillé entre waypoints
+          map.addSource('route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: sorted.map((w) => [w.lng, w.lat]),
+              },
+            },
+          });
+          map.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            paint: { 'line-color': '#1A6BDB', 'line-width': 3, 'line-dasharray': [0.1, 2] },
+          });
+        }
+
         for (const w of sorted) {
-          new mapboxgl.Marker({ color: w.kind === 'start' ? '#1A8A4A' : w.kind === 'end' ? '#C03030' : '#1A6BDB' })
+          const color =
+            w.kind === 'start'
+              ? '#1A8A4A'
+              : w.kind === 'end'
+                ? '#C03030'
+                : w.kind === 'camp'
+                  ? '#1E1E24'
+                  : w.kind === 'trailhead'
+                    ? '#1A8A4A'
+                    : '#C86341';
+          const marker = new mapboxgl.Marker({ color })
             .setLngLat([w.lng, w.lat])
             .setPopup(new mapboxgl.Popup({ offset: 24 }).setText(`${w.name} (J${w.day})`))
             .addTo(map);
+          if (onSelectDay) {
+            marker.getElement().addEventListener('click', () => onSelectDay(w.day));
+            marker.getElement().style.cursor = 'pointer';
+          }
         }
       });
     });
 
     return () => {
       cancelled = true;
-      map?.remove();
+      mapRef.current?.remove();
+      mapRef.current = null;
     };
-  }, [waypoints]);
+    // onSelectDay volontairement hors deps : callback stable attendu
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waypoints, days]);
+
+  // Synchro cartes-étapes → carte : recentrage sur le jour sélectionné (2.2)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || selectedDay == null) return;
+    const day = days?.find((d) => d.day === selectedDay);
+    const coords = day
+      ? dayCoordinates(day)
+      : waypoints.filter((w) => w.day === selectedDay).map((w) => [w.lng, w.lat] as [number, number]);
+    if (coords.length === 0) return;
+    void import('mapbox-gl').then(({ default: mapboxgl }) => {
+      const bounds = coords.reduce(
+        (b, c) => b.extend(c),
+        new mapboxgl.LngLatBounds(coords[0]!, coords[0]!),
+      );
+      map.fitBounds(bounds, { padding: 64, duration: 600, maxZoom: 13 });
+    });
+  }, [selectedDay, days, waypoints]);
 
   if (!hasToken) {
     return (

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Bookmark, Leaf, Share2, Wallet } from 'lucide-react';
 import { saveTrip } from '../lib/api';
+import { DayCards } from '../components/DayCards';
 import { DifficultyBadge } from '../components/DifficultyBadge';
 import { GPXExportButton } from '../components/GPXExportButton';
 import { MapView } from '../components/MapView';
@@ -14,6 +15,7 @@ export function TripPage() {
   const { selected, saved, setSaved } = useTripStore();
   const { plan } = useUserStore();
   const [copied, setCopied] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   if (!selected) {
     return (
@@ -69,7 +71,12 @@ export function TripPage() {
         </p>
       </header>
 
-      <MapView waypoints={selected.waypoints} />
+      <MapView
+        waypoints={selected.waypoints}
+        days={selected.days}
+        selectedDay={selectedDay}
+        onSelectDay={setSelectedDay}
+      />
 
       <div className="flex flex-wrap gap-2">
         <button
@@ -151,6 +158,11 @@ export function TripPage() {
         </section>
       )}
 
+      {selected.days && selected.days.length > 0 && (
+        <DayCards days={selected.days} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+      )}
+
+      {(!selected.days || selected.days.length === 0) && (
       <section aria-labelledby="waypoints-title" className="flex flex-col gap-2">
         <h2 id="waypoints-title" className="font-display text-xl font-bold text-trail">
           {t('trips.waypoints_title')}
@@ -173,6 +185,7 @@ export function TripPage() {
           ))}
         </ol>
       </section>
+      )}
     </main>
   );
 }

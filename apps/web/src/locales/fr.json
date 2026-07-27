@@ -164,5 +164,14 @@
     "total": "Total estimé",
     "co2": "Empreinte carbone",
     "note": "Estimations indicatives et ajustables. CO₂ : ADEME Base Carbone (well-to-wheel) ; carburant : prix moyens par pays."
+  },
+  "days": {
+    "title": "Programme jour par jour",
+    "estimated": "estimation"
+  },
+  "time": {
+    "morning": "matin",
+    "afternoon": "après-midi",
+    "evening": "soir"
   }
 }

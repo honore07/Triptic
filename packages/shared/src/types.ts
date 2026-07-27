@@ -103,6 +103,8 @@ export interface TripDay {
   end_location?: string | undefined;
   activities: TripActivity[];
   segments?: TripSegment[] | undefined;
+  /** Photo réelle de l'étape (Unsplash/Pexels) — posée côté serveur (2.3). */
+  photo_url?: string | undefined;
 }
 
 /** Fourchette de coût en EUR [min, max]. */

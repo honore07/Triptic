@@ -164,5 +164,14 @@
     "total": "Estimated total",
     "co2": "Carbon footprint",
     "note": "Indicative, adjustable estimates. CO₂: ADEME Base Carbone (well-to-wheel); fuel: average prices per country."
+  },
+  "days": {
+    "title": "Day-by-day plan",
+    "estimated": "estimate"
+  },
+  "time": {
+    "morning": "morning",
+    "afternoon": "afternoon",
+    "evening": "evening"
   }
 }

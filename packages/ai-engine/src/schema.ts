@@ -77,6 +77,7 @@ export const tripDaySchema = z.object({
   end_location: z.string().optional(),
   activities: z.array(tripActivitySchema).min(1),
   segments: z.array(tripSegmentSchema).optional(),
+  photo_url: z.string().optional(),
 });
 
 /**

@@ -164,5 +164,14 @@
     "total": "Geschätzte Summe",
     "co2": "CO₂-Fußabdruck",
     "note": "Richtwerte, anpassbar. CO₂: ADEME Base Carbone (Well-to-Wheel); Kraftstoff: Durchschnittspreise pro Land."
+  },
+  "days": {
+    "title": "Tagesprogramm",
+    "estimated": "Schätzung"
+  },
+  "time": {
+    "morning": "Morgen",
+    "afternoon": "Nachmittag",
+    "evening": "Abend"
   }
 }

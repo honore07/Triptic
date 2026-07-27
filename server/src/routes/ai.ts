@@ -4,7 +4,7 @@ import { generateTrips, type LlmProvider } from '@triptic/ai-engine';
 import { PLANS, type TripRequest } from '@triptic/shared';
 import { logger } from '../logger.js';
 import { applyTripEstimates } from '../services/budget.js';
-import { findTripPhoto } from '../services/photos.js';
+import { findDayPhotos, findTripPhoto } from '../services/photos.js';
 import { enrichTripSegments } from '../services/segments.js';
 import type { QuotaService } from '../services/quota.js';
 import type { RoutingService } from '../services/routing.js';
@@ -156,6 +156,11 @@ export function createAiRouter(
             trip.photo_url = (await findTripPhoto(trip.photo_keywords)) ?? undefined;
           }),
         );
+        // Photos par étape (2.3) — uniquement le 1er trip (quotas API)
+        const first = visible[0];
+        if (first?.days) {
+          await findDayPhotos(first.days, first.photo_keywords);
+        }
         sseWrite(res, 'trips', {
           generation: {
             ...result.generation,
