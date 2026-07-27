@@ -58,11 +58,53 @@ export async function generateTripsStream(
   if (!res.ok || !res.body) {
     throw new Error(`generate-trips failed: ${res.status}`);
   }
+  await readSse(res, onEvent as (event: { event: string; data: unknown }) => void);
+}
 
+/** Champs recalculés après édition (POST /api/trips/recompute). */
+export interface RecomputePayload {
+  days: NonNullable<TripProposal['days']>;
+  waypoints: TripProposal['waypoints'];
+  distance_km: number;
+  elevation_gain_m: number;
+  daily_distance_km: number;
+  co2_kg?: number;
+  budget?: TripProposal['budget'];
+}
+
+/**
+ * Recalcul live (3.1) : segments routés + totaux + budget + CO₂ depuis la
+ * structure days[] éditée. Retourne null si le serveur ne peut pas recalculer
+ * (l'UI garde alors les valeurs locales).
+ */
+export async function recomputeTrip(
+  proposal: Pick<TripProposal, 'mode' | 'duration_days' | 'days'>,
+  plan: PlanId,
+  request?: { vehicle?: string; group_type?: string; camping?: boolean },
+): Promise<RecomputePayload | null> {
+  if (!proposal.days || proposal.days.length === 0) return null;
+  const res = await fetch(`${API_URL}/api/trips/recompute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    body: JSON.stringify({
+      mode: proposal.mode,
+      duration_days: proposal.duration_days,
+      days: proposal.days,
+      ...(request ? { request } : {}),
+    }),
+  });
+  return res.ok ? res.json() : null;
+}
+
+/** Lit un flux SSE fetch (POST) et invoque onEvent par événement. */
+async function readSse(
+  res: Response,
+  onEvent: (event: { event: string; data: unknown }) => void,
+): Promise<void> {
+  if (!res.body) return;
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
-
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -73,10 +115,41 @@ export async function generateTripsStream(
       const eventMatch = chunk.match(/^event: (.+)$/m);
       const dataMatch = chunk.match(/^data: (.+)$/m);
       if (eventMatch?.[1] && dataMatch?.[1]) {
-        onEvent({ event: eventMatch[1], data: JSON.parse(dataMatch[1]) } as GenerateEvent);
+        onEvent({ event: eventMatch[1], data: JSON.parse(dataMatch[1]) });
       }
     }
   }
+}
+
+export type EditTripEvent =
+  | { event: 'status'; data: { step: string } }
+  | { event: 'question'; data: { message: string } }
+  | { event: 'trip'; data: RecomputePayload & { validated: boolean } }
+  | { event: 'error'; data: { error: string } }
+  | { event: 'done'; data: Record<string, never> };
+
+/** POST /api/ai/edit-trip (3.2) — « change le J3 matin en trail 20 km ». */
+export async function editTripStream(
+  proposal: TripProposal,
+  instruction: string,
+  lang: Lang,
+  plan: PlanId,
+  onEvent: (event: EditTripEvent) => void,
+): Promise<void> {
+  const res = await fetch(`${API_URL}/api/ai/edit-trip`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    body: JSON.stringify({
+      title: proposal.title,
+      mode: proposal.mode,
+      duration_days: proposal.duration_days,
+      days: proposal.days ?? [],
+      instruction,
+      lang,
+    }),
+  });
+  if (!res.ok) throw new Error(`edit-trip failed: ${res.status}`);
+  await readSse(res, onEvent as (event: { event: string; data: unknown }) => void);
 }
 
 export async function saveTrip(
@@ -100,6 +173,21 @@ export async function saveTrip(
   });
   if (!res.ok) throw new Error(`saveTrip failed: ${res.status}`);
   return res.json();
+}
+
+/** PATCH /api/trips/:id — synchronise un trip sauvegardé après édition (3.1). */
+export async function updateTrip(
+  tripId: string,
+  proposal: TripProposal,
+  plan: PlanId,
+): Promise<Trip | null> {
+  const { waypoints, title, mode, days, ...metadata } = proposal;
+  const res = await fetch(`${API_URL}/api/trips/${tripId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    body: JSON.stringify({ title, mode, metadata, waypoints, days: days ?? null }),
+  });
+  return res.ok ? res.json() : null;
 }
 
 export interface SubmitPlaceInput {

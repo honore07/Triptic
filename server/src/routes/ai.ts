@@ -1,8 +1,9 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
-import { generateTrips, type LlmProvider } from '@triptic/ai-engine';
+import { editTrip, generateTrips, tripDaySchema, type LlmProvider } from '@triptic/ai-engine';
 import { PLANS, type TripRequest } from '@triptic/shared';
 import { logger } from '../logger.js';
+import { recomputeTrip } from '../services/recompute.js';
 import { applyTripEstimates } from '../services/budget.js';
 import { findDayPhotos, findTripPhoto } from '../services/photos.js';
 import { enrichTripSegments } from '../services/segments.js';
@@ -190,6 +191,70 @@ export function createAiRouter(
     } catch (error) {
       logger.error({ error, context: 'generate-trips' }, 'Trip generation failed');
       sseWrite(res, 'error', { error: 'generation_failed' });
+    }
+    sseWrite(res, 'done', {});
+    res.end();
+  });
+
+  const editBodySchema = z.object({
+    title: z.string().min(1).max(200),
+    mode: z.enum(['roadtrip', 'trek', 'bikepacking']),
+    duration_days: z.number().int().min(1).max(60),
+    days: z.array(tripDaySchema).min(1).max(60),
+    instruction: z.string().min(3).max(1000),
+    lang: z.enum(['fr', 'en', 'de']).default('fr'),
+    request: z
+      .object({
+        vehicle: z.enum(['van', 'car', 'moto', 'none']).optional(),
+        group_type: z.enum(['solo', 'couple', 'group', 'family']).optional(),
+        camping: z.boolean().optional(),
+      })
+      .optional(),
+  });
+
+  /**
+   * POST /api/ai/edit-trip — édition conversationnelle (3.2), SSE :
+   *   event: status   {step}
+   *   event: question {message}
+   *   event: trip     {days, waypoints, distance_km, …, validated}
+   *   event: error / done
+   * Une phrase modifie l'activité ciblée ; correcteur + recalcul systématiques.
+   */
+  router.post('/edit-trip', async (req, res) => {
+    const parsed = editBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
+      return;
+    }
+    const { title, mode, duration_days, days, instruction, lang, request } = parsed.data;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    try {
+      const result = await editTrip(provider, { title, mode, days }, instruction, {
+        lang,
+        onEvent: (event) => {
+          if (event.kind === 'status') sseWrite(res, 'status', { step: event.step });
+        },
+      });
+      if (result.type === 'question') {
+        sseWrite(res, 'question', { message: result.message });
+      } else if (routing) {
+        sseWrite(res, 'status', { step: 'routing' });
+        const recomputed = await recomputeTrip(
+          { mode, duration_days, days: result.days, request },
+          routing,
+        );
+        sseWrite(res, 'trip', { ...recomputed, validated: result.validated });
+      } else {
+        sseWrite(res, 'trip', { days: result.days, validated: result.validated });
+      }
+    } catch (error) {
+      logger.error({ error, context: 'edit-trip' }, 'Trip edit failed');
+      sseWrite(res, 'error', { error: 'edit_failed' });
     }
     sseWrite(res, 'done', {});
     res.end();

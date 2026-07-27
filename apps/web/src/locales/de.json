@@ -173,5 +173,35 @@
     "morning": "Morgen",
     "afternoon": "Nachmittag",
     "evening": "Abend"
+  },
+  "activity": {
+    "hike": "Wanderung",
+    "drive": "Fahrt",
+    "visit": "Besuch",
+    "meal": "Essen",
+    "camp": "Nacht",
+    "rest": "Ruhetag"
+  },
+  "editor": {
+    "edit": "Programm bearbeiten",
+    "done": "Bearbeitung beenden",
+    "undo": "Letzte Änderung rückgängig",
+    "recomputing": "Neuberechnung (Distanzen, Budget, CO₂)…",
+    "add_activity": "Aktivität hinzufügen",
+    "delete": "Löschen",
+    "move_up": "Nach oben",
+    "move_down": "Nach unten",
+    "title": "Titel",
+    "type": "Typ",
+    "time": "Tageszeit",
+    "duration": "Dauer (Min)",
+    "cost": "Kosten (€)",
+    "new_activity": "Neue Aktivität",
+    "edit_activity": "Bearbeiten"
+  },
+  "edit_chat": {
+    "title": "Per Chat bearbeiten",
+    "placeholder": "Z. B.: ersetze Tag 3 morgens durch einen sportlichen 20-km-Trail…",
+    "error": "Die Änderung ist fehlgeschlagen. Versuche es gleich noch einmal."
   }
 }

@@ -122,6 +122,13 @@ export const engineOutputSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
+/** Sortie de l'éditeur conversationnel (3.2). */
+export const editOutputSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('question'), message: z.string() }),
+  z.object({ type: z.literal('edit'), days: z.array(tripDaySchema).min(1) }),
+]);
+export type EditOutput = z.infer<typeof editOutputSchema>;
+
 export const correctorOutputSchema = z.object({
   valid: z.boolean(),
   issues: z.array(z.string()).default([]),

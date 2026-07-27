@@ -53,7 +53,7 @@ export function createApp({ provider, repo, quota, placeRepo, routing }: AppDeps
     aiRateLimiter,
     createAiRouter(provider, quotaService, placeRepo, enrichment, routingService),
   );
-  app.use('/api/trips', createTripsRouter(tripRepo));
+  app.use('/api/trips', createTripsRouter(tripRepo, routingService));
   app.use('/api/public', createPublicTripsRouter(tripRepo));
   if (placeRepo) {
     app.use('/api/places', createPlacesRouter(placeRepo));

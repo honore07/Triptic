@@ -83,7 +83,7 @@ export async function enrichTripSegments(
   }
 
   if (routedCount > 0) {
-    applyRoutedTotals(trip, days);
+    applyTotalsFromSegments(trip, days);
   }
   return { routedCount, segmentCount };
 }
@@ -93,8 +93,10 @@ export async function enrichTripSegments(
  * sont des boucles sur place : leur distance/dénivelé s'ajoutent aux segments.
  * En trek/bikepacking, les segments SONT la progression : ne pas compter
  * deux fois les distances déclarées sur les activités.
+ * Exportée pour le recalcul post-édition (3.1) qui a besoin de totaux même
+ * quand tous les segments sont des estimations (routeur indisponible).
  */
-function applyRoutedTotals(trip: TripProposal, days: TripDay[]): void {
+export function applyTotalsFromSegments(trip: TripProposal, days: TripDay[]): void {
   let distanceKm = 0;
   let elevationM = 0;
   for (const day of days) {

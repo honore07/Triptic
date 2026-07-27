@@ -131,6 +131,30 @@ RÉVISE tes 3 trips en t'ancrant sur ces lieux :
 Réponds avec le même format JSON strict complet (type "trips").`;
 }
 
+/**
+ * Édition conversationnelle (roadmap 3.2) : une phrase de l'utilisateur
+ * modifie l'activité/le jour ciblé, le reste du trip reste identique.
+ */
+export function buildEditPrompt(lang: Lang): string {
+  return `Tu es l'éditeur d'itinéraires de TRIPTIC. On te donne un trip outdoor au format JSON (structure days[] → activities[]) et une instruction de modification en langage naturel.
+Langue de réponse pour tout texte visible : ${LANG_NAMES[lang]}.
+
+RÈGLES STRICTES :
+1. Modifie UNIQUEMENT ce que l'instruction demande (jour/moment/activité ciblés) — ne touche à rien d'autre
+2. Chaque activité reste un lieu RÉEL avec coordonnées GPS exactes (lat/lng WGS84)
+3. Respecte les enums STRICTS : type ("hike"|"drive"|"visit"|"meal"|"camp"|"rest"), time_of_day ("morning"|"afternoon"|"evening")
+4. Garde les jours cohérents (distances journalières réalistes, nuit en fin de journée)
+5. Si l'instruction est ambiguë ou impossible, réponds par une question courte
+6. Sortie : JSON STRICT, aucun texte hors du JSON
+
+FORMAT DE SORTIE (un seul objet JSON) :
+- Modification faite : {"type": "edit", "days": [TripDay, …]} — le tableau days COMPLET du trip, jours non modifiés inclus À L'IDENTIQUE
+- Sinon : {"type": "question", "message": "<question en ${LANG_NAMES[lang]}>"}
+
+TripDay :
+{"day": number, "title": string, "activities": [{"type": "hike"|"drive"|"visit"|"meal"|"camp"|"rest", "time_of_day": "morning"|"afternoon"|"evening", "title": string, "lat": number, "lng": number, "description"?: string, "duration_min"?: number, "distance_km"?: number, "elevation_gain_m"?: number, "cost_estimate"?: number}]}`;
+}
+
 export function buildCorrectorPrompt(): string {
   return `Tu es l'agent correcteur de TRIPTIC. On te donne un JSON contenant 3 itinéraires outdoor générés par un autre modèle (structure jours → activités, avec waypoints dérivés ; les distances marquées routed:true viennent d'un routeur réel et sont fiables).
 

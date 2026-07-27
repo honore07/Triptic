@@ -173,5 +173,35 @@
     "morning": "matin",
     "afternoon": "après-midi",
     "evening": "soir"
+  },
+  "activity": {
+    "hike": "Rando",
+    "drive": "Roulage",
+    "visit": "Visite",
+    "meal": "Repas",
+    "camp": "Nuit",
+    "rest": "Repos"
+  },
+  "editor": {
+    "edit": "Modifier le programme",
+    "done": "Terminer l’édition",
+    "undo": "Annuler la dernière modification",
+    "recomputing": "Recalcul en cours (distances, budget, CO₂)…",
+    "add_activity": "Ajouter une activité",
+    "delete": "Supprimer",
+    "move_up": "Monter",
+    "move_down": "Descendre",
+    "title": "Titre",
+    "type": "Type",
+    "time": "Moment",
+    "duration": "Durée (min)",
+    "cost": "Coût (€)",
+    "new_activity": "Nouvelle activité",
+    "edit_activity": "Modifier"
+  },
+  "edit_chat": {
+    "title": "Modifier par le chat",
+    "placeholder": "Ex. : remplace le jour 3 matin par un trail de 20 km sportif…",
+    "error": "La modification a échoué. Réessaie dans un instant."
   }
 }

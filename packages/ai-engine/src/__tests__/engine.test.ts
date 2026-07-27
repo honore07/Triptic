@@ -8,7 +8,7 @@ import {
   extractJson,
   tripProposalSchema,
 } from '../schema.js';
-import { generateTrips, type LlmProvider } from '../index.js';
+import { editTrip, generateTrips, type LlmProvider } from '../index.js';
 
 const VALID_TRIP = {
   title: 'Crêtes des Vosges',
@@ -298,6 +298,67 @@ describe('generateTrips — grounding (base de lieux)', () => {
       expect(result.grounding.applied).toBe(false);
       expect(result.validated).toBe(true);
     }
+  });
+});
+
+describe('editTrip — édition conversationnelle (3.2)', () => {
+  const EDIT_DAYS = [
+    {
+      day: 1,
+      title: 'Crêtes',
+      activities: [
+        { type: 'hike', time_of_day: 'morning', title: 'Trail du Hohneck', lat: 48.04, lng: 7.01, distance_km: 20 },
+        { type: 'camp', time_of_day: 'evening', title: 'Refuge', lat: 48.02, lng: 7.03 },
+      ],
+    },
+  ];
+  const TRIP = { title: 'Crêtes des Vosges', mode: 'trek', days: EDIT_DAYS };
+
+  it('applique la modification et valide via le correcteur', async () => {
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async ({ messages }) => {
+        expect(messages[0]!.content).toContain('INSTRUCTION');
+        return JSON.stringify({ type: 'edit', days: EDIT_DAYS });
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const result = await editTrip(provider, TRIP, 'passe le J1 matin en trail 20 km', {
+      lang: 'fr',
+    });
+    expect(result.type).toBe('edit');
+    if (result.type === 'edit') {
+      expect(result.validated).toBe(true);
+      expect(result.days[0]?.activities[0]?.distance_km).toBe(20);
+    }
+  });
+
+  it('renvoie la question du modèle si l’instruction est ambiguë', async () => {
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async () => JSON.stringify({ type: 'question', message: 'Quel jour ?' }),
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const result = await editTrip(provider, TRIP, 'rends-le plus sportif', { lang: 'fr' });
+    expect(result).toEqual({ type: 'question', message: 'Quel jour ?' });
+  });
+
+  it('retente une fois quand le correcteur rejette', async () => {
+    let completeCalls = 0;
+    const provider: LlmProvider = {
+      name: 'mock',
+      complete: async () => {
+        completeCalls += 1;
+        return JSON.stringify({ type: 'edit', days: EDIT_DAYS });
+      },
+      correct: async () =>
+        completeCalls === 1
+          ? '{"valid": false, "issues": ["coordonnées douteuses"]}'
+          : '{"valid": true, "issues": []}',
+    };
+    const result = await editTrip(provider, TRIP, 'change la nuit', { lang: 'fr' });
+    expect(completeCalls).toBe(2);
+    if (result.type === 'edit') expect(result.validated).toBe(true);
   });
 });
 

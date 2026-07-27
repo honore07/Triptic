@@ -173,5 +173,35 @@
     "morning": "morning",
     "afternoon": "afternoon",
     "evening": "evening"
+  },
+  "activity": {
+    "hike": "Hike",
+    "drive": "Drive",
+    "visit": "Visit",
+    "meal": "Meal",
+    "camp": "Night",
+    "rest": "Rest"
+  },
+  "editor": {
+    "edit": "Edit the plan",
+    "done": "Done editing",
+    "undo": "Undo last change",
+    "recomputing": "Recomputing (distances, budget, CO₂)…",
+    "add_activity": "Add an activity",
+    "delete": "Delete",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "title": "Title",
+    "type": "Type",
+    "time": "Time of day",
+    "duration": "Duration (min)",
+    "cost": "Cost (€)",
+    "new_activity": "New activity",
+    "edit_activity": "Edit"
+  },
+  "edit_chat": {
+    "title": "Edit via chat",
+    "placeholder": "E.g.: replace day 3 morning with a tough 20 km trail run…",
+    "error": "The edit failed. Try again in a moment."
   }
 }
