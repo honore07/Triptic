@@ -13,6 +13,7 @@
     "import:osm-trails": "tsx src/import/osm/runTrailImport.ts",
     "import:geotrek": "tsx src/import/geotrek/runGeotrekImport.ts",
     "import:datatourisme": "tsx src/import/datatourisme/runDatatourismeImport.ts",
+    "import:blog": "tsx src/import/blogs/runBlogImport.ts",
     "import:villages": "tsx src/import/wikidata/importVillages.ts",
     "enrich:wikidata": "tsx src/import/wikidata/enrichNotoriety.ts"
   },

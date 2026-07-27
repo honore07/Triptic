@@ -25,6 +25,9 @@ export interface PlaceInput {
   wikipedia?: string | null;
   /** Tracé complet [lng, lat][] (tours DATAtourisme, rando phase 5). */
   trace?: [number, number][] | null;
+  /** Provenance TDM (phase 6) — obligatoire pour source='web'. */
+  opt_out_status?: string | null;
+  fetch_date?: Date | null;
 }
 
 /** WKT d'un point pour PostGIS (ordre lon lat — pas lat lng). */
@@ -123,6 +126,8 @@ export class PgPlaceRepo {
             source_url: p.source_url ?? null,
             wikidata_id: p.wikidata_id ?? null,
             wikipedia: p.wikipedia ?? null,
+            opt_out_status: p.opt_out_status ?? null,
+            fetch_date: p.fetch_date ?? null,
             ...(toTraceWkt(p.trace)
               ? { trace: sql`ST_GeogFromText(${toTraceWkt(p.trace)})` }
               : {}),
@@ -429,6 +434,13 @@ export class PgPlaceRepo {
     pending: number;
     by_region: { region: string | null; count: number }[];
     by_source: { source: string; count: number }[];
+    /** Conformité TDM (phase 6) — rapport hebdo de l'agent 5. */
+    tdm: {
+      web_active: number;
+      web_pending: number;
+      sources_total: number;
+      sources_opted_out: number;
+    };
   }> {
     const totals = await this.db.execute(sql`
       SELECT count(*)::int AS total,
@@ -442,11 +454,42 @@ export class PgPlaceRepo {
       SELECT source, count(*)::int AS count FROM places GROUP BY source ORDER BY count DESC
     `);
     const t = (totals as unknown as { total: number; pending: number }[])[0];
+
+    // Conformité TDM — tables/colonnes phase 6 : tolérant si la migration
+    // 0005 n'est pas encore passée (rapport à zéro plutôt qu'erreur).
+    let tdm = { web_active: 0, web_pending: 0, sources_total: 0, sources_opted_out: 0 };
+    try {
+      const webRows = await this.db.execute(sql`
+        SELECT count(*) FILTER (WHERE status = 'active')::int AS web_active,
+               count(*) FILTER (WHERE status = 'pending')::int AS web_pending
+        FROM places WHERE source = 'web'
+      `);
+      const sourceRows = await this.db.execute(sql`
+        SELECT count(*)::int AS sources_total,
+               count(*) FILTER (WHERE opt_out_status = 'opted_out')::int AS sources_opted_out
+        FROM tdm_sources
+      `);
+      const web = (webRows as unknown as { web_active: number; web_pending: number }[])[0];
+      const src = (sourceRows as unknown as {
+        sources_total: number;
+        sources_opted_out: number;
+      }[])[0];
+      tdm = {
+        web_active: web?.web_active ?? 0,
+        web_pending: web?.web_pending ?? 0,
+        sources_total: src?.sources_total ?? 0,
+        sources_opted_out: src?.sources_opted_out ?? 0,
+      };
+    } catch {
+      // migration 0005 absente : rapport TDM vide
+    }
+
     return {
       total: t?.total ?? 0,
       pending: t?.pending ?? 0,
       by_region: byRegion as unknown as { region: string | null; count: number }[],
       by_source: bySource as unknown as { source: string; count: number }[],
+      tdm,
     };
   }
 }
