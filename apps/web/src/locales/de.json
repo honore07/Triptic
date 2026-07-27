@@ -24,6 +24,7 @@
     "status_validating": "Geografische Prüfung durch den Korrektur-Agenten…",
     "status_retrying": "Routen werden korrigiert…",
     "status_grounding": "Verankerung an echten Orten aus der TRIPTIC-Basis…",
+    "status_routing": "Echte Routen werden berechnet…",
     "status_photos": "Fotos werden gesucht…",
     "error_generation": "Generierung fehlgeschlagen. Versuche es gleich noch einmal.",
     "error_quota": "Du hast deine 3 kostenlosen Generierungen diesen Monat aufgebraucht."

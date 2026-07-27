@@ -24,6 +24,7 @@
     "status_validating": "Validation géographique par l'agent correcteur…",
     "status_retrying": "Correction des itinéraires…",
     "status_grounding": "Ancrage sur les lieux réels de la base TRIPTIC…",
+    "status_routing": "Calcul des vrais itinéraires routiers…",
     "status_photos": "Recherche des photos…",
     "error_generation": "La génération a échoué. Réessaie dans un instant.",
     "error_quota": "Tu as utilisé tes 3 générations gratuites ce mois-ci."

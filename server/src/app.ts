@@ -16,6 +16,7 @@ import { createPlacesRouter } from './routes/places.js';
 import { createPublicTripsRouter, createTripsRouter } from './routes/trips.js';
 import { QuotaService } from './services/quota.js';
 import { EnrichmentService } from './services/enrichment.js';
+import { RoutingService } from './services/routing.js';
 
 export interface AppDeps {
   provider: LlmProvider;
@@ -23,12 +24,15 @@ export interface AppDeps {
   quota?: QuotaService;
   /** Base de connaissance des lieux — active le grounding des générations. */
   placeRepo?: PgPlaceRepo;
+  /** Routing GraphHopper — segments réels des trips (0.2/0.3). */
+  routing?: RoutingService;
 }
 
-export function createApp({ provider, repo, quota, placeRepo }: AppDeps): Express {
+export function createApp({ provider, repo, quota, placeRepo, routing }: AppDeps): Express {
   const app = express();
   const tripRepo = repo ?? new MemoryTripRepo();
   const quotaService = quota ?? new QuotaService();
+  const routingService = routing ?? new RoutingService(env.graphhopperUrl);
 
   app.use(cors({ origin: env.appUrl, credentials: true }));
   app.use(express.json({ limit: '1mb' }));
@@ -47,7 +51,7 @@ export function createApp({ provider, repo, quota, placeRepo }: AppDeps): Expres
   app.use(
     '/api/ai',
     aiRateLimiter,
-    createAiRouter(provider, quotaService, placeRepo, enrichment),
+    createAiRouter(provider, quotaService, placeRepo, enrichment, routingService),
   );
   app.use('/api/trips', createTripsRouter(tripRepo));
   app.use('/api/public', createPublicTripsRouter(tripRepo));

@@ -46,6 +46,7 @@ export const trips = pgTable('trips', {
   metadata: jsonb('metadata'),
   waypoints: geographyLineString('waypoints'),
   waypoints_json: jsonb('waypoints_json'), // détail app (noms, jours, types)
+  days_json: jsonb('days_json'), // structure jours → activités → segments (0.1)
   gpx_url: text('gpx_url'),
   cover_photo: text('cover_photo'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -93,6 +94,7 @@ export const places = pgTable('places', {
   source_url: text('source_url'),
   wikidata_id: text('wikidata_id'),
   wikipedia: text('wikipedia'),
+  trace: geographyLineString('trace'), // tracé complet (tours DATAtourisme, rando phase 5)
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });

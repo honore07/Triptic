@@ -1,0 +1,19 @@
+# TRIPTIC — GraphHopper auto-hébergé (roadmap 0.2)
+# Routing voiture (profil scenic « belles routes ») / pied / vélo sur OSM.
+# Données : extraits Geofabrik fusionnés par deploy/graphhopper-setup.sh.
+# ⚠️ Port lié à 127.0.0.1 uniquement : l'API GraphHopper n'est JAMAIS exposée
+# au public (consommée par le serveur TRIPTIC, qui porte le rate limiting).
+# Attribution : © OpenStreetMap contributors (ODbL) — résultats stockables.
+services:
+  graphhopper:
+    image: israelhikingmap/graphhopper:latest
+    container_name: triptic-graphhopper
+    command: ["--input", "/data/triptic.osm.pbf", "-c", "/data/config.yml", "--host", "0.0.0.0"]
+    environment:
+      # KVM 2 = 8 Go RAM : on plafonne la JVM, MMAP fait le reste (config.yml)
+      JAVA_OPTS: "-Xmx4g -Xms1g"
+    volumes:
+      - /opt/graphhopper/data:/data
+    ports:
+      - "127.0.0.1:8989:8989"
+    restart: unless-stopped

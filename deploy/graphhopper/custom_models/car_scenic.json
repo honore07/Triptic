@@ -1,0 +1,10 @@
+{
+  "comment": "TRIPTIC — profil voiture « belles routes » : pénalise autoroutes, voies rapides, primaires et tunnels ; distance_influence bas pour accepter des détours panoramiques (cols, routes de forêt, tertiaires).",
+  "priority": [
+    { "if": "road_class == MOTORWAY", "multiply_by": "0.05" },
+    { "if": "road_class == TRUNK", "multiply_by": "0.25" },
+    { "if": "road_class == PRIMARY", "multiply_by": "0.5" },
+    { "if": "road_environment == TUNNEL", "multiply_by": "0.5" }
+  ],
+  "distance_influence": 5
+}

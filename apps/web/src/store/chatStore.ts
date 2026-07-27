@@ -2,7 +2,15 @@ import { create } from 'zustand';
 import type { ChatMessage, Lang, PlanId, TripTuning } from '@triptic/shared';
 import { generateTripsStream, type TripsPayload } from '../lib/api';
 
-type ChatStatus = 'idle' | 'generating' | 'validating' | 'retrying' | 'photos' | 'error';
+type ChatStatus =
+  | 'idle'
+  | 'generating'
+  | 'grounding'
+  | 'validating'
+  | 'retrying'
+  | 'routing'
+  | 'photos'
+  | 'error';
 
 interface ChatState {
   messages: ChatMessage[];

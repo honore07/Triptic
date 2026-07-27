@@ -44,6 +44,7 @@ describe('rowToTrip', () => {
     status: 'saved',
     metadata: { duration_days: 3 },
     waypoints_json: WAYPOINTS,
+    days_json: null,
     cover_photo: null,
     created_at: new Date('2026-07-17T10:00:00Z'),
     updated_at: new Date('2026-07-17T10:00:00Z'),

@@ -32,6 +32,24 @@ describe('IMPORT_REGIONS', () => {
   });
 });
 
+describe('catégories food (roadmap 0.4 — search this area)', () => {
+  it('importe restaurants, cafés, bars et fast-foods avec le tag food', () => {
+    for (const kind of ['restaurant', 'cafe', 'bar', 'fast_food'] as const) {
+      const category = OSM_CATEGORIES.find((c) => c.kind === kind);
+      expect(category, kind).toBeDefined();
+      expect(category!.selectors[0]).toBe(`[amenity=${kind}][name]`);
+      expect(category!.tags).toContain('food');
+    }
+  });
+
+  it('résume la cuisine quand OSM la connaît', () => {
+    expect(buildSummary({ cuisine: 'regional;french' }, 'restaurant')).toBe(
+      'Cuisine : regional, french',
+    );
+    expect(buildSummary({}, 'restaurant')).toBeNull();
+  });
+});
+
 describe('buildOverpassQuery', () => {
   it('construit une requête nwr avec bbox sud,ouest,nord,est', () => {
     const query = buildOverpassQuery(PEAK_CATEGORY, {

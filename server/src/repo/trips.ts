@@ -5,7 +5,15 @@ import type { Trip } from '@triptic/shared';
 export type TripPatch = Partial<
   Pick<
     Trip,
-    'title' | 'is_public' | 'status' | 'waypoints' | 'slug' | 'mode' | 'metadata' | 'cover_photo'
+    | 'title'
+    | 'is_public'
+    | 'status'
+    | 'waypoints'
+    | 'days'
+    | 'slug'
+    | 'mode'
+    | 'metadata'
+    | 'cover_photo'
   >
 >;
 

@@ -49,20 +49,20 @@ MISSION : À partir de la conversation, extraire les paramètres du trip et gén
 RÈGLES STRICTES :
 1. Les 3 trips doivent satisfaire les critères principaux de l'utilisateur (région, durée globale, type d'activité)
 2. Ils se différencient sur 1 à 2 axes maximum (durée ±1j, difficulté ±1 niveau, ambiance sauvage/services)
-3. Chaque waypoint doit être un lieu RÉEL et ACCESSIBLE avec des coordonnées GPS exactes (lat/lng décimaux WGS84)
+3. Chaque activité doit être un lieu RÉEL et ACCESSIBLE avec des coordonnées GPS exactes (lat/lng décimaux WGS84)
 4. Les distances journalières doivent être réalistes (trek : 15-25 km/j max, vélo : 60-120 km/j, van/voiture : 100-300 km/j)
 5. Toujours vérifier que les points de départ/arrivée sont accessibles en voiture/van
 6. Si des informations ESSENTIELLES manquent (au minimum : région/destination ET durée), pose UNE question courte
 7. Format de sortie : JSON STRICT, aucun texte hors du JSON
-8. Les champs à valeurs fermées sont STRICTS : difficulty vaut EXACTEMENT "easy", "medium" ou "hard" (jamais "medium-hard" ni autre variante) — pareil pour mode, kind, budget, group_type, vehicle
+8. Les champs à valeurs fermées sont STRICTS : difficulty vaut EXACTEMENT "easy", "medium" ou "hard" (jamais "medium-hard" ni autre variante) — pareil pour mode, type, time_of_day, budget, group_type, vehicle
+9. Les distances/durées de déplacement seront recalculées par un routeur réel : tes estimations restent utiles en secours, ne les gonfle pas
 
-RÈGLES ROAD TRIP (voiture/van) — surtout pour les longs trips (7 jours et +) :
-- Chaque jour a 2 à 3 waypoints MAX (roulage + 1 temps fort + nuit) pour rester lisible
-- Chaque jour se termine par un waypoint kind "camp" : le lieu de la nuit, avec dans note une suggestion concrète de logement (camping nommé, aire de van, hôtel/refuge typique)
-- Les temps forts sont des waypoints kind "poi" : randonnée à la journée (préciser durée/dénivelé dans note), village ou site à visiter
-- Dans les notes, glisse quand c'est pertinent une spécialité culinaire locale ou une bonne adresse où manger
+STRUCTURE DES JOURNÉES :
+- Chaque jour a 2 à 4 activités MAX, ordonnées chronologiquement (time_of_day morning → afternoon → evening)
+- Types d'activité : "drive" (étape de roulage vers un lieu), "hike" (rando à la journée : préciser distance_km, elevation_gain_m, duration_min), "visit" (village, site, panorama), "meal" (spécialité ou bonne adresse locale, si pertinent), "camp" (lieu de la nuit), "rest" (jour respiration)
+- Chaque jour se termine par une activité "camp" : le lieu de la nuit, avec en description une suggestion concrète (camping nommé, aire de van, refuge) et cost_estimate en EUR — sauf le dernier jour si retour au départ
 - Prévois 1 jour "respiration" (moins de route) tous les 4-5 jours sur les trips de 10 jours et +
-- Notes TÉLÉGRAPHIQUES (max 15 mots) et summary max 2 phrases : le JSON total doit rester compact
+- descriptions TÉLÉGRAPHIQUES (max 15 mots) et summary max 2 phrases : le JSON total doit rester compact
 
 FORMAT DE SORTIE (un seul objet JSON) :
 - S'il manque des informations essentielles :
@@ -77,7 +77,10 @@ FORMAT DE SORTIE (un seul objet JSON) :
 }
 
 TripProposal :
-{"title": string, "mode": "roadtrip"|"trek"|"bikepacking", "duration_days": number, "distance_km": number, "elevation_gain_m": number, "difficulty": "easy"|"medium"|"hard", "ambiance": string, "summary": "<2-3 phrases en ${LANG_NAMES[lang]}>", "daily_distance_km": number, "waypoints": [{"name": string, "lat": number, "lng": number, "day": number, "kind": "start"|"stage"|"poi"|"camp"|"trailhead"|"end", "note"?: string}], "photo_keywords": ["<région>", "<activité>", "<ambiance>"]}
+{"title": string, "mode": "roadtrip"|"trek"|"bikepacking", "duration_days": number, "distance_km": number, "elevation_gain_m": number, "difficulty": "easy"|"medium"|"hard", "ambiance": string, "summary": "<2-3 phrases en ${LANG_NAMES[lang]}>", "daily_distance_km": number, "days": [TripDay], "photo_keywords": ["<région>", "<activité>", "<ambiance>"]}
+
+TripDay :
+{"day": number, "title": "<thème du jour>", "activities": [{"type": "hike"|"drive"|"visit"|"meal"|"camp"|"rest", "time_of_day": "morning"|"afternoon"|"evening", "title": string, "lat": number, "lng": number, "description"?: string, "duration_min"?: number, "distance_km"?: number, "elevation_gain_m"?: number, "cost_estimate"?: number}]}
 
 Les 3 trips doivent donner envie de tous les faire — le choix doit être difficile et plaisant.${
     tuning ? buildTuningSection(tuning) : ''
@@ -110,15 +113,15 @@ export function buildGroundingMessage(places: ShortlistPlace[]): string {
 ${formatShortlist(places)}
 
 RÉVISE tes 3 trips en t'ancrant sur ces lieux :
-1. Si un de tes waypoints correspond à un lieu de la liste, reprends EXACTEMENT son nom et ses coordonnées
-2. Remplace les waypoints douteux par des lieux pertinents de la liste (respecte le mode, le rythme, les réglages)
+1. Si une de tes activités correspond à un lieu de la liste, reprends EXACTEMENT son nom et ses coordonnées
+2. Remplace les activités douteuses par des lieux pertinents de la liste (respecte le mode, le rythme, les réglages)
 3. Intègre 1 à 2 pépites de la liste par trip quand c'est cohérent avec l'itinéraire
-4. Ne change ni la structure, ni la durée, ni ce qui distingue les 3 trips
+4. Ne change ni la structure des jours, ni la durée, ni ce qui distingue les 3 trips
 Réponds avec le même format JSON strict complet (type "trips").`;
 }
 
 export function buildCorrectorPrompt(): string {
-  return `Tu es l'agent correcteur de TRIPTIC. On te donne un JSON contenant 3 itinéraires outdoor générés par un autre modèle.
+  return `Tu es l'agent correcteur de TRIPTIC. On te donne un JSON contenant 3 itinéraires outdoor générés par un autre modèle (structure jours → activités, avec waypoints dérivés ; les distances marquées routed:true viennent d'un routeur réel et sont fiables).
 
 Ton rôle : bloquer UNIQUEMENT les erreurs CRITIQUES qui rendraient un trip inutilisable sur le terrain. Tu n'es pas un critique de style : un trip perfectible mais faisable est VALIDE.
 

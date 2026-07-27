@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { deriveWaypointsFromDays } from '@triptic/shared';
 
 /**
  * Les LLM dérivent parfois des enums stricts ("medium-hard", "modéré"…) —
@@ -43,19 +44,68 @@ export const waypointSchema = z.object({
   note: z.string().optional(),
 });
 
-export const tripProposalSchema = z.object({
+export const tripActivitySchema = z.object({
+  type: z.enum(['hike', 'drive', 'visit', 'meal', 'camp', 'rest']),
+  time_of_day: z.enum(['morning', 'afternoon', 'evening']),
   title: z.string(),
-  mode: z.enum(['roadtrip', 'trek', 'bikepacking']),
-  duration_days: z.number().int().min(1),
-  distance_km: z.number().min(0),
-  elevation_gain_m: z.number().min(0),
-  difficulty: difficultySchema,
-  ambiance: z.string(),
-  summary: z.string(),
-  daily_distance_km: z.number().min(0),
-  waypoints: z.array(waypointSchema).min(2),
-  photo_keywords: z.array(z.string()).min(1),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  description: z.string().optional(),
+  duration_min: z.number().min(0).optional(),
+  distance_km: z.number().min(0).optional(),
+  elevation_gain_m: z.number().min(0).optional(),
+  cost_estimate: z.number().min(0).optional(),
+  place_id: z.string().optional(),
 });
+
+/** Segments calculés côté serveur (GraphHopper) — jamais demandés au LLM. */
+export const tripSegmentSchema = z.object({
+  geometry: z.array(z.tuple([z.number(), z.number()])).optional(),
+  distance_km: z.number().min(0),
+  duration_min: z.number().min(0),
+  mode: z.enum(['car', 'foot', 'bike']),
+  routed: z.boolean().optional(),
+  elevation_gain_m: z.number().min(0).optional(),
+  fuel_cost: z.number().min(0).optional(),
+  co2_kg: z.number().min(0).optional(),
+});
+
+export const tripDaySchema = z.object({
+  day: z.number().int().min(1),
+  title: z.string(),
+  start_location: z.string().optional(),
+  end_location: z.string().optional(),
+  activities: z.array(tripActivitySchema).min(1),
+  segments: z.array(tripSegmentSchema).optional(),
+});
+
+/**
+ * Un trip arrive soit au format historique (waypoints[]), soit au format
+ * structuré jours → activités (roadmap 0.1) — dans ce cas les waypoints sont
+ * dérivés des activités (compat carte/GPX/PostGIS).
+ */
+export const tripProposalSchema = z
+  .object({
+    title: z.string(),
+    mode: z.enum(['roadtrip', 'trek', 'bikepacking']),
+    duration_days: z.number().int().min(1),
+    distance_km: z.number().min(0),
+    elevation_gain_m: z.number().min(0),
+    difficulty: difficultySchema,
+    ambiance: z.string(),
+    summary: z.string(),
+    daily_distance_km: z.number().min(0),
+    waypoints: z.array(waypointSchema).min(2).optional(),
+    days: z.array(tripDaySchema).min(1).optional(),
+    photo_keywords: z.array(z.string()).min(1),
+  })
+  .transform((p) => ({
+    ...p,
+    waypoints: p.waypoints ?? deriveWaypointsFromDays(p.days ?? []),
+  }))
+  .refine((p) => p.waypoints.length >= 2, {
+    message: 'waypoints[] (min 2) ou days[] avec assez d’activités requis',
+  });
 
 /** Sortie attendue du LLM : soit une question de clarification, soit les 3 trips. */
 export const engineOutputSchema = z.discriminatedUnion('type', [

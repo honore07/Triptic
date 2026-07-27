@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
+import { tripDaySchema } from '@triptic/ai-engine';
 import { buildGpx } from '@triptic/map-utils';
 import { PLANS } from '@triptic/shared';
 import type { TripRepo } from '../repo/trips.js';
@@ -19,6 +20,7 @@ const saveTripSchema = z.object({
   mode: z.enum(['roadtrip', 'trek', 'bikepacking']),
   metadata: z.record(z.unknown()),
   waypoints: z.array(waypointSchema).min(2),
+  days: z.array(tripDaySchema).min(1).nullable().default(null),
   cover_photo: z.string().url().nullable().default(null),
   is_public: z.boolean().default(false),
 });
@@ -42,6 +44,7 @@ export function createTripsRouter(repo: TripRepo): Router {
       status: 'saved',
       metadata: body.metadata as never,
       waypoints: body.waypoints,
+      days: body.days,
       cover_photo: body.cover_photo,
     });
     res.status(201).json(trip);

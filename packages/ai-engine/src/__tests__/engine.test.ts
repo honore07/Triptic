@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { deriveWaypointsFromDays, type TripDay } from '@triptic/shared';
 import { sanitizeUserInput } from '../sanitize.js';
 import { buildSystemPrompt } from '../prompts.js';
-import { coerceDifficulty, engineOutputSchema, extractJson } from '../schema.js';
+import {
+  coerceDifficulty,
+  engineOutputSchema,
+  extractJson,
+  tripProposalSchema,
+} from '../schema.js';
 import { generateTrips, type LlmProvider } from '../index.js';
 
 const VALID_TRIP = {
@@ -121,6 +127,69 @@ describe('engineOutputSchema', () => {
       expect(parsed.request.difficulty).toBe('medium');
       expect(parsed.trips[0].difficulty).toBe('hard');
     }
+  });
+});
+
+describe('structure jours → activités (roadmap 0.1)', () => {
+  const DAYS: TripDay[] = [
+    {
+      day: 1,
+      title: 'Schlucht → Hohneck',
+      activities: [
+        {
+          type: 'drive',
+          time_of_day: 'morning',
+          title: 'Col de la Schlucht',
+          lat: 48.0631,
+          lng: 7.0209,
+        },
+        {
+          type: 'hike',
+          time_of_day: 'afternoon',
+          title: 'Le Hohneck',
+          lat: 48.0403,
+          lng: 7.0086,
+          description: 'Boucle des crêtes',
+          distance_km: 12,
+          elevation_gain_m: 450,
+        },
+        { type: 'camp', time_of_day: 'evening', title: 'Ferme du Kastelberg', lat: 48.02, lng: 7.03 },
+      ],
+    },
+    {
+      day: 2,
+      title: 'Vers le Grand Ballon',
+      activities: [
+        { type: 'hike', time_of_day: 'morning', title: 'Grand Ballon', lat: 47.9014, lng: 7.0994 },
+      ],
+    },
+  ];
+
+  it('dérive les waypoints des activités (compat carte/GPX)', () => {
+    const waypoints = deriveWaypointsFromDays(DAYS);
+    expect(waypoints).toHaveLength(4);
+    expect(waypoints[0]).toMatchObject({ name: 'Col de la Schlucht', day: 1, kind: 'start' });
+    expect(waypoints[1]).toMatchObject({ kind: 'poi', note: 'Boucle des crêtes' });
+    expect(waypoints[2]).toMatchObject({ kind: 'camp' });
+    expect(waypoints[3]).toMatchObject({ name: 'Grand Ballon', day: 2, kind: 'end' });
+  });
+
+  it('accepte un trip au format days[] sans waypoints et les dérive', () => {
+    const { waypoints: _omit, ...withoutWaypoints } = VALID_TRIP;
+    const parsed = tripProposalSchema.parse({ ...withoutWaypoints, days: DAYS });
+    expect(parsed.days).toHaveLength(2);
+    expect(parsed.waypoints).toHaveLength(4);
+    expect(parsed.waypoints[0]?.kind).toBe('start');
+  });
+
+  it('sérialise/désérialise la structure sans perte (persistance JSONB)', () => {
+    const roundTripped = JSON.parse(JSON.stringify(DAYS)) as TripDay[];
+    expect(roundTripped).toEqual(DAYS);
+  });
+
+  it('rejette un trip sans waypoints ni days', () => {
+    const { waypoints: _omit, ...withoutWaypoints } = VALID_TRIP;
+    expect(() => tripProposalSchema.parse(withoutWaypoints)).toThrow();
   });
 });
 

@@ -35,6 +35,13 @@ export const OSM_CATEGORIES: OsmCategory[] = [
   { kind: 'castle', selectors: ['[historic=castle][name]'], tags: ['culture', 'patrimoine'] },
   { kind: 'museum', selectors: ['[tourism=museum][name]'], tags: ['culture'] },
   { kind: 'attraction', selectors: ['[tourism=attraction][name]'], tags: ['visite'] },
+  // Food (roadmap 0.4) — pour « search this area » (phase 4), pas pour le
+  // grounding des trips. ⚠️ Couverture OSM inégale en zone rurale : l'UI ne
+  // doit pas prétendre à l'exhaustivité.
+  { kind: 'restaurant', selectors: ['[amenity=restaurant][name]'], tags: ['food'] },
+  { kind: 'cafe', selectors: ['[amenity=cafe][name]'], tags: ['food'] },
+  { kind: 'bar', selectors: ['[amenity=bar][name]'], tags: ['food'] },
+  { kind: 'fast_food', selectors: ['[amenity=fast_food][name]'], tags: ['food'] },
 ];
 
 /** Requête Overpass QL pour une catégorie sur une bbox. */

@@ -24,6 +24,7 @@
     "status_validating": "Geographic validation by the corrector agent…",
     "status_retrying": "Fixing the routes…",
     "status_grounding": "Anchoring on real places from the TRIPTIC base…",
+    "status_routing": "Computing real road routes…",
     "status_photos": "Finding photos…",
     "error_generation": "Generation failed. Try again in a moment.",
     "error_quota": "You have used your 3 free generations this month."

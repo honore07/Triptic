@@ -50,6 +50,61 @@ export interface Waypoint {
   note?: string | undefined;
 }
 
+/** Type d'une activité dans une journée de trip. */
+export type ActivityType = 'hike' | 'drive' | 'visit' | 'meal' | 'camp' | 'rest';
+
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening';
+
+/** Mode de déplacement d'un segment routé (profils GraphHopper). */
+export type SegmentMode = 'car' | 'foot' | 'bike';
+
+/**
+ * Une activité d'une journée : le grain fin du trip (édition, budget, CO₂).
+ * Les waypoints[] historiques restent dérivables des activités.
+ */
+export interface TripActivity {
+  type: ActivityType;
+  time_of_day: TimeOfDay;
+  title: string;
+  lat: number;
+  lng: number;
+  description?: string | undefined;
+  duration_min?: number | undefined;
+  distance_km?: number | undefined;
+  elevation_gain_m?: number | undefined;
+  /** Estimation de coût en EUR (activité payante, nuit, repas). */
+  cost_estimate?: number | undefined;
+  /** Lien vers la base de lieux (table places) quand l'activité y est ancrée. */
+  place_id?: string | undefined;
+}
+
+/**
+ * Segment de déplacement entre deux activités, routé par GraphHopper (0.2).
+ * Sans routing disponible : distance/durée estimées par le LLM, routed=false.
+ */
+export interface TripSegment {
+  /** Coordonnées GeoJSON [lng, lat][] de la géométrie routée. */
+  geometry?: [number, number][] | undefined;
+  distance_km: number;
+  duration_min: number;
+  mode: SegmentMode;
+  /** true = valeurs issues du routing réel, false/absent = estimation LLM. */
+  routed?: boolean | undefined;
+  elevation_gain_m?: number | undefined;
+  fuel_cost?: number | undefined;
+  co2_kg?: number | undefined;
+}
+
+/** Une journée du trip : activités ordonnées + segments de déplacement. */
+export interface TripDay {
+  day: number;
+  title: string;
+  start_location?: string | undefined;
+  end_location?: string | undefined;
+  activities: TripActivity[];
+  segments?: TripSegment[] | undefined;
+}
+
 /** Une des 3 propositions générées par l'IA. */
 export interface TripProposal {
   title: string;
@@ -62,6 +117,8 @@ export interface TripProposal {
   summary: string;
   daily_distance_km: number;
   waypoints: Waypoint[];
+  /** Structure jours → activités (roadmap 0.1). Absente sur les anciens trips. */
+  days?: TripDay[] | undefined;
   photo_keywords: string[];
   photo_url?: string | undefined;
 }
@@ -92,7 +149,15 @@ export type PlaceKind =
   | 'village'
   | 'museum'
   | 'attraction'
+  | 'restaurant'
+  | 'cafe'
+  | 'bar'
+  | 'fast_food'
   | 'poi';
+
+/** Types food — exclus de la shortlist de grounding des trips (bruit), mais
+ * interrogeables via « search this area » (phase 4). */
+export const FOOD_KINDS: readonly PlaceKind[] = ['restaurant', 'cafe', 'bar', 'fast_food'];
 
 /** Régions couvertes par la base (pilote : Alsace-Vosges + arc alpin). */
 export type PlaceRegion = 'alsace-vosges' | 'alpes-fr' | 'alpes-ch' | 'alpes-it';
@@ -142,8 +207,10 @@ export interface Trip {
   is_public: boolean;
   mode: TripMode;
   status: 'draft' | 'saved' | 'shared';
-  metadata: Omit<TripProposal, 'waypoints' | 'title'>;
+  metadata: Omit<TripProposal, 'waypoints' | 'title' | 'days'>;
   waypoints: Waypoint[];
+  /** Structure jours → activités. null sur les trips antérieurs à la migration 0003. */
+  days: TripDay[] | null;
   cover_photo: string | null;
   created_at: string;
   updated_at: string;

@@ -4,7 +4,9 @@ import { generateTrips, type LlmProvider } from '@triptic/ai-engine';
 import { PLANS } from '@triptic/shared';
 import { logger } from '../logger.js';
 import { findTripPhoto } from '../services/photos.js';
+import { enrichTripSegments } from '../services/segments.js';
 import type { QuotaService } from '../services/quota.js';
+import type { RoutingService } from '../services/routing.js';
 import type { PgPlaceRepo } from '../repo/places.js';
 import type { EnrichmentService } from '../services/enrichment.js';
 
@@ -55,6 +57,7 @@ export function createAiRouter(
   quota: QuotaService,
   placeRepo?: PgPlaceRepo,
   enrichment?: EnrichmentService,
+  routing?: RoutingService,
 ): Router {
   const router = Router();
 
@@ -101,8 +104,23 @@ export function createAiRouter(
         sseWrite(res, 'question', { message: result.message });
       } else {
         quota.consume(userId, plan);
-        sseWrite(res, 'status', { step: 'photos' });
         const visible = result.generation.trips.slice(0, limits.trip_proposals);
+        // Segments routés (GraphHopper 0.2) : géométrie réelle + distances/durées.
+        // Jamais bloquant : sans routeur, les estimations LLM restent en place.
+        if (routing?.enabled) {
+          sseWrite(res, 'status', { step: 'routing' });
+          const stats = await Promise.all(
+            visible.map((trip) => enrichTripSegments(trip, routing)),
+          );
+          logger.info(
+            {
+              routed: stats.reduce((n, s) => n + s.routedCount, 0),
+              segments: stats.reduce((n, s) => n + s.segmentCount, 0),
+            },
+            'Segment routing metrics',
+          );
+        }
+        sseWrite(res, 'status', { step: 'photos' });
         await Promise.all(
           visible.map(async (trip) => {
             trip.photo_url = (await findTripPhoto(trip.photo_keywords)) ?? undefined;

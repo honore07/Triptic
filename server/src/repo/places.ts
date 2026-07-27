@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import type { PlaceKind, PlaceRegion, ShortlistPlace } from '@triptic/shared';
+import { FOOD_KINDS, type PlaceKind, type PlaceRegion, type ShortlistPlace } from '@triptic/shared';
 import { placeReviews, places } from '../db/schema.js';
 
 /** Forme d'insertion d'un lieu (imports + ajouts). */
@@ -23,11 +23,19 @@ export interface PlaceInput {
   source_url?: string | null;
   wikidata_id?: string | null;
   wikipedia?: string | null;
+  /** Tracé complet [lng, lat][] (tours DATAtourisme, rando phase 5). */
+  trace?: [number, number][] | null;
 }
 
 /** WKT d'un point pour PostGIS (ordre lon lat — pas lat lng). */
 export function toPointWkt(lat: number, lng: number): string {
   return `POINT(${lng} ${lat})`;
+}
+
+/** WKT d'un tracé [lng, lat][] pour PostGIS. null si moins de 2 points. */
+export function toTraceWkt(coords: [number, number][] | null | undefined): string | null {
+  if (!coords || coords.length < 2) return null;
+  return `LINESTRING(${coords.map(([lng, lat]) => `${lng} ${lat}`).join(', ')})`;
 }
 
 /** Nom normalisé pour le dédoublonnage inter-sources (minuscule, sans accents). */
@@ -115,6 +123,9 @@ export class PgPlaceRepo {
             source_url: p.source_url ?? null,
             wikidata_id: p.wikidata_id ?? null,
             wikipedia: p.wikipedia ?? null,
+            ...(toTraceWkt(p.trace)
+              ? { trace: sql`ST_GeogFromText(${toTraceWkt(p.trace)})` }
+              : {}),
           })),
         )
         .onConflictDoUpdate({
@@ -131,6 +142,8 @@ export class PgPlaceRepo {
             notoriety: sql`excluded.notoriety`,
             wikidata_id: sql`excluded.wikidata_id`,
             wikipedia: sql`excluded.wikipedia`,
+            // Une trace connue n'est jamais écrasée par un import sans trace
+            trace: sql`COALESCE(excluded.trace, places.trace)`,
             updated_at: sql`now()`,
           },
         });
@@ -159,11 +172,13 @@ export class PgPlaceRepo {
       `);
       const match = (existing as unknown as { id: string }[])[0];
       if (match) {
+        const traceWkt = toTraceWkt(p.trace);
         await this.db.execute(sql`
           UPDATE places SET
             summary     = COALESCE(summary, ${p.summary ?? null}),
             notoriety   = GREATEST(notoriety, ${p.notoriety ?? 20}),
             wikidata_id = COALESCE(wikidata_id, ${p.wikidata_id ?? null}),
+            trace       = COALESCE(trace, ${traceWkt ? sql`ST_GeogFromText(${traceWkt})` : null}),
             updated_at  = now()
           WHERE id = ${match.id}
         `);
@@ -191,11 +206,15 @@ export class PgPlaceRepo {
     const radius = opts.radiusM ?? 20000;
     const { majors, gems } = splitShortlistLimits(opts.limit ?? 60, opts.discovery ?? 3);
 
+    // Les food (restos, cafés…) sont exclus du grounding : nombreux et proches
+    // de tout, ils noieraient les vraies pépites. Ils restent interrogeables
+    // via findNearby/bbox (« search this area », phase 4).
     const majorRows = await this.db.execute(sql`
       SELECT name, kind, notoriety, summary,
              ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
       FROM places
       WHERE status = 'active' AND notoriety >= 50
+        AND kind <> ALL(${FOOD_KINDS as string[]})
         AND ST_DWithin(location, ST_GeogFromText(${wkt}), ${radius})
       ORDER BY notoriety DESC, ST_Distance(location, ST_GeogFromText(${wkt})) ASC
       LIMIT ${majors}
@@ -205,6 +224,7 @@ export class PgPlaceRepo {
              ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
       FROM places
       WHERE status = 'active' AND notoriety < 50 AND confidence >= 70
+        AND kind <> ALL(${FOOD_KINDS as string[]})
         AND ST_DWithin(location, ST_GeogFromText(${wkt}), ${radius})
       ORDER BY ST_Distance(location, ST_GeogFromText(${wkt})) ASC
       LIMIT ${gems}
