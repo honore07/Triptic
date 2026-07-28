@@ -17,8 +17,16 @@ Resend.
 ```bash
 docker cp /opt/triptic/n8n-workflows/. <conteneur-n8n>:/tmp/wf/
 docker exec -u node <conteneur-n8n> n8n import:workflow --separate --input=/tmp/wf/
-# puis activer les workflows dans l'UI (toggle en haut à droite)
+# puis publier/activer les workflows dans l'UI (bouton « Publish » en haut à droite)
 ```
+
+> ⚠️ `n8n import:workflow` (CLI) **exige un champ `id` de premier niveau** dans
+> le JSON, sinon il échoue avec `SQLITE_CONSTRAINT: NOT NULL constraint failed:
+> workflow_entity.id`. Chaque fichier ici en a un (ré-import idempotent : même
+> `id` ⇒ mise à jour, pas de doublon). Un nouveau workflow créé dans l'UI reçoit
+> son `id` automatiquement — pensez à le reporter dans le JSON exporté.
+> Vérifié le 2026-07-27 sur l'instance du VPS (`agent-compliance-report` importé
+> + publié, cron lundi 09:30).
 
 Après modification dans l'UI n8n : ré-exporter le JSON ici (menu ⋯ → Download)
 pour garder le repo en phase.
