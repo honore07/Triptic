@@ -22,6 +22,7 @@ const difficultySchema = z.preprocess(coerceDifficulty, z.enum(['easy', 'medium'
 export const tripRequestSchema = z.object({
   departure: z.string(),
   destination: z.string().optional(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   duration_days: z.number().int().min(1).max(60),
   modes: z.array(z.enum(['roadtrip', 'trek', 'bikepacking'])).min(1),
   difficulty: difficultySchema,

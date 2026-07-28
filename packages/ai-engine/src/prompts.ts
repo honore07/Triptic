@@ -1,3 +1,4 @@
+import { seasonForDate, type Season } from '@triptic/shared';
 import type { Lang, ShortlistPlace, TripRequest, TripTuning } from '@triptic/shared';
 
 const LANG_NAMES: Record<Lang, string> = {
@@ -40,7 +41,32 @@ ${lines.join('\n')}
 Adapte dénivelés, distances quotidiennes, choix des étapes, des POI et des nuits à ces réglages. Un curseur à 3 est neutre. Ces réglages priment sur tes valeurs par défaut, mais jamais sur une demande explicite de la conversation.`;
 }
 
-export function buildSystemPrompt(lang: Lang, maxProposals: 1 | 3, tuning?: TripTuning): string {
+/** Consignes de faisabilité saisonnière (les dates pilotent les activités). */
+const SEASON_GUIDANCE: Record<Season, string> = {
+  winter:
+    'HIVER : cols alpins souvent FERMÉS (Galibier, Iseran, Grand-Ballon parfois…) — vérifie les accès routiers ; jours courts (activités finies avant ~16h30) ; randos = raquettes/neige en altitude, privilégier basse altitude ; baignade exclue ; refuges d’altitude fermés ou non gardés ; prévoir équipements neige.',
+  spring:
+    'PRINTEMPS : névés fréquents au-dessus de ~2000 m (randos d’altitude risquées tôt en saison) ; cols en cours de réouverture (vérifier) ; rivières hautes (fonte) ; cascades à leur maximum ; baignade en lac encore froide.',
+  summer:
+    'ÉTÉ : canicule possible en vallée (départs tôt, éviter les randos exposées l’après-midi) ; orages fréquents en montagne l’après-midi (sommets le matin) ; baignade possible ; forte affluence sur les sites majeurs (décaler ou viser des pépites) ; certains massifs interdits de bivouac/feu.',
+  autumn:
+    'AUTOMNE : jours qui raccourcissent vite ; couleurs superbes en forêt (mettre en avant) ; premiers enneigements en altitude dès octobre ; refuges qui ferment ; brouillards matinaux en plaine ; chasse en cours dans certains massifs.',
+};
+
+export function buildSeasonSection(startDate: string): string {
+  const season = seasonForDate(startDate);
+  if (!season) return '';
+  return `\n\nDATES & SAISON — le trip démarre le ${startDate} (${season === 'winter' ? 'hiver' : season === 'spring' ? 'printemps' : season === 'summer' ? 'été' : 'automne'}) :
+${SEASON_GUIDANCE[season]}
+Ne propose QUE des activités faisables à ces dates. Reporte "${startDate}" dans request.start_date.`;
+}
+
+export function buildSystemPrompt(
+  lang: Lang,
+  maxProposals: 1 | 3,
+  tuning?: TripTuning,
+  startDate?: string,
+): string {
   return `Tu es le moteur de planification de TRIPTIC, une app d'aventure outdoor (road trip, trek, bikepacking).
 Langue de réponse pour tout texte visible : ${LANG_NAMES[lang]}.
 
@@ -83,6 +109,8 @@ TripDay :
 {"day": number, "title": "<thème du jour>", "activities": [{"type": "hike"|"drive"|"visit"|"meal"|"camp"|"rest", "time_of_day": "morning"|"afternoon"|"evening", "title": string, "lat": number, "lng": number, "description"?: string, "duration_min"?: number, "distance_km"?: number, "elevation_gain_m"?: number, "cost_estimate"?: number}]}
 
 Les 3 trips doivent donner envie de tous les faire — le choix doit être difficile et plaisant.${
+    startDate ? buildSeasonSection(startDate) : ''
+  }${
     tuning ? buildTuningSection(tuning) : ''
   }${
     maxProposals === 1

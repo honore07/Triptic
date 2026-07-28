@@ -1,6 +1,13 @@
 import { create } from 'zustand';
+import { tripDurationDays } from '@triptic/shared';
 import type { ChatMessage, Lang, PlanId, TripRequest, TripTuning } from '@triptic/shared';
 import { generateTripsStream, type TripsPayload } from '../lib/api';
+
+/** Dates du trip choisies dans l'onboarding (ISO yyyy-mm-dd). */
+export interface TripDates {
+  start: string;
+  end: string;
+}
 
 type ChatStatus =
   | 'idle'
@@ -24,12 +31,19 @@ interface ChatState {
    * enums TripRequest (jamais du texte re-parsé). Cumulées entre régénérations.
    */
   overrides: Partial<TripRequest>;
+  /** Dates départ/retour (fixent saison, durée exacte et fenêtre météo). */
+  dates: TripDates | null;
   /** Applique une correction de puce et régénère avec les valeurs confirmées. */
   applyOverrides: (patch: Partial<TripRequest>, lang: Lang, plan: PlanId) => Promise<void>;
   /** Pose la demande initiale SANS générer — le TripTuner s'affiche ensuite. */
   begin: (content: string) => void;
-  /** Valide les curseurs et lance la génération hyper-personnalisée. */
-  confirmTuning: (tuning: TripTuning, lang: Lang, plan: PlanId) => Promise<void>;
+  /** Valide curseurs + dates éventuelles et lance la génération. */
+  confirmTuning: (
+    tuning: TripTuning,
+    lang: Lang,
+    plan: PlanId,
+    dates?: TripDates | null,
+  ) => Promise<void>;
   send: (content: string, lang: Lang, plan: PlanId) => Promise<void>;
   /** Relance la génération avec la conversation existante (ex. après upgrade de plan). */
   regenerate: (lang: Lang, plan: PlanId) => Promise<void>;
@@ -65,6 +79,7 @@ export const useChatStore = create<ChatState>((set, get) => {
         },
         get().tuning,
         get().overrides,
+        get().dates?.start ?? null,
       );
       if (get().status !== 'idle' && get().status !== 'error') {
         set({ status: 'idle' });
@@ -81,6 +96,7 @@ export const useChatStore = create<ChatState>((set, get) => {
     result: null,
     tuning: null,
     overrides: {},
+    dates: null,
 
     reset: () =>
       set({
@@ -90,6 +106,7 @@ export const useChatStore = create<ChatState>((set, get) => {
         result: null,
         tuning: null,
         overrides: {},
+        dates: null,
       }),
 
     applyOverrides: async (patch, lang, plan) => {
@@ -103,8 +120,16 @@ export const useChatStore = create<ChatState>((set, get) => {
       set({ messages: [{ role: 'user', content }], status: 'idle', error: null, result: null });
     },
 
-    confirmTuning: async (tuning, lang, plan) => {
-      set({ tuning });
+    confirmTuning: async (tuning, lang, plan, dates = null) => {
+      // Les dates fixent la durée EXACTE via l'override d'enum (jamais re-déduite)
+      const duration = dates ? tripDurationDays(dates.start, dates.end) : null;
+      set({
+        tuning,
+        dates,
+        ...(duration !== null
+          ? { overrides: { ...get().overrides, duration_days: duration, start_date: dates!.start } }
+          : {}),
+      });
       await run(get().messages, lang, plan);
     },
 

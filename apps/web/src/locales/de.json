@@ -44,7 +44,13 @@
     "culture_high": "Kultur & Dörfer",
     "discovery_label": "Erkundung",
     "discovery_low": "Klassiker",
-    "discovery_high": "Abseits der Pfade"
+    "discovery_high": "Abseits der Pfade",
+    "dates_label": "Reisedaten (optional)",
+    "date_start": "Abfahrt",
+    "date_end": "Rückkehr",
+    "dates_hint": "Ohne Daten leitet die KI die Dauer aus deiner Anfrage ab.",
+    "dates_season_hint": "Aktivitäten werden an die Saison angepasst",
+    "dates_invalid": "Das Rückreisedatum muss nach der Abfahrt liegen."
   },
   "trips": {
     "compare_title": "3 Routen im Wettbewerb",
@@ -240,5 +246,23 @@
     "chip_trails": "Rundwanderungen",
     "target_km": "Ziel-Distanz:",
     "generated_loop": "Auf dem Wegenetz generierte Runde (keine kartierte Runde hier)"
+  },
+  "season": {
+    "winter": "Winter",
+    "spring": "Frühling",
+    "summer": "Sommer",
+    "autumn": "Herbst"
+  },
+  "weather": {
+    "title": "Wetter auf der Route",
+    "locked": "Tageswetter und Aktivitäts-Warnungen: verfügbar mit dem Abenteurer-Plan.",
+    "too_far": "Zu weit voraus für eine Vorhersage (max. ~16 Tage)",
+    "source": "Open-Meteo-Vorhersagen (open-meteo.com) — bei jedem Besuch aktualisiert.",
+    "alert_thunderstorm": "Gewitter erwartet — Außenaktivitäten verschieben (Gipfel nachmittags meiden).",
+    "alert_rain_on_hike": "Starker Regen an einem Wandertag erwartet — plane eine Alternative.",
+    "alert_strong_wind": "Sehr starker Wind erwartet — Vorsicht auf Graten und Pässen.",
+    "alert_heat_on_hike": "Große Hitze an einem Wandertag — früh starten und Wasser mitnehmen.",
+    "alert_cold_camp": "Frostige Nacht am Lagerplatz erwartet — Winterausrüstung einpacken.",
+    "alert_snow_on_route": "Schnee auf Straße oder Weg erwartet — Pässe prüfen und ausrüsten."
   }
 }

@@ -35,6 +35,7 @@ const tuningValue = z.union([
 const requestOverridesSchema = z
   .object({
     duration_days: z.number().int().min(1).max(60),
+    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     modes: z.array(z.enum(['roadtrip', 'trek', 'bikepacking'])).min(1),
     difficulty: z.enum(['easy', 'medium', 'hard']),
     group_type: z.enum(['solo', 'couple', 'group', 'family']),
@@ -66,6 +67,8 @@ const generateBodySchema = z.object({
     })
     .optional(),
   request_overrides: requestOverridesSchema.optional(),
+  /** Date de départ ISO — fixe la saison (activités faisables) + météo. */
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
 function sseWrite(res: Response, event: string, data: unknown): void {
@@ -95,7 +98,7 @@ export function createAiRouter(
       res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
       return;
     }
-    const { messages, lang, tuning, request_overrides } = parsed.data;
+    const { messages, lang, tuning, request_overrides, start_date } = parsed.data;
     // exactOptionalPropertyTypes : on retire les clés explicitement undefined
     const overrides = request_overrides
       ? (Object.fromEntries(
@@ -123,6 +126,7 @@ export function createAiRouter(
         maxProposals: limits.trip_proposals,
         tuning,
         requestOverrides: overrides,
+        startDate: start_date,
         // Ancrage sur la base de lieux (PostGIS) quand elle est disponible
         getShortlist: placeRepo
           ? (points) =>
@@ -140,6 +144,11 @@ export function createAiRouter(
       } else {
         quota.consume(userId, plan);
         const visible = result.generation.trips.slice(0, limits.trip_proposals);
+        // Date de départ posée sur chaque proposition (météo, saison, export)
+        const tripStartDate = start_date ?? result.generation.request.start_date;
+        if (tripStartDate) {
+          for (const trip of visible) trip.start_date = tripStartDate;
+        }
         // Segments routés (GraphHopper 0.2) : géométrie réelle + distances/durées.
         // Jamais bloquant : sans routeur, les estimations LLM restent en place.
         if (routing?.enabled) {

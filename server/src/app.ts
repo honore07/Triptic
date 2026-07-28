@@ -17,6 +17,7 @@ import { createPublicTripsRouter, createTripsRouter } from './routes/trips.js';
 import { QuotaService } from './services/quota.js';
 import { EnrichmentService } from './services/enrichment.js';
 import { RoutingService } from './services/routing.js';
+import { WeatherService } from './services/weather.js';
 
 export interface AppDeps {
   provider: LlmProvider;
@@ -53,7 +54,7 @@ export function createApp({ provider, repo, quota, placeRepo, routing }: AppDeps
     aiRateLimiter,
     createAiRouter(provider, quotaService, placeRepo, enrichment, routingService),
   );
-  app.use('/api/trips', createTripsRouter(tripRepo, routingService));
+  app.use('/api/trips', createTripsRouter(tripRepo, routingService, new WeatherService()));
   app.use('/api/public', createPublicTripsRouter(tripRepo));
   if (placeRepo) {
     app.use('/api/places', createPlacesRouter(placeRepo, routingService));

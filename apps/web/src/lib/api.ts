@@ -45,6 +45,7 @@ export async function generateTripsStream(
   onEvent: (event: GenerateEvent) => void,
   tuning?: TripTuning | null,
   requestOverrides?: Partial<TripRequest> | null,
+  startDate?: string | null,
 ): Promise<void> {
   const res = await fetch(`${API_URL}/api/ai/generate-trips`, {
     method: 'POST',
@@ -56,6 +57,7 @@ export async function generateTripsStream(
       ...(requestOverrides && Object.keys(requestOverrides).length > 0
         ? { request_overrides: requestOverrides }
         : {}),
+      ...(startDate ? { start_date: startDate } : {}),
     }),
   });
   if (!res.ok || !res.body) {
@@ -253,6 +255,39 @@ export async function parseExploreFilters(
   });
   if (!res.ok) return { kinds: [], keywords: [] };
   return res.json();
+}
+
+/** Fenêtre météo d'un jour du trip + alertes proactives (POST /api/trips/weather). */
+export interface WeatherDayPayload {
+  day: number;
+  date: string | null;
+  forecast: {
+    weather_code: number;
+    temp_min_c: number;
+    temp_max_c: number;
+    precipitation_mm: number;
+    precipitation_probability: number;
+    wind_max_kmh: number;
+  } | null;
+  alerts: { code: string; severity: 'warning' | 'danger' }[];
+  out_of_range: boolean;
+}
+
+/**
+ * Météo du trip (Aventurier+). Retourne null si plan insuffisant (402) ou
+ * service indisponible — l'UI reste silencieuse dans ce cas.
+ */
+export async function fetchTripWeather(
+  startDate: string,
+  days: NonNullable<TripProposal['days']>,
+  plan: PlanId,
+): Promise<{ days: WeatherDayPayload[]; horizon_days: number } | null> {
+  const res = await fetch(`${API_URL}/api/trips/weather`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    body: JSON.stringify({ start_date: startDate, days }),
+  });
+  return res.ok ? res.json() : null;
 }
 
 /** PATCH /api/trips/:id — synchronise un trip sauvegardé après édition (3.1). */

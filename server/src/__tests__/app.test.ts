@@ -98,6 +98,43 @@ describe('POST /api/ai/edit-trip (3.2 — édition conversationnelle)', () => {
   });
 });
 
+describe('POST /api/trips/weather (météo + alertes, Aventurier+)', () => {
+  it('402 pour le plan gratuit (weather_integration)', async () => {
+    const app = createApp({ provider: mockProvider });
+    const res = await request(app)
+      .post('/api/trips/weather')
+      .send({ start_date: '2026-08-01', days: EDIT_DAYS });
+    expect(res.status).toBe(402);
+    expect(res.body.feature).toBe('weather_integration');
+  });
+
+  it('répond par jour (hors horizon → forecast null, out_of_range)', async () => {
+    const app = createApp({ provider: mockProvider });
+    const res = await request(app)
+      .post('/api/trips/weather')
+      .set('x-plan', 'aventurier')
+      .send({ start_date: '2030-01-01', days: EDIT_DAYS });
+    expect(res.status).toBe(200);
+    expect(res.body.horizon_days).toBe(16);
+    expect(res.body.days[0]).toMatchObject({
+      day: 1,
+      date: '2030-01-01',
+      forecast: null,
+      alerts: [],
+      out_of_range: true,
+    });
+  });
+
+  it('400 sur date invalide', async () => {
+    const app = createApp({ provider: mockProvider });
+    const res = await request(app)
+      .post('/api/trips/weather')
+      .set('x-plan', 'aventurier')
+      .send({ start_date: 'demain', days: EDIT_DAYS });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe('TRIPTIC API', () => {
   it('GET /health returns ok', async () => {
     const app = createApp({ provider: mockProvider });

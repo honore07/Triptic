@@ -27,6 +27,8 @@ export interface TripTuning {
 export interface TripRequest {
   departure: string;
   destination?: string | undefined;
+  /** Date de départ ISO (yyyy-mm-dd) — fixe la saison et la fenêtre météo. */
+  start_date?: string | undefined;
   duration_days: number;
   modes: TripMode[];
   difficulty: Difficulty;
@@ -140,6 +142,8 @@ export interface TripProposal {
   waypoints: Waypoint[];
   /** Structure jours → activités (roadmap 0.1). Absente sur les anciens trips. */
   days?: TripDay[] | undefined;
+  /** Date de départ ISO (posée par le serveur depuis la requête utilisateur). */
+  start_date?: string | undefined;
   /** CO₂e total estimé (ADEME Base Carbone, well-to-wheel) — roadmap 1.2. */
   co2_kg?: number | undefined;
   /** Budget itemisé estimé — roadmap 1.3. */
