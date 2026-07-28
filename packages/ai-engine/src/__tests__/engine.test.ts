@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { deriveWaypointsFromDays, type TripDay } from '@triptic/shared';
+import {
+  dateForTripDay,
+  deriveWaypointsFromDays,
+  seasonForDate,
+  tripDurationDays,
+  type TripDay,
+} from '@triptic/shared';
 import { sanitizeUserInput } from '../sanitize.js';
 import { buildSystemPrompt } from '../prompts.js';
 import {
@@ -190,6 +196,36 @@ describe('structure jours → activités (roadmap 0.1)', () => {
   it('rejette un trip sans waypoints ni days', () => {
     const { waypoints: _omit, ...withoutWaypoints } = VALID_TRIP;
     expect(() => tripProposalSchema.parse(withoutWaypoints)).toThrow();
+  });
+});
+
+describe('dates → saison → activités faisables', () => {
+  it('déduit la saison des dates (bascules aux solstices/équinoxes)', () => {
+    expect(seasonForDate('2026-01-15')).toBe('winter');
+    expect(seasonForDate('2026-03-20')).toBe('winter');
+    expect(seasonForDate('2026-03-21')).toBe('spring');
+    expect(seasonForDate('2026-07-28')).toBe('summer');
+    expect(seasonForDate('2026-10-05')).toBe('autumn');
+    expect(seasonForDate('2026-12-25')).toBe('winter');
+    expect(seasonForDate('pas-une-date')).toBeNull();
+  });
+
+  it('calcule durée et date du jour N', () => {
+    expect(tripDurationDays('2026-08-01', '2026-08-05')).toBe(5);
+    expect(tripDurationDays('2026-08-05', '2026-08-01')).toBeNull();
+    expect(dateForTripDay('2026-08-01', 3)).toBe('2026-08-03');
+  });
+
+  it('injecte la section saison dans le prompt système', () => {
+    const winter = buildSystemPrompt('fr', 3, undefined, '2026-01-10');
+    expect(winter).toContain('DATES & SAISON');
+    expect(winter).toContain('hiver');
+    expect(winter).toContain('cols alpins souvent FERMÉS');
+    expect(winter).toContain('request.start_date');
+
+    const summer = buildSystemPrompt('fr', 3, undefined, '2026-07-28');
+    expect(summer).toContain('orages fréquents en montagne');
+    expect(buildSystemPrompt('fr', 3)).not.toContain('DATES & SAISON');
   });
 });
 

@@ -50,6 +50,8 @@ export interface GenerateOptions {
    * puces de l'UI — prioritaires sur l'extraction de la conversation.
    */
   requestOverrides?: Partial<TripRequest> | undefined;
+  /** Date de départ ISO (yyyy-mm-dd) — active la section saison/faisabilité. */
+  startDate?: string | undefined;
   /**
    * Lieux réels (base places) autour des points donnés — active la passe de
    * grounding. Si absent ou si la zone est vide, comportement historique.
@@ -95,7 +97,7 @@ export async function generateTrips(
     // Valeurs d'enum déjà validées par Zod côté route — pas de sanitization
     cleanMessages.push({ role: 'user', content: buildOverridesMessage(opts.requestOverrides) });
   }
-  const system = buildSystemPrompt(opts.lang, opts.maxProposals, opts.tuning);
+  const system = buildSystemPrompt(opts.lang, opts.maxProposals, opts.tuning, opts.startDate);
 
   emit({ kind: 'status', step: 'generating' });
   let output = await completeAndParse(provider, system, cleanMessages);

@@ -44,7 +44,13 @@
     "culture_high": "Culture & villages",
     "discovery_label": "Exploration",
     "discovery_low": "Must-sees",
-    "discovery_high": "Off the beaten path"
+    "discovery_high": "Off the beaten path",
+    "dates_label": "Trip dates (optional)",
+    "date_start": "Departure",
+    "date_end": "Return",
+    "dates_hint": "Without dates, the AI infers the duration from your request.",
+    "dates_season_hint": "activities will match the season",
+    "dates_invalid": "The return date must be after departure."
   },
   "trips": {
     "compare_title": "3 competing routes",
@@ -240,5 +246,23 @@
     "chip_trails": "Hiking loops",
     "target_km": "Target distance:",
     "generated_loop": "Loop generated on the trail network (no mapped loop here)"
+  },
+  "season": {
+    "winter": "Winter",
+    "spring": "Spring",
+    "summer": "Summer",
+    "autumn": "Autumn"
+  },
+  "weather": {
+    "title": "Route weather",
+    "locked": "Day-by-day weather and alerts on your activities: available with the Adventurer plan.",
+    "too_far": "Too far ahead for a forecast (max ~16 days)",
+    "source": "Open-Meteo forecasts (open-meteo.com) — refreshed on every visit.",
+    "alert_thunderstorm": "Thunderstorm expected — reschedule outdoor activities (avoid summits in the afternoon).",
+    "alert_rain_on_hike": "Heavy rain expected on a hiking day — plan an alternative.",
+    "alert_strong_wind": "Very strong wind expected — caution on ridges and passes.",
+    "alert_heat_on_hike": "High heat expected on a hiking day — start early and carry water.",
+    "alert_cold_camp": "Freezing night expected at camp — bring cold-weather gear.",
+    "alert_snow_on_route": "Snow expected on the road or trail — check passes and gear up."
   }
 }

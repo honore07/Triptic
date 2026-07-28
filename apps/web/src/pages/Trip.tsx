@@ -10,6 +10,7 @@ import { DifficultyBadge } from '../components/DifficultyBadge';
 import { GPXExportButton } from '../components/GPXExportButton';
 import { MapView } from '../components/MapView';
 import { TripEditChat } from '../components/TripEditChat';
+import { WeatherStrip } from '../components/WeatherStrip';
 import { useTripStore } from '../store/tripStore';
 import { useUserStore } from '../store/userStore';
 
@@ -183,6 +184,8 @@ export function TripPage() {
 
       {selected.days && selected.days.length > 0 && (
         <>
+          <WeatherStrip trip={selected} plan={plan} />
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"

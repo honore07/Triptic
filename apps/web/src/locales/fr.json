@@ -44,7 +44,13 @@
     "culture_high": "Culture & villages",
     "discovery_label": "Exploration",
     "discovery_low": "Incontournables",
-    "discovery_high": "Hors des sentiers"
+    "discovery_high": "Hors des sentiers",
+    "dates_label": "Dates du trip (optionnel)",
+    "date_start": "Départ",
+    "date_end": "Retour",
+    "dates_hint": "Sans dates, l’IA déduit la durée de ta demande.",
+    "dates_season_hint": "les activités seront adaptées à la saison",
+    "dates_invalid": "La date de retour doit être après le départ."
   },
   "trips": {
     "compare_title": "3 itinéraires en compétition",
@@ -240,5 +246,23 @@
     "chip_trails": "Boucles rando",
     "target_km": "Distance visée :",
     "generated_loop": "Boucle générée sur les sentiers (aucune boucle référencée ici)"
+  },
+  "season": {
+    "winter": "Hiver",
+    "spring": "Printemps",
+    "summer": "Été",
+    "autumn": "Automne"
+  },
+  "weather": {
+    "title": "Météo du parcours",
+    "locked": "Météo jour par jour et alertes sur tes activités : disponible avec le plan Aventurier.",
+    "too_far": "Trop loin pour une prévision (max ~16 jours)",
+    "source": "Prévisions Open-Meteo (open-meteo.com) — recalculées à chaque visite.",
+    "alert_thunderstorm": "Orage prévu — activités extérieures à décaler (sommets à éviter l’après-midi).",
+    "alert_rain_on_hike": "Pluie soutenue prévue sur une journée de rando — prévois une alternative.",
+    "alert_strong_wind": "Vent très fort prévu — prudence en crête et sur les cols.",
+    "alert_heat_on_hike": "Forte chaleur prévue un jour de rando — pars tôt et charge de l’eau.",
+    "alert_cold_camp": "Nuit glaciale prévue sur un bivouac/camping — équipement grand froid.",
+    "alert_snow_on_route": "Neige prévue sur la route ou le sentier — vérifie les cols et équipe-toi."
   }
 }

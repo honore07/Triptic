@@ -3,10 +3,15 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { tripDaySchema } from '@triptic/ai-engine';
 import { buildGpx } from '@triptic/map-utils';
-import { PLANS } from '@triptic/shared';
+import { dateForTripDay, PLANS } from '@triptic/shared';
 import type { TripRepo } from '../repo/trips.js';
 import { recomputeTrip } from '../services/recompute.js';
 import type { RoutingService } from '../services/routing.js';
+import {
+  weatherAlertsForDay,
+  FORECAST_HORIZON_DAYS,
+  type WeatherService,
+} from '../services/weather.js';
 
 const waypointSchema = z.object({
   name: z.string(),
@@ -40,8 +45,61 @@ const recomputeSchema = z.object({
   request: recomputeRequestSchema.optional(),
 });
 
-export function createTripsRouter(repo: TripRepo, routing?: RoutingService): Router {
+const weatherSchema = z.object({
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  days: z.array(tripDaySchema).min(1).max(60),
+});
+
+export function createTripsRouter(
+  repo: TripRepo,
+  routing?: RoutingService,
+  weather?: WeatherService,
+): Router {
   const router = Router();
+
+  /**
+   * POST /api/trips/weather — fenêtre météo par jour + ALERTES PROACTIVES
+   * (prévision × activités planifiées : orage sur rando, canicule, neige sur
+   * la route…). Open-Meteo, horizon ~16 jours. Feature payante
+   * (weather_integration, plan Aventurier+). Stateless comme /recompute.
+   */
+  router.post('/weather', async (req, res) => {
+    if (!PLANS[req.user.plan].limits.weather_integration) {
+      res.status(402).json({ error: 'plan_required', feature: 'weather_integration' });
+      return;
+    }
+    if (!weather) {
+      res.status(503).json({ error: 'weather_unavailable' });
+      return;
+    }
+    const parsed = weatherSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
+      return;
+    }
+    const { start_date, days } = parsed.data;
+    const result = await Promise.all(
+      [...days]
+        .sort((a, b) => a.day - b.day)
+        .map(async (day) => {
+          const date = dateForTripDay(start_date, day.day);
+          // Point représentatif du jour : la première activité
+          const anchor = day.activities[0];
+          if (!date || !anchor) {
+            return { day: day.day, date, forecast: null, alerts: [], out_of_range: false };
+          }
+          const forecast = await weather.dayForecast(anchor.lat, anchor.lng, date);
+          return {
+            day: day.day,
+            date,
+            forecast,
+            alerts: forecast ? weatherAlertsForDay(forecast, day.activities) : [],
+            out_of_range: forecast === null,
+          };
+        }),
+    );
+    res.json({ days: result, horizon_days: FORECAST_HORIZON_DAYS });
+  });
 
   /**
    * POST /api/trips/recompute — recalcul live après édition (3.1) :

@@ -111,7 +111,9 @@ export function Plan() {
         <div ref={bottomRef} />
       </section>
 
-      {tunerVisible && <TripTuner onConfirm={(value) => void confirmTuning(value, lang, plan)} />}
+      {tunerVisible && (
+        <TripTuner onConfirm={(value, dates) => void confirmTuning(value, lang, plan, dates)} />
+      )}
 
       {!result && !tunerVisible && (
         <form
