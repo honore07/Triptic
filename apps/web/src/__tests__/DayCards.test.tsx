@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { TripDay } from '@triptic/shared';
-import { DayCards } from '../components/DayCards';
+import { DayCards, thumbnailUrl } from '../components/DayCards';
 import { setLang } from '../lib/i18n';
 
 const DAYS: TripDay[] = [
@@ -51,5 +51,35 @@ describe('DayCards (cartes-étapes 2.2)', () => {
     render(<DayCards days={DAYS} selectedDay={2} onSelectDay={() => {}} />);
     expect(screen.getByRole('button', { name: /Jour 2/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: /Jour 1/ })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('demande la vignette en w=400 (perf 6.4)', () => {
+    setLang('fr');
+    const days: TripDay[] = [
+      {
+        ...DAYS[0]!,
+        photo_url: 'https://images.unsplash.com/photo-1?auto=format&w=1080&q=80',
+      },
+    ];
+    const { container } = render(<DayCards days={days} selectedDay={null} onSelectDay={() => {}} />);
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('w=400');
+  });
+});
+
+describe('thumbnailUrl', () => {
+  it('réécrit le paramètre w existant (Unsplash/Pexels)', () => {
+    expect(thumbnailUrl('https://images.unsplash.com/photo-1?auto=format&w=1080&q=80')).toBe(
+      'https://images.unsplash.com/photo-1?auto=format&w=400&q=80',
+    );
+    expect(
+      thumbnailUrl('https://images.pexels.com/photos/1/a.jpeg?auto=compress&cs=tinysrgb&w=1080'),
+    ).toBe('https://images.pexels.com/photos/1/a.jpeg?auto=compress&cs=tinysrgb&w=400');
+  });
+
+  it("laisse intacte une URL sans paramètre w ou invalide", () => {
+    expect(thumbnailUrl('https://images.unsplash.com/photo-1')).toBe(
+      'https://images.unsplash.com/photo-1',
+    );
+    expect(thumbnailUrl('not-a-url')).toBe('not-a-url');
   });
 });

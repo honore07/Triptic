@@ -42,6 +42,7 @@ export function Explore() {
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [from, setFrom] = useState<{ lat: number; lng: number } | null>(null);
   const [status, setStatus] = useState<'idle' | 'parsing' | 'searching' | 'error'>('idle');
+  const [geoError, setGeoError] = useState(false);
   const [searched, setSearched] = useState(false);
   const [targetDay, setTargetDay] = useState(1);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
@@ -103,11 +104,20 @@ export function Explore() {
   };
 
   const locate = () => {
-    navigator.geolocation?.getCurrentPosition((pos) => {
-      const point = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      setFrom(point);
-      setCenter([point.lng, point.lat]);
-    });
+    // API absente (contexte non sécurisé HTTP) ou refus utilisateur → message visible
+    if (!navigator.geolocation) {
+      setGeoError(true);
+      return;
+    }
+    setGeoError(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const point = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setFrom(point);
+        setCenter([point.lng, point.lat]);
+      },
+      () => setGeoError(true),
+    );
   };
 
   const addToDay = (place: ExplorePlace) => {
@@ -144,6 +154,7 @@ export function Explore() {
         <button
           type="submit"
           disabled={busy || !wish.trim()}
+          aria-label={t('explore.parse')}
           className="flex min-h-12 items-center gap-2 rounded-xl bg-gold px-4 font-display text-sm font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-mist disabled:text-fog"
         >
           <Sparkles size={16} aria-hidden="true" />
@@ -181,7 +192,7 @@ export function Explore() {
           }}
           className={`flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-colors ${
             trailMode
-              ? 'border-pine bg-pine/10 text-pine'
+              ? 'border-pine bg-pine/10 text-pine-deep'
               : 'border-mist bg-snow text-ridge hover:border-summit'
           }`}
         >
@@ -197,6 +208,12 @@ export function Explore() {
           {t('explore.locate')}
         </button>
       </div>
+
+      {geoError && (
+        <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm font-semibold text-storm">
+          {t('explore.locate_error')}
+        </p>
+      )}
 
       {trailMode && (
         <label className="flex items-center gap-2 text-sm font-semibold text-ridge">

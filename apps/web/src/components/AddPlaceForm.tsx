@@ -31,12 +31,22 @@ export function AddPlaceForm() {
   const [lng, setLng] = useState('');
   const [summary, setSummary] = useState('');
   const [status, setStatus] = useState<Status>('idle');
+  const [geoError, setGeoError] = useState(false);
 
   const useMyLocation = () => {
-    navigator.geolocation?.getCurrentPosition((pos) => {
-      setLat(pos.coords.latitude.toFixed(5));
-      setLng(pos.coords.longitude.toFixed(5));
-    });
+    // API absente (contexte non sécurisé HTTP) ou refus utilisateur → message visible
+    if (!navigator.geolocation) {
+      setGeoError(true);
+      return;
+    }
+    setGeoError(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude.toFixed(5));
+        setLng(pos.coords.longitude.toFixed(5));
+      },
+      () => setGeoError(true),
+    );
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -159,6 +169,12 @@ export function AddPlaceForm() {
           {t('places.use_location')}
         </button>
 
+        {geoError && (
+          <p role="alert" className="text-sm font-semibold text-storm">
+            {t('places.locate_error')}
+          </p>
+        )}
+
         <div className="flex flex-col gap-1.5">
           <label htmlFor="place-summary" className="text-sm font-semibold text-trail">
             {t('places.summary_label')}
@@ -185,7 +201,7 @@ export function AddPlaceForm() {
 
         <p aria-live="polite" className="min-h-5 text-sm">
           {status === 'pending' && (
-            <span className="font-semibold text-pine">{t('places.success_pending')}</span>
+            <span className="font-semibold text-pine-deep">{t('places.success_pending')}</span>
           )}
           {status === 'merged' && (
             <span className="font-semibold text-ridge">{t('places.success_merged')}</span>

@@ -3,7 +3,9 @@
     "tagline": "Plan, Explore, Repeat.",
     "promise": "Describe your adventure. TRIPTIC crafts 3 tailored routes. You choose. You refine. You go.",
     "offline": "Offline — your saved trips remain available",
-    "online": "Online"
+    "online": "Online",
+    "page_not_found": "This page does not exist.",
+    "back_home": "Back to home"
   },
   "home": {
     "headline": "Go explore Europe.",
@@ -69,7 +71,9 @@
     "share": "Public link",
     "copied": "Link copied!",
     "back": "Back to proposals",
-    "not_found": "Trip not found."
+    "not_found": "Trip not found.",
+    "error_action": "The action failed. Check your connection and try again.",
+    "copy_manual": "Automatic copy isn't available here — select the link below to copy it."
   },
   "difficulty": {
     "easy": "Easy",
@@ -117,6 +121,7 @@
     "lat_label": "Latitude",
     "lng_label": "Longitude",
     "use_location": "Use my location",
+    "locate_error": "Couldn't get your location. Allow geolocation and try again.",
     "summary_label": "Description (optional)",
     "summary_placeholder": "One sentence: why is this place worth it?",
     "submit": "Submit this place",
@@ -178,12 +183,12 @@
     "meals": "Meals",
     "activities": "Activities & visits",
     "total": "Estimated total",
-    "co2": "Carbon footprint",
+    "co2": "Carbon footprint:",
     "note": "Indicative, adjustable estimates. CO₂: ADEME Base Carbone (well-to-wheel); fuel: average prices per country."
   },
   "days": {
     "title": "Day-by-day plan",
-    "estimated": "estimate"
+    "estimated": "straight-line estimate — outside routing coverage"
   },
   "time": {
     "morning": "morning",
@@ -203,6 +208,7 @@
     "done": "Done editing",
     "undo": "Undo last change",
     "recomputing": "Recomputing (distances, budget, CO₂)…",
+    "recompute_error": "Recompute failed — the totals shown may be outdated. Try again in a moment.",
     "add_activity": "Add an activity",
     "delete": "Delete",
     "move_up": "Move up",
@@ -232,6 +238,7 @@
     "chip_food": "Where to eat",
     "chip_night": "Overnight spots",
     "locate": "Around me",
+    "locate_error": "Couldn't get your location. Allow geolocation and try again.",
     "search_area": "Search this area",
     "searching": "Searching…",
     "map_label": "Area search map",

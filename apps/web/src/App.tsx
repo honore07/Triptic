@@ -13,6 +13,19 @@ import { Plan } from './pages/Plan';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
 
+/** Page 404 (route catch-all) — message + retour accueil, jamais de page blanche. */
+function NotFound() {
+  const { t } = useTranslation();
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-12 text-center">
+      <p className="text-ridge">{t('app.page_not_found')}</p>
+      <Link to="/" className="mt-4 inline-block font-semibold text-copper-deep underline">
+        {t('app.back_home')}
+      </Link>
+    </main>
+  );
+}
+
 export function App() {
   const { t } = useTranslation();
   return (
@@ -51,6 +64,7 @@ export function App() {
         <Route path="/explore" element={<Explore />} />
         <Route path="/legal/attributions" element={<LegalAttributions />} />
         <Route path="/legal/tdm" element={<LegalTdm />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
         <Link

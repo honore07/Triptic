@@ -3,7 +3,9 @@
     "tagline": "Plan, Explore, Repeat.",
     "promise": "Beschreibe dein Abenteuer. TRIPTIC erstellt 3 maßgeschneiderte Routen. Du wählst. Du verfeinerst. Du gehst los.",
     "offline": "Offline — deine gespeicherten Trips bleiben verfügbar",
-    "online": "Online"
+    "online": "Online",
+    "page_not_found": "Diese Seite existiert nicht.",
+    "back_home": "Zurück zur Startseite"
   },
   "home": {
     "headline": "Entdecke Europa.",
@@ -69,7 +71,9 @@
     "share": "Öffentlicher Link",
     "copied": "Link kopiert!",
     "back": "Zurück zu den Vorschlägen",
-    "not_found": "Trip nicht gefunden."
+    "not_found": "Trip nicht gefunden.",
+    "error_action": "Die Aktion ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
+    "copy_manual": "Automatisches Kopieren ist hier nicht verfügbar — wähle den Link unten aus, um ihn zu kopieren."
   },
   "difficulty": {
     "easy": "Leicht",
@@ -117,6 +121,7 @@
     "lat_label": "Breitengrad",
     "lng_label": "Längengrad",
     "use_location": "Meinen Standort verwenden",
+    "locate_error": "Dein Standort konnte nicht ermittelt werden. Erlaube die Standortfreigabe und versuche es erneut.",
     "summary_label": "Beschreibung (optional)",
     "summary_placeholder": "In einem Satz: Warum lohnt sich dieser Ort?",
     "submit": "Ort vorschlagen",
@@ -178,12 +183,12 @@
     "meals": "Mahlzeiten",
     "activities": "Aktivitäten & Besichtigungen",
     "total": "Geschätzte Summe",
-    "co2": "CO₂-Fußabdruck",
+    "co2": "CO₂-Fußabdruck:",
     "note": "Richtwerte, anpassbar. CO₂: ADEME Base Carbone (Well-to-Wheel); Kraftstoff: Durchschnittspreise pro Land."
   },
   "days": {
     "title": "Tagesprogramm",
-    "estimated": "Schätzung"
+    "estimated": "Luftlinien-Schätzung — außerhalb des Routing-Gebiets"
   },
   "time": {
     "morning": "Morgen",
@@ -203,6 +208,7 @@
     "done": "Bearbeitung beenden",
     "undo": "Letzte Änderung rückgängig",
     "recomputing": "Neuberechnung (Distanzen, Budget, CO₂)…",
+    "recompute_error": "Die Neuberechnung ist fehlgeschlagen — die angezeigten Summen können veraltet sein. Versuche es gleich erneut.",
     "add_activity": "Aktivität hinzufügen",
     "delete": "Löschen",
     "move_up": "Nach oben",
@@ -232,6 +238,7 @@
     "chip_food": "Essen & Trinken",
     "chip_night": "Übernachtungsplätze",
     "locate": "In meiner Nähe",
+    "locate_error": "Dein Standort konnte nicht ermittelt werden. Erlaube die Standortfreigabe und versuche es erneut.",
     "search_area": "In diesem Bereich suchen",
     "searching": "Suche…",
     "map_label": "Karte für die Bereichssuche",

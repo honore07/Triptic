@@ -3,7 +3,9 @@
     "tagline": "Plan, Explore, Repeat.",
     "promise": "Tu décris ton aventure. TRIPTIC te propose 3 itinéraires sur-mesure. Tu choisis. Tu peaufines. Tu pars.",
     "offline": "Hors ligne — tes trips sauvegardés restent disponibles",
-    "online": "En ligne"
+    "online": "En ligne",
+    "page_not_found": "Cette page n'existe pas.",
+    "back_home": "Retour à l'accueil"
   },
   "home": {
     "headline": "Pars explorer l'Europe.",
@@ -69,7 +71,9 @@
     "share": "Lien public",
     "copied": "Lien copié !",
     "back": "Retour aux propositions",
-    "not_found": "Trip introuvable."
+    "not_found": "Trip introuvable.",
+    "error_action": "L'action a échoué. Vérifie ta connexion et réessaie.",
+    "copy_manual": "La copie automatique n'est pas disponible ici — sélectionne le lien ci-dessous pour le copier."
   },
   "difficulty": {
     "easy": "Facile",
@@ -117,6 +121,7 @@
     "lat_label": "Latitude",
     "lng_label": "Longitude",
     "use_location": "Utiliser ma position",
+    "locate_error": "Impossible de récupérer ta position. Autorise la géolocalisation et réessaie.",
     "summary_label": "Description (optionnelle)",
     "summary_placeholder": "En une phrase : pourquoi ce lieu vaut le détour ?",
     "submit": "Proposer ce lieu",
@@ -178,12 +183,12 @@
     "meals": "Repas",
     "activities": "Activités & visites",
     "total": "Total estimé",
-    "co2": "Empreinte carbone",
+    "co2": "Empreinte carbone :",
     "note": "Estimations indicatives et ajustables. CO₂ : ADEME Base Carbone (well-to-wheel) ; carburant : prix moyens par pays."
   },
   "days": {
     "title": "Programme jour par jour",
-    "estimated": "estimation"
+    "estimated": "estimation à vol d'oiseau — hors zone de routage"
   },
   "time": {
     "morning": "matin",
@@ -203,6 +208,7 @@
     "done": "Terminer l’édition",
     "undo": "Annuler la dernière modification",
     "recomputing": "Recalcul en cours (distances, budget, CO₂)…",
+    "recompute_error": "Le recalcul a échoué — les totaux affichés peuvent être obsolètes. Réessaie dans un instant.",
     "add_activity": "Ajouter une activité",
     "delete": "Supprimer",
     "move_up": "Monter",
@@ -232,6 +238,7 @@
     "chip_food": "Où manger",
     "chip_night": "Spots de nuit",
     "locate": "Autour de moi",
+    "locate_error": "Impossible de récupérer ta position. Autorise la géolocalisation et réessaie.",
     "search_area": "Chercher dans cette zone",
     "searching": "Recherche…",
     "map_label": "Carte de recherche par zone",

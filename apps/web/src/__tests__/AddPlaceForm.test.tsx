@@ -61,4 +61,28 @@ describe('AddPlaceForm', () => {
     fillAndSubmit();
     await waitFor(() => expect(screen.getByText(/L'envoi a échoué/)).toBeInTheDocument());
   });
+
+  it('affiche une erreur visible quand la géolocalisation est indisponible (QA 1.1)', () => {
+    // jsdom : navigator.geolocation est absent, comme en contexte HTTP non sécurisé
+    render(<AddPlaceForm />);
+    fireEvent.click(screen.getByRole('button', { name: /Utiliser ma position/ }));
+    expect(screen.getByRole('alert')).toHaveTextContent(/Impossible de récupérer ta position/);
+  });
+
+  it("affiche une erreur visible quand l'utilisateur refuse la géolocalisation (QA 1.1)", () => {
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (_ok: PositionCallback, err?: PositionErrorCallback) =>
+          err?.({ code: 1, message: 'denied' } as GeolocationPositionError),
+      },
+    });
+    try {
+      render(<AddPlaceForm />);
+      fireEvent.click(screen.getByRole('button', { name: /Utiliser ma position/ }));
+      expect(screen.getByRole('alert')).toHaveTextContent(/Impossible de récupérer ta position/);
+    } finally {
+      delete (navigator as { geolocation?: unknown }).geolocation;
+    }
+  });
 });
