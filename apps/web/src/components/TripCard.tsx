@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Clock, Leaf, Mountain, Route, Wallet } from 'lucide-react';
 import type { TripProposal } from '@triptic/shared';
+import { MAP_COLORS } from '../lib/mapColors';
 import { DifficultyBadge } from './DifficultyBadge';
 import { RoutePreview } from './RoutePreview';
 
@@ -31,7 +32,7 @@ export function TripCard({ trip, onChoose, index = 0 }: Props) {
         />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-ridge to-trail">
-          <RoutePreview waypoints={trip.waypoints} className="h-full w-full opacity-50" stroke="#FAC05E" />
+          <RoutePreview waypoints={trip.waypoints} className="h-full w-full opacity-50" stroke={MAP_COLORS.gold} />
         </div>
       )}
       <div

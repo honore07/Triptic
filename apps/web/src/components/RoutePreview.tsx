@@ -1,4 +1,5 @@
 import type { Waypoint } from '@triptic/shared';
+import { MAP_COLORS } from '../lib/mapColors';
 
 interface Props {
   waypoints: Waypoint[];
@@ -10,7 +11,7 @@ interface Props {
  * Aperçu SVG du tracé (fallback léger sans token Mapbox, utilisable offline).
  * Projection équirectangulaire simple, suffisante à cette échelle.
  */
-export function RoutePreview({ waypoints, className = '', stroke = '#1A6BDB' }: Props) {
+export function RoutePreview({ waypoints, className = '', stroke = MAP_COLORS.summit }: Props) {
   if (waypoints.length < 2) return null;
   const sorted = [...waypoints].sort((a, b) => a.day - b.day);
   const lats = sorted.map((w) => w.lat);
@@ -41,8 +42,8 @@ export function RoutePreview({ waypoints, className = '', stroke = '#1A6BDB' }: 
         strokeLinejoin="round"
         strokeDasharray="0.1 4"
       />
-      <circle cx={toX(first.lng)} cy={toY(first.lat)} r="3" fill="#1A8A4A" />
-      <circle cx={toX(last.lng)} cy={toY(last.lat)} r="3" fill="#C03030" />
+      <circle cx={toX(first.lng)} cy={toY(first.lat)} r="3" fill={MAP_COLORS.pine} />
+      <circle cx={toX(last.lng)} cy={toY(last.lat)} r="3" fill={MAP_COLORS.storm} />
     </svg>
   );
 }

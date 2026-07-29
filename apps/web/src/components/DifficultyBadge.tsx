@@ -1,10 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import type { Difficulty } from '@triptic/shared';
 
+/*
+ * Fonds opaques (tints précalculées dans styles.css) + textes *-deep :
+ * contraste ≥ 4.5:1 garanti partout, y compris posé sur photo (TripCard).
+ */
 const STYLES: Record<Difficulty, string> = {
-  easy: 'bg-pine/15 text-pine',
-  medium: 'bg-amber/15 text-amber',
-  hard: 'bg-storm/15 text-storm',
+  easy: 'bg-pine-tint text-pine-deep',
+  medium: 'bg-amber-tint text-amber-deep',
+  hard: 'bg-storm-tint text-storm-deep',
 };
 
 export function DifficultyBadge({ level }: { level: Difficulty }) {

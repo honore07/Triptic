@@ -104,7 +104,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                       disabled={busy || i === 0}
                       onClick={() => move(day.day, i, -1)}
                       aria-label={`${t('editor.move_up')} — ${activity.title}`}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg text-ridge hover:bg-gold/20 disabled:opacity-30"
+                      className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-ridge hover:bg-gold/20 disabled:opacity-30"
                     >
                       <ArrowUp size={15} aria-hidden="true" />
                     </button>
@@ -113,7 +113,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                       disabled={busy || i === day.activities.length - 1}
                       onClick={() => move(day.day, i, 1)}
                       aria-label={`${t('editor.move_down')} — ${activity.title}`}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg text-ridge hover:bg-gold/20 disabled:opacity-30"
+                      className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-ridge hover:bg-gold/20 disabled:opacity-30"
                     >
                       <ArrowDown size={15} aria-hidden="true" />
                     </button>
@@ -122,7 +122,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                       disabled={busy || day.activities.length <= 1}
                       onClick={() => remove(day.day, i)}
                       aria-label={`${t('editor.delete')} — ${activity.title}`}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg text-storm hover:bg-storm/10 disabled:opacity-30"
+                      className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-storm hover:bg-storm/10 disabled:opacity-30"
                     >
                       <Trash2 size={15} aria-hidden="true" />
                     </button>

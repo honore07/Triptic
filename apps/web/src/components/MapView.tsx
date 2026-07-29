@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TripDay, Waypoint } from '@triptic/shared';
+import { MAP_COLORS } from '../lib/mapColors';
 import { RoutePreview } from './RoutePreview';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
@@ -84,7 +85,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
             type: 'line',
             source: 'route',
             filter: ['==', ['get', 'mode'], 'car'],
-            paint: { 'line-color': '#C86341', 'line-width': 4, 'line-opacity': 0.9 },
+            paint: { 'line-color': MAP_COLORS.summit, 'line-width': 4, 'line-opacity': 0.9 },
           });
           map.addLayer({
             id: 'route-trail',
@@ -92,7 +93,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
             source: 'route',
             filter: ['!=', ['get', 'mode'], 'car'],
             paint: {
-              'line-color': '#1A8A4A',
+              'line-color': MAP_COLORS.pine,
               'line-width': 3,
               'line-dasharray': [0.5, 1.5],
             },
@@ -114,21 +115,21 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
             id: 'route',
             type: 'line',
             source: 'route',
-            paint: { 'line-color': '#1A6BDB', 'line-width': 3, 'line-dasharray': [0.1, 2] },
+            paint: { 'line-color': MAP_COLORS.summit, 'line-width': 3, 'line-dasharray': [0.1, 2] },
           });
         }
 
         for (const w of sorted) {
           const color =
             w.kind === 'start'
-              ? '#1A8A4A'
+              ? MAP_COLORS.pine
               : w.kind === 'end'
-                ? '#C03030'
+                ? MAP_COLORS.storm
                 : w.kind === 'camp'
-                  ? '#1E1E24'
+                  ? MAP_COLORS.trail
                   : w.kind === 'trailhead'
-                    ? '#1A8A4A'
-                    : '#C86341';
+                    ? MAP_COLORS.pine
+                    : MAP_COLORS.summit;
           const marker = new mapboxgl.Marker({ color })
             .setLngLat([w.lng, w.lat])
             .setPopup(new mapboxgl.Popup({ offset: 24 }).setText(`${w.name} (J${w.day})`))

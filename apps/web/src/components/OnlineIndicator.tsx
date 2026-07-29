@@ -22,7 +22,7 @@ export function OnlineIndicator() {
   return (
     <div
       role="status"
-      className="flex items-center justify-center gap-2 bg-amber px-4 py-1.5 text-xs font-medium text-snow"
+      className="flex items-center justify-center gap-2 bg-amber px-4 py-1.5 text-xs font-medium text-trail"
     >
       <WifiOff size={14} aria-hidden="true" />
       {t('app.offline')}
