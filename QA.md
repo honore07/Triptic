@@ -3,6 +3,13 @@
 > Audit du 2026-07-29 sur la prod `http://82.25.118.185:3001` (UI servie par l'API Express)
 > + revue statique de `apps/web/src/`. Méthodo : skill `qa-loop` (phase 1 uniquement).
 > Tout finding listé ici a été **vérifié** (runtime ou code), pas de spéculation.
+>
+> **✅ Fixes appliqués le 29/07 (même PR)** : tous les findings code sont corrigés —
+> 1.1 (mitigations front : clipboard fallback, callbacks géoloc), 1.3, 1.4 (libellé),
+> 1.5, 1.6, 1.7, 1.8 (page enrichie + OG serveur), 2.1, 2.2, 3.1-3.5, 4.1-4.3, 6.1-6.5.
+> Restent 2 actions VPS : **1.1 TLS** → `deploy/RUNBOOK-https.md` (triptic.hakoe-alsace.com)
+> et **1.2 paywall** → mode démo conservé volontairement (décision Jules 29/07) ;
+> fermeture au lancement payant via `deploy/NOTE-paywall-prod.md`.
 
 ---
 
