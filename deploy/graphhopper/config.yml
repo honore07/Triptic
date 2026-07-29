@@ -6,6 +6,10 @@ graphhopper:
   datareader.file: /data/triptic.osm.pbf
   graph.location: /data/graph-cache
 
+  # Requis par GraphHopper ≥ 8 (vérifié sur GH 12 le 2026-07-28) : vide car
+  # nos profils mixtes voiture/pied/vélo utilisent tous les types de voies
+  import.osm.ignored_highways: ""
+
   # Élévation : SRTM CGIAR (téléchargé automatiquement, ~90 m de résolution).
   # OpenTopoData (Copernicus GLO-30 + RGE ALTI) arrive en phase 5.3 pour les
   # profils fins ; ici l'élévation sert aux durées et dénivelés de segment.
@@ -15,7 +19,9 @@ graphhopper:
   # KVM 2 (8 Go) : stockage MMAP pour tenir l'import + le service en RAM bornée
   graph.dataaccess.default_type: MMAP_STORE
 
-  graph.encoded_values: car_access, car_average_speed, foot_access, foot_average_speed, foot_priority, bike_access, bike_average_speed, bike_priority, road_class, road_environment, roundabout, average_slope
+  # Les encoded values incluent celles exigées par les custom models intégrés
+  # de GH 12 (car/foot/bike + *_elevation) — liste issue de l'erreur de boot
+  graph.encoded_values: car_access, car_average_speed, foot_access, foot_average_speed, foot_priority, bike_access, bike_average_speed, bike_priority, road_class, road_environment, roundabout, average_slope, ferry_speed, max_speed, hike_rating, foot_road_access, mtb_rating, bike_network, bike_road_access
 
   custom_models.directory: /data/custom_models
 
