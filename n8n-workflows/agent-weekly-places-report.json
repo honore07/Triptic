@@ -33,13 +33,52 @@
     },
     {
       "parameters": {
-        "jsCode": "// Rapport Markdown hebdo — brancher un nœud Email (Resend) ou Telegram\n// à la suite quand les clés seront disponibles.\nconst s = $input.first().json;\nconst regions = (s.by_region ?? []).map(r => `- ${r.region ?? 'hors périmètre'} : ${r.count}`).join('\\n');\nconst sources = (s.by_source ?? []).map(r => `- ${r.source} : ${r.count}`).join('\\n');\nconst rapport = `# TRIPTIC — Base de lieux (${new Date().toLocaleDateString('fr-FR')})\\n\\n` +\n  `**Total : ${s.total} lieux** · en modération : ${s.pending}\\n\\n` +\n  `## Par région\\n${regions}\\n\\n## Par source\\n${sources}\\n`;\nreturn [{ json: { rapport, total: s.total, pending: s.pending } }];"
+        "jsCode": "// Rapport Markdown hebdo — envoyé par Email (Resend) + résumé Telegram\n// (nœuds suivants du flux).\nconst s = $input.first().json;\nconst regions = (s.by_region ?? []).map(r => `- ${r.region ?? 'hors périmètre'} : ${r.count}`).join('\\n');\nconst sources = (s.by_source ?? []).map(r => `- ${r.source} : ${r.count}`).join('\\n');\nconst rapport = `# TRIPTIC — Base de lieux (${new Date().toLocaleDateString('fr-FR')})\\n\\n` +\n  `**Total : ${s.total} lieux** · en modération : ${s.pending}\\n\\n` +\n  `## Par région\\n${regions}\\n\\n## Par source\\n${sources}\\n`;\nreturn [{ json: { rapport, total: s.total, pending: s.pending } }];"
       },
       "id": "c2000000-0000-4000-8000-000000000003",
       "name": "Formater le rapport",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'TRIPTIC <noreply@hakoe-alsace.com>', to: ['jules.million07@gmail.com'], subject: 'TRIPTIC — Rapport hebdo base de lieux', text: $json.rapport }) }}",
+        "options": {}
+      },
+      "id": "c2000000-0000-4000-8000-000000000004",
+      "name": "Email Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Resend API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=TRIPTIC — Base de lieux : {{ $json.total }} lieux, {{ $json.pending }} en modération. Rapport complet envoyé par email.",
+        "additionalFields": {}
+      },
+      "id": "c2000000-0000-4000-8000-000000000005",
+      "name": "Notifier Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, 400],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram TRIPTIC Bot"
+        }
+      }
     }
   ],
   "connections": {
@@ -59,6 +98,22 @@
         [
           {
             "node": "Formater le rapport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formater le rapport": {
+      "main": [
+        [
+          {
+            "node": "Email Resend",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notifier Telegram",
             "type": "main",
             "index": 0
           }

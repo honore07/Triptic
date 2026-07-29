@@ -7,9 +7,24 @@ import { PaywallModal } from './components/PaywallModal';
 import { Contribute } from './pages/Contribute';
 import { Explore } from './pages/Explore';
 import { Home } from './pages/Home';
+import { LegalAttributions } from './pages/LegalAttributions';
+import { LegalTdm } from './pages/LegalTdm';
 import { Plan } from './pages/Plan';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
+
+/** Page 404 (route catch-all) — message + retour accueil, jamais de page blanche. */
+function NotFound() {
+  const { t } = useTranslation();
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-12 text-center">
+      <p className="text-ridge">{t('app.page_not_found')}</p>
+      <Link to="/" className="mt-4 inline-block font-semibold text-copper-deep underline">
+        {t('app.back_home')}
+      </Link>
+    </main>
+  );
+}
 
 export function App() {
   const { t } = useTranslation();
@@ -47,7 +62,24 @@ export function App() {
         <Route path="/trip/:slug" element={<PublicTrip />} />
         <Route path="/contribute" element={<Contribute />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/legal/attributions" element={<LegalAttributions />} />
+        <Route path="/legal/tdm" element={<LegalTdm />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
+        <Link
+          to="/legal/attributions"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.attributions_nav')}
+        </Link>
+        <Link
+          to="/legal/tdm"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.tdm_nav')}
+        </Link>
+      </footer>
       <PaywallModal />
     </BrowserRouter>
   );

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express, { type Express } from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import { pinoHttp } from 'pino-http';
 import type { LlmProvider } from '@triptic/ai-engine';
@@ -16,6 +17,7 @@ import { createPlacesRouter } from './routes/places.js';
 import { createPublicTripsRouter, createTripsRouter } from './routes/trips.js';
 import { QuotaService } from './services/quota.js';
 import { EnrichmentService } from './services/enrichment.js';
+import { renderIndexWithTripOg } from './services/og.js';
 import { RoutingService } from './services/routing.js';
 import { WeatherService } from './services/weather.js';
 
@@ -27,15 +29,33 @@ export interface AppDeps {
   placeRepo?: PgPlaceRepo;
   /** Routing GraphHopper — segments réels des trips (0.2/0.3). */
   routing?: RoutingService;
+  /** Dossier du build web statique (défaut : apps/web/dist) — injectable en test. */
+  webDist?: string;
 }
 
-export function createApp({ provider, repo, quota, placeRepo, routing }: AppDeps): Express {
+export function createApp({ provider, repo, quota, placeRepo, routing, webDist }: AppDeps): Express {
   const app = express();
   const tripRepo = repo ?? new MemoryTripRepo();
   const quotaService = quota ?? new QuotaService();
   const routingService = routing ?? new RoutingService(env.graphhopperUrl);
 
+  // QA 6.5 — ne pas exposer la techno du serveur
+  app.disable('x-powered-by');
+
   app.use(cors({ origin: env.appUrl, credentials: true }));
+  // QA 6.1 — gzip sur tout ce qui est servi (API JSON + statiques).
+  // Les streams SSE (/api/ai/*) sont exclus : la compression les bufferise.
+  app.use(
+    compression({
+      filter: (req, res) => {
+        const contentType = res.getHeader('Content-Type');
+        if (typeof contentType === 'string' && contentType.includes('text/event-stream')) {
+          return false;
+        }
+        return compression.filter(req, res);
+      },
+    }),
+  );
   app.use(express.json({ limit: '1mb' }));
   app.use(pinoHttp({ logger, autoLogging: env.isProd }));
   app.use(authMiddleware);
@@ -62,18 +82,45 @@ export function createApp({ provider, repo, quota, placeRepo, routing }: AppDeps
 
   // Production sans reverse proxy dédié (VPS : Traefik occupe 80/443) :
   // Express sert aussi la PWA buildée + fallback SPA.
-  const webDist = path.resolve(
-    path.dirname(fileURLToPath(import.meta.url)),
-    '../../apps/web/dist',
-  );
-  if (fs.existsSync(webDist)) {
-    app.use(express.static(webDist));
+  const distDir =
+    webDist ??
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../apps/web/dist');
+  if (fs.existsSync(distDir)) {
+    const indexPath = path.join(distDir, 'index.html');
+    // QA 6.2 — /assets est content-hashé par Vite : cache long immutable.
+    app.use(
+      '/assets',
+      express.static(path.join(distDir, 'assets'), { maxAge: '1y', immutable: true }),
+    );
+    // Le reste du dist (manifest, sw, icônes…) : pas de cache long.
+    // index.html jamais caché → les déploiements sont pris immédiatement.
+    app.use(
+      express.static(distDir, {
+        index: false,
+        setHeaders: (res, filePath) => {
+          if (filePath === indexPath) res.setHeader('Cache-Control', 'no-cache');
+        },
+      }),
+    );
+    // Fallback SPA + OG tags par trip sur /trip/:slug (QA 1.8).
     app.use((req, res, next) => {
-      if (req.method === 'GET' && !req.path.startsWith('/api')) {
-        res.sendFile(path.join(webDist, 'index.html'));
-      } else {
+      if (req.method !== 'GET' || req.path.startsWith('/api')) {
         next();
+        return;
       }
+      void (async () => {
+        try {
+          const html = await fs.promises.readFile(indexPath, 'utf8');
+          const slugMatch = /^\/trip\/([^/]+)$/.exec(req.path);
+          const body = slugMatch?.[1]
+            ? await renderIndexWithTripOg(html, slugMatch[1], tripRepo, env.appUrl)
+            : html;
+          res.setHeader('Cache-Control', 'no-cache');
+          res.type('html').send(body);
+        } catch (error) {
+          next(error);
+        }
+      })();
     });
   }
 

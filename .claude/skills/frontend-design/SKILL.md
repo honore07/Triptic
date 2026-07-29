@@ -45,6 +45,10 @@ Ambiance chill & aventure, moderne, très animée.
 - CTA = `bg-gold` + `text-trail` (9:1). JAMAIS `text-snow` sur gold ni sur copper
   en petit texte (copper/snow ≈ 3.4:1) — pour du copper texte sur fond clair,
   utiliser `copper-deep`
+- Même règle pour les sémantiques en texte sur fond clair : utiliser les
+  variantes `pine-deep` / `amber-deep` / `storm-deep` (styles.css), jamais
+  pine/amber/storm bruts en petit texte. Bandeau `bg-amber` : `text-trail`
+  (4.95:1), pas snow
 - Fond sombre (trail) : textes en snow / sky / gold
 - Animations signature : `.fade-up` (entrées, stagger via animation-delay),
   `.hero-blob` (halos copper/gold flottants sur le hero), `.glow-cta`
@@ -61,11 +65,14 @@ Ambiance chill & aventure, moderne, très animée.
   (durée, dénivelé, difficulté), radius 16px
 - **TripCompare** : les 3 cards côte à côte (colonne sur mobile), le choix
   doit être difficile et plaisant
-- **ChatBubble** : bulles asymétriques, IA à gauche fond terrain, user à
-  droite fond summit texte snow
+- **ChatBubble** : bulles asymétriques, IA à gauche fond snow, user à
+  droite fond `trail` texte snow — PAS summit : choix a11y délibéré,
+  summit/snow ≈ 3.4:1 serait sous le seuil de 4.5:1 (trail/snow ≈ 14:1)
 - **PaywallModal** : hiérarchie claire — bénéfice d'abord, prix ensuite,
   CTA summit plein, option "plus tard" discrète en texte
-- **DifficultyBadge** : radius 6px, fond teinté 12% de la couleur sémantique
+- **DifficultyBadge** : radius 6px, fond tint OPAQUE de la couleur sémantique
+  (`pine-tint`/`amber-tint`/`storm-tint`, précalculés dans styles.css) + texte
+  `*-deep` — opaque pour garantir ≥ 4.5:1 même posé sur photo (TripCard)
 
 ## Accessibilité (non négociable)
 - Contraste ≥ 4.5:1 texte normal, ≥ 3:1 large

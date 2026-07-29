@@ -16,12 +16,20 @@
   --color-sky: #cde6f5; /* Pale Sky — surfaces accent */
   --color-terrain: #eaf4fb; /* surface claire dérivée de Pale Sky */
   --color-cloud: #f6fafd; /* fond de page */
-  --color-pine: #1a8a4a; /* succès */
-  --color-amber: #c97a00; /* warning */
-  --color-storm: #c03030; /* erreur */
+  --color-pine: #1a8a4a; /* succès (fonds, icônes) */
+  --color-pine-deep: #147038; /* texte succès lisible sur fond clair (≥4.5:1) */
+  --color-amber: #c97a00; /* warning (fonds, icônes) */
+  --color-amber-deep: #8a5400; /* texte warning lisible sur fond clair (≥4.5:1) */
+  --color-storm: #c03030; /* erreur (fonds, icônes) */
+  --color-storm-deep: #a32626; /* texte erreur lisible sur fond clair (≥4.5:1) */
+  /* Fonds opaques des badges (tint 15 % précalculée sur snow) — opaques pour
+   * garantir le contraste même posés sur photo (TripCard). */
+  --color-pine-tint: #ddede4; /* pine-deep dessus : 5.08:1 */
+  --color-amber-tint: #f7ebd9; /* amber-deep dessus : 5.33:1 */
+  --color-storm-tint: #f6e0e0; /* storm-deep dessus : 5.82:1 */
   --color-snow: #ffffff;
   --color-mist: #b9d8ea; /* bordures */
-  --color-fog: #6e7480; /* placeholders (4.5:1 sur snow) */
+  --color-fog: #676d79; /* placeholders (≥4.5:1 sur snow ET cloud) */
 
   --font-display: 'DM Sans', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;

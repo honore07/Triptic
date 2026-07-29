@@ -96,7 +96,7 @@ export function WeatherStrip({ trip, plan }: Props) {
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${
                 alert.severity === 'danger'
                   ? 'bg-storm/10 text-storm'
-                  : 'bg-amber/10 text-amber'
+                  : 'bg-amber/10 text-amber-deep'
               }`}
             >
               <AlertTriangle size={16} aria-hidden="true" />

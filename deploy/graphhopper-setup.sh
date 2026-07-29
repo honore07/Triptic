@@ -6,6 +6,15 @@
 #
 # Périmètre = régions pilotes (server/src/import/osm/regions.ts) :
 # Alsace-Vosges + Alpes FR/CH/IT. Surcharger : TRIPTIC_PBF_URLS="url1 url2…"
+#
+# ⛔ GOTCHA confirmé (07/2026) : l'étape 3 (`osmium merge` d'extraits Geofabrik
+# adjacents) fait planter l'import GraphHopper 12 — objets en versions
+# différentes aux frontières entre extraits coupés sur des snapshots
+# différents (résultat « undefined » selon man osmium-merge). Ce script ne
+# fonctionne donc qu'avec UN seul extrait (TRIPTIC_PBF_URLS=une URL, état
+# actuel : alsace). Pour étendre la couverture, utiliser
+# deploy/graphhopper-extend.sh (découpe bbox depuis une source unique) —
+# procédure : deploy/RUNBOOK-routing-extension.md.
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 

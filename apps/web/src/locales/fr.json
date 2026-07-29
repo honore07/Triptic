@@ -3,7 +3,9 @@
     "tagline": "Plan, Explore, Repeat.",
     "promise": "Tu décris ton aventure. TRIPTIC te propose 3 itinéraires sur-mesure. Tu choisis. Tu peaufines. Tu pars.",
     "offline": "Hors ligne — tes trips sauvegardés restent disponibles",
-    "online": "En ligne"
+    "online": "En ligne",
+    "page_not_found": "Cette page n'existe pas.",
+    "back_home": "Retour à l'accueil"
   },
   "home": {
     "headline": "Pars explorer l'Europe.",
@@ -69,7 +71,9 @@
     "share": "Lien public",
     "copied": "Lien copié !",
     "back": "Retour aux propositions",
-    "not_found": "Trip introuvable."
+    "not_found": "Trip introuvable.",
+    "error_action": "L'action a échoué. Vérifie ta connexion et réessaie.",
+    "copy_manual": "La copie automatique n'est pas disponible ici — sélectionne le lien ci-dessous pour le copier."
   },
   "difficulty": {
     "easy": "Facile",
@@ -117,6 +121,7 @@
     "lat_label": "Latitude",
     "lng_label": "Longitude",
     "use_location": "Utiliser ma position",
+    "locate_error": "Impossible de récupérer ta position. Autorise la géolocalisation et réessaie.",
     "summary_label": "Description (optionnelle)",
     "summary_placeholder": "En une phrase : pourquoi ce lieu vaut le détour ?",
     "submit": "Proposer ce lieu",
@@ -178,12 +183,12 @@
     "meals": "Repas",
     "activities": "Activités & visites",
     "total": "Total estimé",
-    "co2": "Empreinte carbone",
+    "co2": "Empreinte carbone :",
     "note": "Estimations indicatives et ajustables. CO₂ : ADEME Base Carbone (well-to-wheel) ; carburant : prix moyens par pays."
   },
   "days": {
     "title": "Programme jour par jour",
-    "estimated": "estimation"
+    "estimated": "estimation à vol d'oiseau — hors zone de routage"
   },
   "time": {
     "morning": "matin",
@@ -203,6 +208,7 @@
     "done": "Terminer l’édition",
     "undo": "Annuler la dernière modification",
     "recomputing": "Recalcul en cours (distances, budget, CO₂)…",
+    "recompute_error": "Le recalcul a échoué — les totaux affichés peuvent être obsolètes. Réessaie dans un instant.",
     "add_activity": "Ajouter une activité",
     "delete": "Supprimer",
     "move_up": "Monter",
@@ -232,6 +238,7 @@
     "chip_food": "Où manger",
     "chip_night": "Spots de nuit",
     "locate": "Autour de moi",
+    "locate_error": "Impossible de récupérer ta position. Autorise la géolocalisation et réessaie.",
     "search_area": "Chercher dans cette zone",
     "searching": "Recherche…",
     "map_label": "Carte de recherche par zone",
@@ -264,5 +271,35 @@
     "alert_heat_on_hike": "Forte chaleur prévue un jour de rando — pars tôt et charge de l’eau.",
     "alert_cold_camp": "Nuit glaciale prévue sur un bivouac/camping — équipement grand froid.",
     "alert_snow_on_route": "Neige prévue sur la route ou le sentier — vérifie les cols et équipe-toi."
+  },
+  "legal": {
+    "attributions_nav": "Données & licences",
+    "tdm_nav": "Notice TDM",
+    "attributions_title": "Attributions & licences",
+    "attributions_intro": "TRIPTIC est construit sur des données ouvertes et des services tiers. Voici les sources utilisées dans l'app, leurs licences et les liens vers leurs producteurs.",
+    "license_label": "Licence :",
+    "src_osm": "Base de lieux et de sentiers, et calcul des itinéraires (moteur GraphHopper auto-hébergé sur données OpenStreetMap).",
+    "src_datatourisme": "Points d'intérêt touristiques en France, publiés par les offices de tourisme via la plateforme nationale DATAtourisme (Direction générale des Entreprises).",
+    "src_wikidata": "Villages classés (Les Plus Beaux Villages de France, I borghi più belli d'Italia) et scores de notoriété des lieux.",
+    "src_geotrek": "Itinéraires de randonnée publiés par les parcs : PNR des Ballons des Vosges, Parc national des Écrins et Parc national de la Vanoise (portails Geotrek).",
+    "src_openmeteo": "Prévisions météo affichées sur les trips.",
+    "src_copernicus": "Altitudes et calcul des dénivelés (modèle numérique de terrain Copernicus DEM GLO-30, servi par une instance OpenTopoData auto-hébergée).",
+    "src_photos": "Photos d'illustration des trips, utilisées conformément aux licences Unsplash et Pexels.",
+    "src_ademe": "Facteurs d'émission de CO₂e des carburants (Base Carbone® de l'ADEME, approche well-to-wheel) pour l'estimation de l'empreinte carbone.",
+    "src_mapbox": "Fonds de carte et rendu cartographique interactif.",
+    "tdm_title": "Notice de fouille de textes et de données (TDM)",
+    "tdm_intro": "TRIPTIC enrichit sa base de lieux en extrayant automatiquement des faits géographiques depuis des contenus web outdoor publics. Cette notice résume ce que nous collectons, sur quelle base légale, et comment s'y opposer.",
+    "french_prevails": "Seule la version française de cette notice fait foi.",
+    "tdm_what_title": "Ce que nous collectons",
+    "tdm_what_body": "Uniquement des faits sur des lieux : nom, type, coordonnées et tags courts. Jamais le texte des articles, jamais les photos, jamais d'informations sur les auteurs ou d'autres personnes. Toute donnée personnelle détectée est rejetée avant enregistrement, et chaque fait est recoupé avec des sources ouvertes (OpenStreetMap, DATAtourisme, Wikidata).",
+    "tdm_why_title": "Pourquoi",
+    "tdm_why_body": "Améliorer la pertinence des itinéraires outdoor proposés aux utilisateurs de TRIPTIC, en ancrant les suggestions sur des lieux réels et vérifiés. Aucune finalité de profilage de personnes.",
+    "tdm_legal_title": "Base légale",
+    "tdm_legal_body": "Volet propriété intellectuelle : exception de fouille de textes et de données (article 4 de la directive (UE) 2019/790 ; article L.122-5-3 du Code de la propriété intellectuelle), avec opt-out systématiquement respecté. Volet données personnelles : intérêt légitime, assorti de garanties strictes (minimisation, filtres de rejet, journal d'audit) ; hébergement dans l'Union européenne, aucun transfert hors UE.",
+    "tdm_optout_title": "Opt-out : le refus des sites est respecté",
+    "tdm_optout_body": "Avant tout accès, nous vérifions et respectons robots.txt (RFC 9309), ai.txt, les balises meta noai / notdm, le protocole TDMRep et les mentions d'opposition exprimées en langage naturel. Le statut d'opt-out est re-vérifié à chaque accès et historisé dans notre registre de sources (tdm_sources). Notre robot s'identifie par le user-agent « TRIPTIC-TDM », avec une URL d'information et un contact.",
+    "tdm_rights_title": "Opposition & effacement",
+    "tdm_rights_body": "Éditeur d'un site ou personne concernée : vous pouvez demander l'exclusion d'un site ou l'effacement des faits issus d'une source. L'effacement s'exécute par suppression des fiches concernées et ajout du site à notre liste d'exclusion permanente.",
+    "tdm_contact_label": "Contact :"
   }
 }

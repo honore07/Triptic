@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ExploreBbox } from '../lib/api';
 import type { ExplorePlace } from '../lib/explore';
+import { MAP_COLORS } from '../lib/mapColors';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
 const hasToken = Boolean(MAPBOX_TOKEN && !MAPBOX_TOKEN.startsWith('pk.xxx'));
@@ -72,7 +73,7 @@ export function ExploreMap({ results, trace = null, center, onBoundsChange }: Pr
     void import('mapbox-gl').then(({ default: mapboxgl }) => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = results.map((place) =>
-        new mapboxgl.Marker({ color: '#C86341' })
+        new mapboxgl.Marker({ color: MAP_COLORS.summit })
           .setLngLat([place.lng, place.lat])
           .setPopup(new mapboxgl.Popup({ offset: 24 }).setText(place.name))
           .addTo(map),
@@ -104,7 +105,7 @@ export function ExploreMap({ results, trace = null, center, onBoundsChange }: Pr
       id: 'trail-trace',
       type: 'line',
       source: 'trail-trace',
-      paint: { 'line-color': '#1A8A4A', 'line-width': 3, 'line-dasharray': [0.5, 1.5] },
+      paint: { 'line-color': MAP_COLORS.pine, 'line-width': 3, 'line-dasharray': [0.5, 1.5] },
     });
     void import('mapbox-gl').then(({ default: mapboxgl }) => {
       const bounds = trace.reduce(

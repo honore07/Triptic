@@ -30,7 +30,8 @@ export type GenerateEvent =
   | { event: 'done'; data: Record<string, never> };
 
 function planHeaders(plan: PlanId): HeadersInit {
-  // En dev sans auth Supabase, le plan passe par x-plan (ignoré en production)
+  // Sans auth Supabase, le plan passe par x-plan — honoré seulement si le
+  // serveur tourne en mode démo/dev (avec auth, le plan est dérivé du JWT)
   return plan === 'free' ? {} : { 'x-plan': plan };
 }
 
@@ -290,17 +291,22 @@ export async function fetchTripWeather(
   return res.ok ? res.json() : null;
 }
 
-/** PATCH /api/trips/:id — synchronise un trip sauvegardé après édition (3.1). */
+/**
+ * PATCH /api/trips/:id — synchronise un trip sauvegardé après édition (3.1).
+ * `patch.is_public: true` rend le trip public sans le dupliquer (le serveur
+ * génère le slug si absent).
+ */
 export async function updateTrip(
   tripId: string,
   proposal: TripProposal,
   plan: PlanId,
+  patch?: { is_public?: boolean },
 ): Promise<Trip | null> {
   const { waypoints, title, mode, days, ...metadata } = proposal;
   const res = await fetch(`${API_URL}/api/trips/${tripId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
-    body: JSON.stringify({ title, mode, metadata, waypoints, days: days ?? null }),
+    body: JSON.stringify({ title, mode, metadata, waypoints, days: days ?? null, ...patch }),
   });
   return res.ok ? res.json() : null;
 }

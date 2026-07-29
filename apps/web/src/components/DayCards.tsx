@@ -18,6 +18,22 @@ import type { ActivityType, TripDay } from '@triptic/shared';
  * de la carte met la carte-jour en avant (scroll + surbrillance).
  */
 
+/**
+ * Vignette h-28 (112px) : réduit la largeur demandée aux CDN images
+ * (Unsplash/Pexels utilisent tous deux le paramètre `w`). On ne réécrit
+ * l'URL que si elle porte déjà ce paramètre — sinon on la laisse intacte.
+ */
+export function thumbnailUrl(url: string, width = 400): string {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.searchParams.has('w')) return url;
+    parsed.searchParams.set('w', String(width));
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 const ACTIVITY_ICONS: Record<ActivityType, typeof Car> = {
   drive: Car,
   hike: Footprints,
@@ -76,7 +92,7 @@ export function DayCards({ days, selectedDay, onSelectDay }: Props) {
               >
                 {day.photo_url && (
                   <img
-                    src={day.photo_url}
+                    src={thumbnailUrl(day.photo_url)}
                     alt=""
                     aria-hidden="true"
                     loading="lazy"

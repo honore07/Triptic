@@ -69,7 +69,7 @@ export function RequestChips({ request, busy, onRegenerate }: Props) {
             disabled={busy || merged.duration_days <= 1}
             onClick={() => setField('duration_days', merged.duration_days - 1)}
             aria-label={t('request.duration_minus')}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gold/20 disabled:opacity-40"
+            className="-my-1.5 flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-gold/20 disabled:opacity-40"
           >
             <Minus size={14} aria-hidden="true" />
           </button>
@@ -81,7 +81,7 @@ export function RequestChips({ request, busy, onRegenerate }: Props) {
             disabled={busy || merged.duration_days >= 60}
             onClick={() => setField('duration_days', merged.duration_days + 1)}
             aria-label={t('request.duration_plus')}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gold/20 disabled:opacity-40"
+            className="-my-1.5 flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-gold/20 disabled:opacity-40"
           >
             <Plus size={14} aria-hidden="true" />
           </button>

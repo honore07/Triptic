@@ -15,7 +15,33 @@ export function PaywallModal() {
   useEffect(() => {
     if (!paywallOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closePaywall();
+      if (e.key === 'Escape') {
+        closePaywall();
+        return;
+      }
+      // Focus trap : Tab / Shift+Tab bouclent sur les focusables du dialog
+      if (e.key === 'Tab') {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        const focusables = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter((el) => !el.hasAttribute('disabled'));
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (!first || !last) return;
+        const active = document.activeElement;
+        if (e.shiftKey) {
+          if (active === first || !dialog.contains(active)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else if (active === last || !dialog.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
     dialogRef.current?.querySelector('button')?.focus();
@@ -53,7 +79,7 @@ export function PaywallModal() {
             type="button"
             onClick={closePaywall}
             aria-label={t('paywall.later')}
-            className="rounded-full p-1 text-ridge hover:bg-terrain"
+            className="-mr-2 -mt-2 flex min-h-11 min-w-11 items-center justify-center rounded-full text-ridge hover:bg-terrain"
           >
             <X size={20} />
           </button>

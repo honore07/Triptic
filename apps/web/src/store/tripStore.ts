@@ -11,6 +11,8 @@ interface TripState {
   history: TripProposal[];
   /** Recalcul serveur en cours (segments/budget/CO₂). */
   recomputing: boolean;
+  /** Échec du dernier recalcul (même pattern que chatStore.error) — affiché par l'UI. */
+  error: string | null;
   select: (proposal: TripProposal) => void;
   setSaved: (trip: Trip) => void;
   /**
@@ -31,10 +33,12 @@ export const useTripStore = create<TripState>((set, get) => ({
   saved: null,
   history: [],
   recomputing: false,
+  error: null,
 
-  select: (proposal) => set({ selected: proposal, saved: null, history: [] }),
+  select: (proposal) => set({ selected: proposal, saved: null, history: [], error: null }),
   setSaved: (trip) => set({ saved: trip }),
-  clear: () => set({ selected: null, saved: null, history: [], recomputing: false }),
+  clear: () =>
+    set({ selected: null, saved: null, history: [], recomputing: false, error: null }),
 
   applyDays: async (days, plan) => {
     const current = get().selected;
@@ -44,10 +48,15 @@ export const useTripStore = create<TripState>((set, get) => ({
       history: [...get().history, current],
       selected: { ...current, days },
       recomputing: true,
+      error: null,
     });
     try {
       const payload = await recomputeTrip({ ...current, days }, plan);
       if (payload) get().applyRecomputed(payload);
+    } catch {
+      // Échec réseau du recalcul : l'édition locale reste, les totaux peuvent
+      // être obsolètes — l'UI affiche l'erreur (règle qualité #2)
+      set({ error: 'recompute_failed' });
     } finally {
       set({ recomputing: false });
     }

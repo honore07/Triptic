@@ -22,6 +22,7 @@ export function TripPage() {
     setSaved,
     history,
     recomputing,
+    error: recomputeError,
     applyDays,
     applyRecomputed,
     pushHistory,
@@ -29,6 +30,9 @@ export function TripPage() {
   } = useTripStore();
   const { plan } = useUserStore();
   const [copied, setCopied] = useState(false);
+  const [actionError, setActionError] = useState(false);
+  /** URL publique affichée en fallback quand le presse-papiers est indisponible. */
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
   const lang = (i18n.language as Lang) ?? 'fr';
@@ -54,21 +58,52 @@ export function TripPage() {
 
   const onSave = async () => {
     if (saved) return;
-    setSaved(await saveTrip(selected, plan, false));
+    setActionError(false);
+    try {
+      setSaved(await saveTrip(selected, plan, false));
+    } catch {
+      setActionError(true);
+    }
   };
 
   const onShare = async () => {
-    let trip = saved;
-    if (!trip || !trip.is_public) {
-      trip = await saveTrip(selected, plan, true);
-      setSaved(trip);
-    }
-    if (trip.slug) {
-      await navigator.clipboard.writeText(`${window.location.origin}/trip/${trip.slug}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    setActionError(false);
+    try {
+      let trip = saved;
+      if (trip && !trip.is_public) {
+        // Trip déjà sauvegardé : PATCH is_public (jamais de re-POST → pas de doublon)
+        const updated = await updateTrip(trip.id, selected, plan, { is_public: true });
+        if (!updated) throw new Error('updateTrip failed');
+        trip = updated;
+        setSaved(updated);
+      } else if (!trip) {
+        trip = await saveTrip(selected, plan, true);
+        setSaved(trip);
+      }
+      if (!trip.slug) return;
+      const url = `${window.location.origin}/trip/${trip.slug}`;
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(url);
+          setShareUrl(null);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          // Copie refusée (permissions) : même fallback que sans clipboard
+          setShareUrl(url);
+        }
+      } else {
+        // Contexte non sécurisé (HTTP) : pas de clipboard → URL sélectionnable
+        setShareUrl(url);
+      }
+    } catch {
+      setActionError(true);
     }
   };
+
+  /** Fourchette € — valeur seule quand min = max (jamais « 35–35 € »). */
+  const eurRange = ([min, max]: [number, number]) =>
+    min === max ? `${min} €` : `${min}–${max} €`;
 
   const sortedWaypoints = [...selected.waypoints].sort((a, b) => a.day - b.day);
 
@@ -123,6 +158,26 @@ export function TripPage() {
         </button>
       </div>
 
+      {actionError && (
+        <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm font-semibold text-storm">
+          {t('trips.error_action')}
+        </p>
+      )}
+
+      {shareUrl && (
+        <div className="flex flex-col gap-1.5 rounded-xl border border-mist bg-snow p-4">
+          <p className="text-sm text-ridge">{t('trips.copy_manual')}</p>
+          <input
+            type="text"
+            readOnly
+            value={shareUrl}
+            aria-label={t('trips.share')}
+            onFocus={(e) => e.currentTarget.select()}
+            className="w-full rounded-lg border border-mist bg-terrain px-3 py-2.5 font-mono text-xs text-trail"
+          />
+        </div>
+      )}
+
       {(selected.budget || (selected.co2_kg !== undefined && selected.co2_kg > 0)) && (
         <section
           aria-labelledby="budget-title"
@@ -140,21 +195,15 @@ export function TripPage() {
               </div>
               <div className="flex justify-between">
                 <dt className="text-ridge">{t('budget.tolls')}</dt>
-                <dd className="font-mono text-trail">
-                  {selected.budget.tolls_eur[0]}–{selected.budget.tolls_eur[1]} €
-                </dd>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.tolls_eur)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-ridge">{t('budget.nights')}</dt>
-                <dd className="font-mono text-trail">
-                  {selected.budget.nights_eur[0]}–{selected.budget.nights_eur[1]} €
-                </dd>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.nights_eur)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-ridge">{t('budget.meals')}</dt>
-                <dd className="font-mono text-trail">
-                  {selected.budget.meals_eur[0]}–{selected.budget.meals_eur[1]} €
-                </dd>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.meals_eur)}</dd>
               </div>
               {selected.budget.activities_eur > 0 && (
                 <div className="flex justify-between">
@@ -164,9 +213,7 @@ export function TripPage() {
               )}
               <div className="mt-1 flex justify-between border-t border-mist pt-2 font-semibold">
                 <dt className="text-trail">{t('budget.total')}</dt>
-                <dd className="font-mono text-trail">
-                  {selected.budget.total_eur[0]}–{selected.budget.total_eur[1]} €
-                </dd>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.total_eur)}</dd>
               </div>
             </dl>
           )}
@@ -174,7 +221,7 @@ export function TripPage() {
             <p className="flex items-center gap-1.5 text-sm text-ridge">
               <Leaf size={15} className="text-pine" aria-hidden="true" />
               <span>
-                {t('budget.co2')} : <strong className="font-mono">≈ {selected.co2_kg} kg CO₂e</strong>
+                {t('budget.co2')} <strong className="font-mono">≈ {selected.co2_kg} kg CO₂e</strong>
               </span>
             </p>
           )}
@@ -213,6 +260,11 @@ export function TripPage() {
             {recomputing && (
               <span className="text-xs text-fog" aria-live="polite">
                 {t('editor.recomputing')}
+              </span>
+            )}
+            {recomputeError && !recomputing && (
+              <span role="alert" className="text-xs font-semibold text-storm">
+                {t('editor.recompute_error')}
               </span>
             )}
           </div>

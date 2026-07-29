@@ -19,9 +19,15 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
+// Lecteurs d'écran (prononciation) + SEO : l'attribut lang suit la langue active
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = initial;
+}
+
 export function setLang(lang: 'fr' | 'en' | 'de'): void {
   void i18n.changeLanguage(lang);
   localStorage.setItem('triptic-lang', lang);
+  document.documentElement.lang = lang;
 }
 
 export default i18n;
