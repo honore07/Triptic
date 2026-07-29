@@ -23,7 +23,7 @@ declare global {
  * sauf mode démo explicite ALLOW_PLAN_OVERRIDE=true — à retirer quand
  * Stripe/Supabase seront branchés).
  */
-const allowPlanOverride =
+export const allowPlanOverride =
   !env.isProd || process.env['ALLOW_PLAN_OVERRIDE'] === 'true';
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
