@@ -52,7 +52,14 @@
     "date_end": "Rückkehr",
     "dates_hint": "Ohne Daten leitet die KI die Dauer aus deiner Anfrage ab.",
     "dates_season_hint": "Aktivitäten werden an die Saison angepasst",
-    "dates_invalid": "Das Rückreisedatum muss nach der Abfahrt liegen."
+    "dates_invalid": "Das Rückreisedatum muss nach der Abfahrt liegen.",
+    "places_label": "Start und Ziel",
+    "places_hint": "Optional — gib deinen echten Startpunkt an für genaue Fahrzeiten (Zuhause, Bahnhof, Mietstation).",
+    "place_from": "Startpunkt",
+    "place_from_placeholder": "z. B.: Straßburg, Bahnhof Colmar…",
+    "place_to": "Zielpunkt",
+    "place_to_placeholder": "z. B.: Genf, Bahnhof Lyon…",
+    "round_trip": "Rundtour — zurück zum Startpunkt"
   },
   "trips": {
     "compare_title": "3 Routen im Wettbewerb",
@@ -73,7 +80,9 @@
     "back": "Zurück zu den Vorschlägen",
     "not_found": "Trip nicht gefunden.",
     "error_action": "Die Aktion ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
-    "copy_manual": "Automatisches Kopieren ist hier nicht verfügbar — wähle den Link unten aus, um ihn zu kopieren."
+    "copy_manual": "Automatisches Kopieren ist hier nicht verfügbar — wähle den Link unten aus, um ihn zu kopieren.",
+    "days_count_one": "{{count}} Tag",
+    "days_count_other": "{{count}} Tage"
   },
   "difficulty": {
     "easy": "Leicht",

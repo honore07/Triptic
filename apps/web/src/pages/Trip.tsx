@@ -124,7 +124,7 @@ export function TripPage() {
         <h1 className="font-display text-3xl font-bold text-trail">{selected.title}</h1>
         <p className="text-sm text-ridge">{selected.summary}</p>
         <p className="font-mono text-xs text-ridge">
-          {selected.duration_days} {t('trips.days')} · {Math.round(selected.distance_km)} km ·{' '}
+          {t('trips.days_count', { count: selected.duration_days })} · {Math.round(selected.distance_km)} km ·{' '}
           {t('trips.elevation')} {Math.round(selected.elevation_gain_m)} m ·{' '}
           {Math.round(selected.daily_distance_km)} km {t('trips.per_day')}
         </p>

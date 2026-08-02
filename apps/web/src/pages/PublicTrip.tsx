@@ -57,7 +57,7 @@ export function PublicTrip() {
         <p className="font-mono text-xs text-ridge">
           {[
             Number.isFinite(meta.duration_days)
-              ? `${meta.duration_days} ${t('trips.days')}`
+              ? t('trips.days_count', { count: meta.duration_days })
               : null,
             Number.isFinite(meta.distance_km) ? `${Math.round(meta.distance_km)} km` : null,
             Number.isFinite(meta.elevation_gain_m)

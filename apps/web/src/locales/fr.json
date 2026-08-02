@@ -52,7 +52,14 @@
     "date_end": "Retour",
     "dates_hint": "Sans dates, l’IA déduit la durée de ta demande.",
     "dates_season_hint": "les activités seront adaptées à la saison",
-    "dates_invalid": "La date de retour doit être après le départ."
+    "dates_invalid": "La date de retour doit être après le départ.",
+    "places_label": "Départ et arrivée",
+    "places_hint": "Facultatif — précise ton point de départ réel pour des temps de trajet justes (domicile, gare, agence de location).",
+    "place_from": "Point de départ",
+    "place_from_placeholder": "Ex. : Strasbourg, gare de Colmar…",
+    "place_to": "Point d'arrivée",
+    "place_to_placeholder": "Ex. : Genève, gare de Lyon…",
+    "round_trip": "Boucle — retour au point de départ"
   },
   "trips": {
     "compare_title": "3 itinéraires en compétition",
@@ -73,7 +80,9 @@
     "back": "Retour aux propositions",
     "not_found": "Trip introuvable.",
     "error_action": "L'action a échoué. Vérifie ta connexion et réessaie.",
-    "copy_manual": "La copie automatique n'est pas disponible ici — sélectionne le lien ci-dessous pour le copier."
+    "copy_manual": "La copie automatique n'est pas disponible ici — sélectionne le lien ci-dessous pour le copier.",
+    "days_count_one": "{{count}} jour",
+    "days_count_other": "{{count}} jours"
   },
   "difficulty": {
     "easy": "Facile",

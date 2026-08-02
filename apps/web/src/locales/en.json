@@ -52,7 +52,14 @@
     "date_end": "Return",
     "dates_hint": "Without dates, the AI infers the duration from your request.",
     "dates_season_hint": "activities will match the season",
-    "dates_invalid": "The return date must be after departure."
+    "dates_invalid": "The return date must be after departure.",
+    "places_label": "Start and finish",
+    "places_hint": "Optional — set your real starting point for accurate travel times (home, station, rental agency).",
+    "place_from": "Starting point",
+    "place_from_placeholder": "E.g.: Strasbourg, Colmar station…",
+    "place_to": "End point",
+    "place_to_placeholder": "E.g.: Geneva, Lyon station…",
+    "round_trip": "Loop — back to the starting point"
   },
   "trips": {
     "compare_title": "3 competing routes",
@@ -73,7 +80,9 @@
     "back": "Back to proposals",
     "not_found": "Trip not found.",
     "error_action": "The action failed. Check your connection and try again.",
-    "copy_manual": "Automatic copy isn't available here — select the link below to copy it."
+    "copy_manual": "Automatic copy isn't available here — select the link below to copy it.",
+    "days_count_one": "{{count}} day",
+    "days_count_other": "{{count}} days"
   },
   "difficulty": {
     "easy": "Easy",

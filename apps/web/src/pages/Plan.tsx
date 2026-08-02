@@ -112,7 +112,11 @@ export function Plan() {
       </section>
 
       {tunerVisible && (
-        <TripTuner onConfirm={(value, dates) => void confirmTuning(value, lang, plan, dates)} />
+        <TripTuner
+          onConfirm={(value, dates, places) =>
+            void confirmTuning(value, lang, plan, dates, places)
+          }
+        />
       )}
 
       {!result && !tunerVisible && (
