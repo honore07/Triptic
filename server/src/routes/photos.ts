@@ -5,6 +5,9 @@ import { findPlacePhotos } from '../services/photos.js';
 const querySchema = z.object({
   q: z.string().trim().min(2).max(120),
   limit: z.coerce.number().int().min(1).max(15).optional(),
+  /** Coordonnées du lieu : sélectionnent des photos réellement prises là. */
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
 });
 
 /**
@@ -21,7 +24,9 @@ export function createPhotosRouter(): Router {
       res.status(400).json({ error: 'invalid_query' });
       return;
     }
-    const media = await findPlacePhotos(parsed.data.q, parsed.data.limit ?? 10);
+    const { q, limit, lat, lng } = parsed.data;
+    const coords = lat !== undefined && lng !== undefined ? { lat, lng } : undefined;
+    const media = await findPlacePhotos(q, limit ?? 10, coords);
     // Les galeries changent rarement : cache navigateur d'une heure
     res.set('Cache-Control', 'public, max-age=3600');
     res.json({ media });

@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../app.js';
-import { clearGalleryCache, findPlacePhotos } from '../services/photos.js';
+import {
+  clearGalleryCache,
+  diversifyByAuthor,
+  findCommonsMedia,
+  findPlacePhotos,
+  type PlaceMedia,
+} from '../services/photos.js';
 
 const mockProvider = {
   name: 'mock',
@@ -113,6 +119,97 @@ describe('findPlacePhotos', () => {
     );
     expect(await findPlacePhotos('Sans mp4')).toEqual([]);
     delete process.env['PEXELS_API_KEY'];
+  });
+
+  it('avec des coordonnées : Commons prime et court-circuite les mots-clés', async () => {
+    const commonsPayload = {
+      query: {
+        pages: {
+          '1': {
+            title: 'File:Col Petit Ballon 2024.jpg',
+            imageinfo: [
+              {
+                thumburl: 'https://commons/petit-ballon-900.jpg',
+                descriptionurl: 'https://commons.wikimedia.org/wiki/File:Col.jpg',
+                extmetadata: {
+                  Artist: { value: '<a href="/wiki/User:X">Jesper B.</a>' },
+                  LicenseShortName: { value: 'CC BY-SA 4.0' },
+                },
+              },
+            ],
+          },
+        },
+      },
+    };
+    const fetchMock = vi.fn(async (url: string) =>
+      url.includes('commons.wikimedia.org')
+        ? new Response(JSON.stringify(commonsPayload), { status: 200 })
+        : new Response(JSON.stringify(unsplashPayload), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const media = await findPlacePhotos('Petit Ballon', 10, { lat: 47.9889, lng: 7.1247 });
+    expect(media).toHaveLength(1);
+    expect(media[0]).toMatchObject({
+      type: 'photo',
+      url: 'https://commons/petit-ballon-900.jpg',
+      author: 'Jesper B.', // HTML du champ Artist retiré
+      license: 'CC BY-SA 4.0',
+      source: 'commons',
+    });
+    // Aucun appel Unsplash/Pexels : c'est eux qui renvoyaient des baudruches
+    expect(fetchMock.mock.calls.every(([u]) => String(u).includes('commons'))).toBe(true);
+  });
+
+  it('répartit la galerie entre auteurs plutôt qu’un seul reportage', () => {
+    const of = (author: string, n: number): PlaceMedia => ({
+      type: 'photo',
+      url: `https://c/${author}-${n}.jpg`,
+      thumb: '',
+      author,
+      link: '',
+      source: 'commons',
+    });
+    // Un contributeur prolifique (6 macros) et deux autres photographes
+    const input = [
+      ...Array.from({ length: 6 }, (_, i) => of('macro', i)),
+      of('paysagiste', 0),
+      of('randonneur', 0),
+    ];
+    const picked = diversifyByAuthor(input, 4);
+    expect(picked).toHaveLength(4);
+    expect(new Set(picked.map((p) => p.author)).size).toBe(3);
+    // Le prolifique ne prend pas toute la place : 2 sur 4 au plus
+    expect(picked.filter((p) => p.author === 'macro').length).toBeLessThanOrEqual(2);
+  });
+
+  it('écarte les fichiers non photographiques de Commons', async () => {
+    const payload = {
+      query: {
+        pages: {
+          '1': {
+            title: 'File:Carte du massif.svg',
+            imageinfo: [{ thumburl: 'https://commons/carte.svg', extmetadata: {} }],
+          },
+        },
+      },
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 })),
+    );
+    expect(await findCommonsMedia(47.9, 7.1, 5)).toEqual([]);
+  });
+
+  it('sans résultat Commons : repli sur la recherche par mot-clé', async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      url.includes('commons.wikimedia.org')
+        ? new Response(JSON.stringify({ query: { pages: {} } }), { status: 200 })
+        : new Response(JSON.stringify(unsplashPayload), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const media = await findPlacePhotos('Lieu sans photo geo', 10, { lat: 0.5, lng: 0.5 });
+    expect(media[0]?.source).toBe('unsplash');
   });
 
   it('renvoie [] sans clé API configurée', async () => {

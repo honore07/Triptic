@@ -10,6 +10,12 @@ interface Props {
   onClose: () => void;
 }
 
+const SOURCE_NAMES: Record<PlaceMedia['source'], string> = {
+  commons: 'Wikimedia Commons',
+  unsplash: 'Unsplash',
+  pexels: 'Pexels',
+};
+
 /**
  * Carrousel de photos réelles d'un lieu, ouvert depuis un marqueur de la
  * carte. Crédit auteur affiché sur chaque vue (exigé par Unsplash & Pexels).
@@ -125,7 +131,8 @@ export function PlaceCarousel({ title, media, loading, onClose }: Props) {
             >
               {item.author}
             </a>{' '}
-            — {item.source === 'unsplash' ? 'Unsplash' : 'Pexels'}
+            — {SOURCE_NAMES[item.source]}
+            {item.license ? ` · ${item.license}` : ''}
           </p>
         </>
       )}

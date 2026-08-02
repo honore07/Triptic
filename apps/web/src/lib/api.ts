@@ -363,13 +363,21 @@ export interface PlaceMedia {
   thumb: string;
   author: string;
   link: string;
-  source: 'unsplash' | 'pexels';
+  source: 'commons' | 'unsplash' | 'pexels';
+  license?: string | undefined;
 }
 
-/** Galerie d'un lieu pour le carrousel de la carte. [] si indisponible. */
-export async function fetchPlaceMedia(query: string): Promise<PlaceMedia[]> {
+/**
+ * Galerie d'un lieu. Les coordonnees priment sur le nom : elles selectionnent
+ * des photos reellement prises sur place. [] si indisponible.
+ */
+export async function fetchPlaceMedia(
+  query: string,
+  coords?: { lat: number; lng: number },
+): Promise<PlaceMedia[]> {
   try {
-    const res = await fetch(`${API_URL}/api/photos?q=${encodeURIComponent(query)}`);
+    const geo = coords ? `&lat=${coords.lat}&lng=${coords.lng}` : '';
+    const res = await fetch(`${API_URL}/api/photos?q=${encodeURIComponent(query)}${geo}`);
     if (!res.ok) return [];
     const data = (await res.json()) as { media?: PlaceMedia[] };
     return data.media ?? [];

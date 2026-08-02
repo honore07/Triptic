@@ -1,6 +1,6 @@
 import { logger } from '../logger.js';
 
-/** Un média de lieu avec son crédit (obligatoire : CGU Unsplash & Pexels). */
+/** Un média de lieu avec son crédit (obligatoire : CGU / licences CC). */
 export interface PlaceMedia {
   type: 'photo' | 'video';
   /** Photo : image affichable. Vidéo : fichier MP4 à lire. */
@@ -10,7 +10,9 @@ export interface PlaceMedia {
   author: string;
   /** Page du média chez le fournisseur — lien de crédit exigé. */
   link: string;
-  source: 'unsplash' | 'pexels';
+  source: 'commons' | 'unsplash' | 'pexels';
+  /** Licence à afficher (Commons : CC BY-SA 4.0…). */
+  license?: string | undefined;
 }
 
 /**
@@ -40,6 +42,106 @@ function cacheSet(key: string, media: PlaceMedia[]): void {
     if (oldest !== undefined) galleryCache.delete(oldest);
   }
   galleryCache.set(key, { at: Date.now(), media });
+}
+
+/** Wikimedia demande un User-Agent identifiant l'application. */
+const COMMONS_UA = 'TRIPTIC/0.1 (https://triptic.app; contact@triptic.app)';
+
+/** `<a href=...>Nom</a>` → `Nom` (extmetadata renvoie du HTML). */
+function stripHtml(value: string): string {
+  return value
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Un contributeur qui a téléversé 40 macros au même endroit monopolise sinon
+ * la galerie (scarabées, fleurs…) : on répartit par auteur, en 2 passes, pour
+ * qu'un aperçu de lieu montre plusieurs regards plutôt qu'un seul reportage.
+ */
+export function diversifyByAuthor(media: PlaceMedia[], limit: number): PlaceMedia[] {
+  const byAuthor = new Map<string, PlaceMedia[]>();
+  for (const item of media) {
+    const list = byAuthor.get(item.author);
+    if (list) list.push(item);
+    else byAuthor.set(item.author, [item]);
+  }
+  const picked: PlaceMedia[] = [];
+  for (let round = 0; picked.length < limit && round < media.length; round++) {
+    let addedThisRound = false;
+    for (const list of byAuthor.values()) {
+      const item = list[round];
+      if (!item) continue;
+      picked.push(item);
+      addedThisRound = true;
+      if (picked.length >= limit) break;
+    }
+    if (!addedThisRound) break;
+  }
+  return picked;
+}
+
+/**
+ * Photos géolocalisées via Wikimedia Commons — source PRINCIPALE.
+ * Les recherches par mot-clé (Unsplash/Pexels) confondent le nom du lieu
+ * avec son sens commun : « Petit Ballon » renvoyait des ballons de baudruche.
+ * Ici c'est la position qui sélectionne les photos, donc le lieu est juste
+ * par construction.
+ */
+export async function findCommonsMedia(
+  lat: number,
+  lng: number,
+  limit: number,
+  radiusM = 4000,
+): Promise<PlaceMedia[]> {
+  const url =
+    `https://commons.wikimedia.org/w/api.php?action=query&generator=geosearch` +
+    // On demande large pour pouvoir répartir entre auteurs ensuite
+    `&ggscoord=${lat}%7C${lng}&ggsradius=${radiusM}&ggslimit=${Math.min(limit * 4, 50)}&ggsnamespace=6` +
+    `&prop=imageinfo&iiprop=url%7Cextmetadata&iiurlwidth=900&format=json&origin=*`;
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': COMMONS_UA } });
+    if (!res.ok) return [];
+    const data = (await res.json()) as {
+      query?: {
+        pages?: Record<
+          string,
+          {
+            title?: string;
+            imageinfo?: {
+              thumburl?: string;
+              url?: string;
+              descriptionurl?: string;
+              extmetadata?: Record<string, { value?: string }>;
+            }[];
+          }
+        >;
+      };
+    };
+    const found: PlaceMedia[] = [];
+    for (const page of Object.values(data.query?.pages ?? {})) {
+      const info = page.imageinfo?.[0];
+      const display = info?.thumburl ?? info?.url;
+      if (!display) continue;
+      // Les fichiers non photographiques (cartes, blasons) desservent l'aperçu
+      if (!/\.(jpe?g|png)$/i.test(page.title ?? '')) continue;
+      const meta = info?.extmetadata ?? {};
+      found.push({
+        type: 'photo',
+        url: display,
+        thumb: display,
+        author: stripHtml(meta['Artist']?.value ?? '') || 'Wikimedia Commons',
+        link: info?.descriptionurl ?? 'https://commons.wikimedia.org',
+        source: 'commons',
+        license: stripHtml(meta['LicenseShortName']?.value ?? '') || undefined,
+      });
+    }
+    return diversifyByAuthor(found, limit);
+  } catch (error) {
+    logger.warn({ error, context: 'gallery-commons' }, 'Commons geosearch failed');
+    return [];
+  }
 }
 
 /**
@@ -95,10 +197,25 @@ export function clearGalleryCache(): void {
  * jusqu'à `limit`. Retourne [] si aucune clé configurée ou en cas d'échec —
  * l'UI retombe alors sur le marqueur simple, sans carrousel.
  */
-export async function findPlacePhotos(query: string, limit = 10): Promise<PlaceMedia[]> {
-  const key = `${query.toLowerCase()}|${limit}`;
+export async function findPlacePhotos(
+  query: string,
+  limit = 10,
+  coords?: { lat: number; lng: number } | undefined,
+): Promise<PlaceMedia[]> {
+  const key = `${query.toLowerCase()}|${limit}|${coords ? `${coords.lat},${coords.lng}` : ''}`;
   const cached = cacheGet(key);
   if (cached) return cached;
+
+  // 1) Position → photos réellement prises sur place. Si Commons répond, on
+  // s'arrête là : la recherche par mot-clé qui suit n'a aucune notion de lieu
+  // et produit des hors-sujet (« Petit Ballon » → ballons de baudruche).
+  if (coords) {
+    const geo = await findCommonsMedia(coords.lat, coords.lng, limit);
+    if (geo.length > 0) {
+      cacheSet(key, geo);
+      return geo;
+    }
+  }
 
   const photos: PlaceMedia[] = [];
   const unsplashKey = process.env['UNSPLASH_ACCESS_KEY'];

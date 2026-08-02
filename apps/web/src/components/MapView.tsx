@@ -147,7 +147,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   const openCarousel = useCallback((waypoint: Waypoint) => {
     const req = ++galleryReqRef.current;
     setGallery({ place: waypoint.name, media: [], loading: true });
-    void fetchPlaceMedia(waypoint.name).then((media) => {
+    void fetchPlaceMedia(waypoint.name, { lat: waypoint.lat, lng: waypoint.lng }).then((media) => {
       if (galleryReqRef.current !== req) return;
       setGallery({ place: waypoint.name, media, loading: false });
     });

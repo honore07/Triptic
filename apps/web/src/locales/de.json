@@ -310,7 +310,8 @@
     "tdm_optout_body": "Avant tout accès, nous vérifions et respectons robots.txt (RFC 9309), ai.txt, les balises meta noai / notdm, le protocole TDMRep et les mentions d'opposition exprimées en langage naturel. Le statut d'opt-out est re-vérifié à chaque accès et historisé dans notre registre de sources (tdm_sources). Notre robot s'identifie par le user-agent « TRIPTIC-TDM », avec une URL d'information et un contact.",
     "tdm_rights_title": "Widerspruch & Löschung",
     "tdm_rights_body": "Éditeur d'un site ou personne concernée : vous pouvez demander l'exclusion d'un site ou l'effacement des faits issus d'une source. L'effacement s'exécute par suppression des fiches concernées et ajout du site à notre liste d'exclusion permanente.",
-    "tdm_contact_label": "Kontakt:"
+    "tdm_contact_label": "Kontakt:",
+    "src_commons": "Georeferenzierte Fotos der Reiseorte (Koordinatensuche), im Kartenkarussell mit Urheber und Lizenz angezeigt."
   },
   "carousel": {
     "label": "Fotos von {{place}}",
