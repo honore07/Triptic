@@ -311,5 +311,15 @@
     "tdm_rights_title": "Opposition & effacement",
     "tdm_rights_body": "Éditeur d'un site ou personne concernée : vous pouvez demander l'exclusion d'un site ou l'effacement des faits issus d'une source. L'effacement s'exécute par suppression des fiches concernées et ajout du site à notre liste d'exclusion permanente.",
     "tdm_contact_label": "Contact :"
+  },
+  "carousel": {
+    "label": "Photos de {{place}}",
+    "open": "Voir les photos de {{place}}",
+    "close": "Fermer les photos",
+    "prev": "Photo précédente",
+    "next": "Photo suivante",
+    "loading": "Chargement des photos…",
+    "empty": "Aucune photo disponible pour ce lieu.",
+    "photo_alt": "{{place}} — photo {{n}}"
   }
 }

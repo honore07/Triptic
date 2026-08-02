@@ -14,6 +14,7 @@ import { MemoryTripRepo, type TripRepo } from './repo/trips.js';
 import type { PgPlaceRepo } from './repo/places.js';
 import { createAiRouter } from './routes/ai.js';
 import { createPlacesRouter } from './routes/places.js';
+import { createPhotosRouter } from './routes/photos.js';
 import { createPublicTripsRouter, createTripsRouter } from './routes/trips.js';
 import { QuotaService } from './services/quota.js';
 import { EnrichmentService } from './services/enrichment.js';
@@ -76,6 +77,7 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
   );
   app.use('/api/trips', createTripsRouter(tripRepo, routingService, new WeatherService()));
   app.use('/api/public', createPublicTripsRouter(tripRepo));
+  app.use('/api/photos', createPhotosRouter());
   if (placeRepo) {
     app.use('/api/places', createPlacesRouter(placeRepo, routingService));
   }

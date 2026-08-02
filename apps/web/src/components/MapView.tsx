@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TripDay, TripSegment, Waypoint } from '@triptic/shared';
+import { fetchPlacePhotos, type PlacePhoto } from '../lib/api';
 import { MAP_COLORS } from '../lib/mapColors';
+import { PlaceCarousel } from './PlaceCarousel';
 import { RoutePreview } from './RoutePreview';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
@@ -69,6 +71,44 @@ export function createTimeBubble(
   return el;
 }
 
+/** Couleur du marqueur selon le type de point. */
+export function markerColor(kind: Waypoint['kind']): string {
+  if (kind === 'start' || kind === 'trailhead') return MAP_COLORS.pine;
+  if (kind === 'end') return MAP_COLORS.storm;
+  if (kind === 'camp') return MAP_COLORS.trail;
+  return MAP_COLORS.summit;
+}
+
+/**
+ * Marqueur de lieu : vignette photo ronde quand le jour en a une (repère
+ * visuel immédiat), sinon pastille pleine. Cliquable → carrousel du lieu.
+ */
+export function createPlaceMarker(
+  waypoint: Waypoint,
+  color: string,
+  thumbUrl: string | undefined,
+  label: string,
+): HTMLElement {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.setAttribute('aria-label', label);
+  el.className =
+    'block h-11 w-11 overflow-hidden rounded-full border-[3px] bg-snow shadow-md transition-transform duration-150 hover:scale-110 cursor-pointer';
+  el.style.borderColor = color;
+
+  if (thumbUrl) {
+    const img = document.createElement('img');
+    img.src = thumbUrl;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.className = 'h-full w-full object-cover';
+    el.appendChild(img);
+  } else {
+    el.style.backgroundColor = color;
+  }
+  return el;
+}
+
 /** Géométrie d'un jour : segments routés bout à bout (2.1). */
 function dayCoordinates(day: TripDay): [number, number][] {
   const coords: [number, number][] = [];
@@ -96,6 +136,22 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   // Lu à la création des bulles (effet carte hors deps de selectedDay)
   const selectedDayRef = useRef(selectedDay);
   selectedDayRef.current = selectedDay;
+  const [gallery, setGallery] = useState<{
+    place: string;
+    photos: PlacePhoto[];
+    loading: boolean;
+  } | null>(null);
+  // Une réponse tardive ne doit pas écraser un lieu ouvert entre-temps
+  const galleryReqRef = useRef(0);
+
+  const openCarousel = useCallback((waypoint: Waypoint) => {
+    const req = ++galleryReqRef.current;
+    setGallery({ place: waypoint.name, photos: [], loading: true });
+    void fetchPlacePhotos(waypoint.name).then((photos) => {
+      if (galleryReqRef.current !== req) return;
+      setGallery({ place: waypoint.name, photos, loading: false });
+    });
+  }, []);
 
   useEffect(() => {
     if (!hasToken || !containerRef.current || waypoints.length < 2) return;
@@ -199,24 +255,16 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
         }
 
         for (const w of sorted) {
-          const color =
-            w.kind === 'start'
-              ? MAP_COLORS.pine
-              : w.kind === 'end'
-                ? MAP_COLORS.storm
-                : w.kind === 'camp'
-                  ? MAP_COLORS.trail
-                  : w.kind === 'trailhead'
-                    ? MAP_COLORS.pine
-                    : MAP_COLORS.summit;
-          const marker = new mapboxgl.Marker({ color })
-            .setLngLat([w.lng, w.lat])
-            .setPopup(new mapboxgl.Popup({ offset: 24 }).setText(`${w.name} (J${w.day})`))
-            .addTo(map);
-          if (onSelectDay) {
-            marker.getElement().addEventListener('click', () => onSelectDay(w.day));
-            marker.getElement().style.cursor = 'pointer';
-          }
+          const color = markerColor(w.kind);
+          // Vignette photo si le jour en a une (réutilisée, aucun appel réseau
+          // de plus) ; sinon pastille pleine de la couleur du type de point.
+          const thumb = days?.find((d) => d.day === w.day)?.photo_url;
+          const element = createPlaceMarker(w, color, thumb, t('carousel.open', { place: w.name }));
+          element.addEventListener('click', () => {
+            onSelectDay?.(w.day);
+            openCarousel(w);
+          });
+          new mapboxgl.Marker({ element }).setLngLat([w.lng, w.lat]).addTo(map);
         }
       });
     });
@@ -266,11 +314,21 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="h-64 w-full overflow-hidden rounded-trip sm:h-96"
-      role="application"
-      aria-label={t('map.preview')}
-    />
+    <div className="relative">
+      <div
+        ref={containerRef}
+        className="h-64 w-full overflow-hidden rounded-trip sm:h-96"
+        role="application"
+        aria-label={t('map.preview')}
+      />
+      {gallery && (
+        <PlaceCarousel
+          title={gallery.place}
+          photos={gallery.photos}
+          loading={gallery.loading}
+          onClose={() => setGallery(null)}
+        />
+      )}
+    </div>
   );
 }

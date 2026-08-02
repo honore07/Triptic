@@ -355,3 +355,24 @@ export async function downloadGpx(tripId: string, title: string, plan: PlanId): 
   URL.revokeObjectURL(url);
   return true;
 }
+
+/** Une photo de lieu avec son crédit (CGU Unsplash & Pexels). */
+export interface PlacePhoto {
+  url: string;
+  thumb: string;
+  author: string;
+  link: string;
+  source: 'unsplash' | 'pexels';
+}
+
+/** Galerie d'un lieu pour le carrousel de la carte. [] si indisponible. */
+export async function fetchPlacePhotos(query: string): Promise<PlacePhoto[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/photos?q=${encodeURIComponent(query)}`);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { photos?: PlacePhoto[] };
+    return data.photos ?? [];
+  } catch {
+    return [];
+  }
+}
