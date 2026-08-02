@@ -21,10 +21,10 @@ export function createPhotosRouter(): Router {
       res.status(400).json({ error: 'invalid_query' });
       return;
     }
-    const photos = await findPlacePhotos(parsed.data.q, parsed.data.limit ?? 10);
+    const media = await findPlacePhotos(parsed.data.q, parsed.data.limit ?? 10);
     // Les galeries changent rarement : cache navigateur d'une heure
     res.set('Cache-Control', 'public, max-age=3600');
-    res.json({ photos });
+    res.json({ media });
   });
 
   return router;

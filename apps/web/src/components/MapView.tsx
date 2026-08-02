@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TripDay, TripSegment, Waypoint } from '@triptic/shared';
-import { fetchPlacePhotos, type PlacePhoto } from '../lib/api';
+import { fetchPlaceMedia, type PlaceMedia } from '../lib/api';
 import { MAP_COLORS } from '../lib/mapColors';
 import { PlaceCarousel } from './PlaceCarousel';
 import { RoutePreview } from './RoutePreview';
@@ -138,7 +138,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   selectedDayRef.current = selectedDay;
   const [gallery, setGallery] = useState<{
     place: string;
-    photos: PlacePhoto[];
+    media: PlaceMedia[];
     loading: boolean;
   } | null>(null);
   // Une réponse tardive ne doit pas écraser un lieu ouvert entre-temps
@@ -146,10 +146,10 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
 
   const openCarousel = useCallback((waypoint: Waypoint) => {
     const req = ++galleryReqRef.current;
-    setGallery({ place: waypoint.name, photos: [], loading: true });
-    void fetchPlacePhotos(waypoint.name).then((photos) => {
+    setGallery({ place: waypoint.name, media: [], loading: true });
+    void fetchPlaceMedia(waypoint.name).then((media) => {
       if (galleryReqRef.current !== req) return;
-      setGallery({ place: waypoint.name, photos, loading: false });
+      setGallery({ place: waypoint.name, media, loading: false });
     });
   }, []);
 
@@ -324,7 +324,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
       {gallery && (
         <PlaceCarousel
           title={gallery.place}
-          photos={gallery.photos}
+          media={gallery.media}
           loading={gallery.loading}
           onClose={() => setGallery(null)}
         />

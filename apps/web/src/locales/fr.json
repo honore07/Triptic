@@ -320,6 +320,7 @@
     "next": "Photo suivante",
     "loading": "Chargement des photos…",
     "empty": "Aucune photo disponible pour ce lieu.",
-    "photo_alt": "{{place}} — photo {{n}}"
+    "photo_alt": "{{place}} — photo {{n}}",
+    "video_alt": "{{place}} — vidéo {{n}}"
   }
 }

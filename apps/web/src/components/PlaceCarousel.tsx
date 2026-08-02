@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import type { PlacePhoto } from '../lib/api';
+import type { PlaceMedia } from '../lib/api';
 
 interface Props {
   title: string;
-  photos: PlacePhoto[];
+  media: PlaceMedia[];
   loading: boolean;
   onClose: () => void;
 }
@@ -14,7 +14,7 @@ interface Props {
  * Carrousel de photos réelles d'un lieu, ouvert depuis un marqueur de la
  * carte. Crédit auteur affiché sur chaque vue (exigé par Unsplash & Pexels).
  */
-export function PlaceCarousel({ title, photos, loading, onClose }: Props) {
+export function PlaceCarousel({ title, media, loading, onClose }: Props) {
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -23,7 +23,7 @@ export function PlaceCarousel({ title, photos, loading, onClose }: Props) {
   useEffect(() => setIndex(0), [title]);
   useEffect(() => closeRef.current?.focus(), []);
 
-  const count = photos.length;
+  const count = media.length;
   const go = (delta: number) => setIndex((i) => (i + delta + count) % count);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export function PlaceCarousel({ title, photos, loading, onClose }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, onClose]);
 
-  const photo = photos[index];
+  const item = media[index];
 
   return (
     <div
@@ -69,14 +69,29 @@ export function PlaceCarousel({ title, photos, loading, onClose }: Props) {
         <p className="px-3 pb-3 text-xs text-fog">{t('carousel.empty')}</p>
       )}
 
-      {!loading && photo && (
+      {!loading && item && (
         <>
           <div className="relative min-h-0 flex-1">
-            <img
-              src={photo.url}
-              alt={t('carousel.photo_alt', { place: title, n: index + 1 })}
-              className="h-full max-h-64 min-h-32 w-full object-cover"
-            />
+            {item.type === 'video' ? (
+              // preload="none" : rien n'est téléchargé tant que l'utilisateur
+              // ne lance pas la lecture (données mobiles en itinérance)
+              <video
+                key={item.url}
+                src={item.url}
+                poster={item.thumb}
+                controls
+                playsInline
+                preload="none"
+                aria-label={t('carousel.video_alt', { place: title, n: index + 1 })}
+                className="h-full max-h-64 min-h-32 w-full bg-trail object-cover"
+              />
+            ) : (
+              <img
+                src={item.url}
+                alt={t('carousel.photo_alt', { place: title, n: index + 1 })}
+                className="h-full max-h-64 min-h-32 w-full object-cover"
+              />
+            )}
             <span className="absolute left-2 top-2 rounded-full bg-trail/85 px-2 py-0.5 font-mono text-[11px] font-semibold text-snow">
               {index + 1} / {count}
             </span>
@@ -103,14 +118,14 @@ export function PlaceCarousel({ title, photos, loading, onClose }: Props) {
           </div>
           <p className="px-3 py-2 text-[11px] text-fog">
             <a
-              href={photo.link}
+              href={item.link}
               target="_blank"
               rel="noreferrer noopener"
               className="underline hover:text-ridge"
             >
-              {photo.author}
+              {item.author}
             </a>{' '}
-            — {photo.source === 'unsplash' ? 'Unsplash' : 'Pexels'}
+            — {item.source === 'unsplash' ? 'Unsplash' : 'Pexels'}
           </p>
         </>
       )}
