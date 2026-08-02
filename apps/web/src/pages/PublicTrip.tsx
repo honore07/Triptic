@@ -55,9 +55,20 @@ export function PublicTrip() {
         <h1 className="font-display text-3xl font-bold text-trail">{trip.title}</h1>
         {meta.summary && <p className="text-sm text-ridge">{meta.summary}</p>}
         <p className="font-mono text-xs text-ridge">
-          {meta.duration_days} {t('trips.days')} · {Math.round(meta.distance_km)} km ·{' '}
-          {t('trips.elevation')} {Math.round(meta.elevation_gain_m)} m ·{' '}
-          {Math.round(meta.daily_distance_km)} km {t('trips.per_day')}
+          {[
+            Number.isFinite(meta.duration_days)
+              ? `${meta.duration_days} ${t('trips.days')}`
+              : null,
+            Number.isFinite(meta.distance_km) ? `${Math.round(meta.distance_km)} km` : null,
+            Number.isFinite(meta.elevation_gain_m)
+              ? `${t('trips.elevation')} ${Math.round(meta.elevation_gain_m)} m`
+              : null,
+            Number.isFinite(meta.daily_distance_km)
+              ? `${Math.round(meta.daily_distance_km)} km ${t('trips.per_day')}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </p>
       </header>
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TripDay, Waypoint } from '@triptic/shared';
+import type { TripDay, TripSegment, Waypoint } from '@triptic/shared';
 import { MAP_COLORS } from '../lib/mapColors';
 import { RoutePreview } from './RoutePreview';
 
@@ -15,6 +15,58 @@ interface Props {
   selectedDay?: number | null | undefined;
   /** Clic sur un marqueur → remonte le jour à la page (synchro inverse). */
   onSelectDay?: ((day: number) => void) | undefined;
+}
+
+/** Position de la bulle : milieu du tracé routé, sinon milieu des 2 activités. */
+export function segmentAnchor(
+  segment: TripSegment,
+  day: TripDay,
+  index: number,
+): [number, number] | null {
+  const geometry = segment.geometry;
+  if (geometry && geometry.length > 1) return geometry[Math.floor(geometry.length / 2)]!;
+  const from = day.activities[index];
+  const to = day.activities[index + 1];
+  if (!from || !to) return null;
+  return [(from.lng + to.lng) / 2, (from.lat + to.lat) / 2];
+}
+
+/**
+ * Bulle de temps de trajet posée sur le tracé (repère GPS familier).
+ * Segment routé : fond plein. Estimation (hors zone de routage) : fond clair
+ * et préfixe « ~ » — une estimation ne doit jamais se lire comme une mesure.
+ */
+export function createTimeBubble(
+  segment: TripSegment,
+  label: string,
+  onClick: (() => void) | null,
+): HTMLElement {
+  const el = document.createElement(onClick ? 'button' : 'div');
+  if (onClick) {
+    (el as HTMLButtonElement).type = 'button';
+    el.addEventListener('click', onClick);
+  }
+  el.className = [
+    'flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 font-body',
+    'text-[11px] font-semibold shadow-md transition-transform duration-150',
+    onClick ? 'cursor-pointer hover:-translate-y-0.5' : '',
+    segment.routed ? 'bg-trail text-snow' : 'border border-mist bg-snow text-ridge',
+  ].join(' ');
+  el.setAttribute('aria-label', label);
+
+  const dot = document.createElement('span');
+  dot.className = `inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+    segment.mode === 'car' ? 'bg-summit' : 'bg-pine'
+  }`;
+  dot.setAttribute('aria-hidden', 'true');
+  el.appendChild(dot);
+
+  const text = document.createElement('span');
+  text.textContent = `${segment.routed ? '' : '~'}${Math.round(segment.duration_min)} min · ${Math.round(
+    segment.distance_km,
+  )} km`;
+  el.appendChild(text);
+  return el;
 }
 
 /** Géométrie d'un jour : segments routés bout à bout (2.1). */
@@ -40,6 +92,10 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import('mapbox-gl').Map | null>(null);
+  const bubblesRef = useRef<{ day: number; element: HTMLElement }[]>([]);
+  // Lu à la création des bulles (effet carte hors deps de selectedDay)
+  const selectedDayRef = useRef(selectedDay);
+  selectedDayRef.current = selectedDay;
 
   useEffect(() => {
     if (!hasToken || !containerRef.current || waypoints.length < 2) return;
@@ -119,6 +175,29 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
           });
         }
 
+        // Temps de trajet lisibles directement sur le tracé
+        bubblesRef.current = [];
+        for (const d of days ?? []) {
+          (d.segments ?? []).forEach((segment, index) => {
+            const anchor = segmentAnchor(segment, d, index);
+            if (!anchor) return;
+            const label = t('map.segment_time', {
+              day: d.day,
+              minutes: Math.round(segment.duration_min),
+              km: Math.round(segment.distance_km),
+            });
+            const element = createTimeBubble(
+              segment,
+              segment.routed ? label : `${label} — ${t('days.estimated')}`,
+              onSelectDay ? () => onSelectDay(d.day) : null,
+            );
+            const active = selectedDayRef.current == null || selectedDayRef.current === d.day;
+            element.style.display = active ? '' : 'none';
+            new mapboxgl.Marker({ element }).setLngLat(anchor).addTo(map);
+            bubblesRef.current.push({ day: d.day, element });
+          });
+        }
+
         for (const w of sorted) {
           const color =
             w.kind === 'start'
@@ -150,6 +229,14 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
     // onSelectDay volontairement hors deps : callback stable attendu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waypoints, days]);
+
+  // Un jour sélectionné : on ne garde que ses bulles (sinon la carte sature)
+  useEffect(() => {
+    for (const bubble of bubblesRef.current) {
+      bubble.element.style.display =
+        selectedDay == null || bubble.day === selectedDay ? '' : 'none';
+    }
+  }, [selectedDay, days]);
 
   // Synchro cartes-étapes → carte : recentrage sur le jour sélectionné (2.2)
   useEffect(() => {

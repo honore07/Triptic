@@ -91,7 +91,8 @@
   },
   "map": {
     "preview": "Routenvorschau",
-    "no_token": "Interaktive Karte mit Mapbox-Token verfügbar (vereinfachte Vorschau)"
+    "no_token": "Interaktive Karte mit Mapbox-Token verfügbar (vereinfachte Vorschau)",
+    "segment_time": "Tag {{day}}: {{minutes}} Min Fahrt, {{km}} km"
   },
   "paywall": {
     "title": "Werde Abenteurer",

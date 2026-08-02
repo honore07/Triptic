@@ -91,7 +91,8 @@
   },
   "map": {
     "preview": "Aperçu du tracé",
-    "no_token": "Carte interactive disponible avec un token Mapbox (aperçu simplifié affiché)"
+    "no_token": "Carte interactive disponible avec un token Mapbox (aperçu simplifié affiché)",
+    "segment_time": "Jour {{day}} : {{minutes}} min de trajet, {{km}} km"
   },
   "paywall": {
     "title": "Passe en mode Aventurier",

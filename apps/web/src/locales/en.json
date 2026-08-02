@@ -91,7 +91,8 @@
   },
   "map": {
     "preview": "Route preview",
-    "no_token": "Interactive map available with a Mapbox token (simplified preview shown)"
+    "no_token": "Interactive map available with a Mapbox token (simplified preview shown)",
+    "segment_time": "Day {{day}}: {{minutes}} min travel, {{km}} km"
   },
   "paywall": {
     "title": "Go Adventurer",
