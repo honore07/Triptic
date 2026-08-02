@@ -1,3 +1,5 @@
+import type { LlmProvider } from '@triptic/ai-engine';
+import { filterUsefulPhotos } from '../agents/photoAgent.js';
 import { logger } from '../logger.js';
 
 /** Un média de lieu avec son crédit (obligatoire : CGU / licences CC). */
@@ -201,6 +203,7 @@ export async function findPlacePhotos(
   query: string,
   limit = 10,
   coords?: { lat: number; lng: number } | undefined,
+  provider: LlmProvider | null = null,
 ): Promise<PlaceMedia[]> {
   const key = `${query.toLowerCase()}|${limit}|${coords ? `${coords.lat},${coords.lng}` : ''}`;
   const cached = cacheGet(key);
@@ -210,10 +213,15 @@ export async function findPlacePhotos(
   // s'arrête là : la recherche par mot-clé qui suit n'a aucune notion de lieu
   // et produit des hors-sujet (« Petit Ballon » → ballons de baudruche).
   if (coords) {
-    const geo = await findCommonsMedia(coords.lat, coords.lng, limit);
-    if (geo.length > 0) {
-      cacheSet(key, geo);
-      return geo;
+    // On récupère large : l'agent correcteur va en écarter une partie
+    const candidates = await findCommonsMedia(coords.lat, coords.lng, limit * 2);
+    if (candidates.length > 0) {
+      const useful = await filterUsefulPhotos(query, candidates, provider);
+      const geo = useful.slice(0, limit);
+      if (geo.length > 0) {
+        cacheSet(key, geo);
+        return geo;
+      }
     }
   }
 

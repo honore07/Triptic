@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import type { LlmProvider } from '@triptic/ai-engine';
 import { findPlacePhotos } from '../services/photos.js';
 
 const querySchema = z.object({
@@ -15,7 +16,7 @@ const querySchema = z.object({
  * Public (les trips partagés y ont droit) et en lecture seule ; le service
  * met en cache 24 h pour tenir dans le quota Unsplash (50 req/h).
  */
-export function createPhotosRouter(): Router {
+export function createPhotosRouter(provider?: LlmProvider): Router {
   const router = Router();
 
   router.get('/', async (req, res) => {
@@ -26,7 +27,7 @@ export function createPhotosRouter(): Router {
     }
     const { q, limit, lat, lng } = parsed.data;
     const coords = lat !== undefined && lng !== undefined ? { lat, lng } : undefined;
-    const media = await findPlacePhotos(q, limit ?? 10, coords);
+    const media = await findPlacePhotos(q, limit ?? 10, coords, provider ?? null);
     // Les galeries changent rarement : cache navigateur d'une heure
     res.set('Cache-Control', 'public, max-age=3600');
     res.json({ media });

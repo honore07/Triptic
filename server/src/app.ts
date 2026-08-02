@@ -77,7 +77,7 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
   );
   app.use('/api/trips', createTripsRouter(tripRepo, routingService, new WeatherService()));
   app.use('/api/public', createPublicTripsRouter(tripRepo));
-  app.use('/api/photos', createPhotosRouter());
+  app.use('/api/photos', createPhotosRouter(provider));
   if (placeRepo) {
     app.use('/api/places', createPlacesRouter(placeRepo, routingService));
   }
