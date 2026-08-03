@@ -56,7 +56,7 @@ export function TripCard({ trip, onChoose, index = 0 }: Props) {
             <Clock size={14} aria-hidden="true" />
             <dt className="sr-only">{t('trips.days')}</dt>
             <dd>
-              {trip.duration_days} {t('trips.days')}
+              {t('trips.days_count', { count: trip.duration_days })}
             </dd>
           </div>
           <div className="flex items-center gap-1.5">

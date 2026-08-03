@@ -24,6 +24,7 @@ describe('TripTuner', () => {
     expect(onConfirm).toHaveBeenCalledWith(
       { physical: 5, pace: 3, culture: 3, discovery: 1 },
       null,
+      {},
     );
   });
 
@@ -35,6 +36,7 @@ describe('TripTuner', () => {
     expect(onConfirm).toHaveBeenCalledWith(
       { physical: 3, pace: 3, culture: 3, discovery: 3 },
       null,
+      {},
     );
   });
 
@@ -43,13 +45,45 @@ describe('TripTuner', () => {
     const onConfirm = vi.fn();
     render(<TripTuner onConfirm={onConfirm} />);
     const year = new Date().getFullYear() + 1;
-    fireEvent.change(screen.getByLabelText(/Départ/), { target: { value: `${year}-07-10` } });
+    fireEvent.change(screen.getByLabelText(/^Départ$/), { target: { value: `${year}-07-10` } });
     fireEvent.change(screen.getByLabelText(/Retour/), { target: { value: `${year}-07-14` } });
     expect(screen.getByText(/5 jours · Été/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-    expect(onConfirm).toHaveBeenCalledWith(expect.anything(), {
-      start: `${year}-07-10`,
-      end: `${year}-07-14`,
+    expect(onConfirm).toHaveBeenCalledWith(
+      expect.anything(),
+      { start: `${year}-07-10`, end: `${year}-07-14` },
+      {},
+    );
+  });
+
+  it('boucle par défaut : le point de départ sert aussi d’arrivée', () => {
+    setLang('fr');
+    const onConfirm = vi.fn();
+    render(<TripTuner onConfirm={onConfirm} />);
+    expect(screen.queryByLabelText(/Point d’arrivée|Point d'arrivée/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Point de départ/), {
+      target: { value: '  Strasbourg  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
+    expect(onConfirm).toHaveBeenCalledWith(expect.anything(), null, {
+      departure: 'Strasbourg',
+      destination: 'Strasbourg',
+    });
+  });
+
+  it('boucle décochée : arrivée distincte transmise', () => {
+    setLang('fr');
+    const onConfirm = vi.fn();
+    render(<TripTuner onConfirm={onConfirm} />);
+    fireEvent.click(screen.getByLabelText(/Boucle/));
+    fireEvent.change(screen.getByLabelText(/Point de départ/), { target: { value: 'Colmar' } });
+    fireEvent.change(screen.getByLabelText(/Point d’arrivée|Point d'arrivée/), {
+      target: { value: 'Genève' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
+    expect(onConfirm).toHaveBeenCalledWith(expect.anything(), null, {
+      departure: 'Colmar',
+      destination: 'Genève',
     });
   });
 

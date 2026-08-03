@@ -74,7 +74,7 @@ export function RequestChips({ request, busy, onRegenerate }: Props) {
             <Minus size={14} aria-hidden="true" />
           </button>
           <span className="font-mono">
-            {merged.duration_days} {t('trips.days')}
+            {t('trips.days_count', { count: merged.duration_days })}
           </span>
           <button
             type="button"

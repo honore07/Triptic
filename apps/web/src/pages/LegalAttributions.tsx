@@ -79,6 +79,18 @@ const SOURCES: DataSource[] = [
     links: [{ label: 'copernicus.eu', href: 'https://www.copernicus.eu' }],
   },
   {
+    id: 'commons',
+    name: 'Wikimedia Commons',
+    license: 'CC BY-SA / CC BY / domaine public (licence indiquée sous chaque photo)',
+    links: [
+      { label: 'commons.wikimedia.org', href: 'https://commons.wikimedia.org' },
+      {
+        label: 'Réutilisation',
+        href: 'https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia',
+      },
+    ],
+  },
+  {
     id: 'photos',
     name: 'Unsplash & Pexels',
     license: 'Unsplash License / Pexels License',

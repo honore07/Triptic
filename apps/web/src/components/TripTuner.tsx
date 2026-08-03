@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CalendarDays, Compass, Landmark, Mountain, Sparkles, Wind } from 'lucide-react';
+import { CalendarDays, Compass, Landmark, MapPin, Mountain, Sparkles, Wind } from 'lucide-react';
 import { seasonForDate, tripDurationDays } from '@triptic/shared';
-import type { TripTuning, TuningValue } from '@triptic/shared';
+import type { TripRequest, TripTuning, TuningValue } from '@triptic/shared';
 import type { TripDates } from '../store/chatStore';
+
+/** Points de départ/arrivée saisis explicitement (boucle = arrivée == départ). */
+export type TripPlaces = Pick<Partial<TripRequest>, 'departure' | 'destination'>;
 
 const AXES = [
   { key: 'physical', Icon: Mountain },
@@ -15,7 +18,7 @@ const AXES = [
 const DEFAULT_TUNING: TripTuning = { physical: 3, pace: 3, culture: 3, discovery: 3 };
 
 interface Props {
-  onConfirm: (tuning: TripTuning, dates: TripDates | null) => void;
+  onConfirm: (tuning: TripTuning, dates: TripDates | null, places: TripPlaces) => void;
   disabled?: boolean;
 }
 
@@ -29,6 +32,9 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
   const [tuning, setTuning] = useState<TripTuning>(DEFAULT_TUNING);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [departure, setDeparture] = useState('');
+  const [destination, setDestination] = useState('');
+  const [roundTrip, setRoundTrip] = useState(true);
 
   const setAxis = (key: keyof TripTuning, value: number) => {
     setTuning((prev) => ({ ...prev, [key]: value as TuningValue }));
@@ -40,6 +46,16 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
   const datesInvalid = Boolean(startDate && endDate && duration === null);
   const dates: TripDates | null =
     startDate && endDate && duration !== null ? { start: startDate, end: endDate } : null;
+
+  // Champs vides = on laisse l'IA déduire depuis la conversation (pas d'override)
+  const places: TripPlaces = {};
+  const from = departure.trim();
+  const to = destination.trim();
+  if (from) {
+    places.departure = from;
+    if (roundTrip) places.destination = from;
+  }
+  if (!roundTrip && to) places.destination = to;
 
   return (
     <section
@@ -59,6 +75,50 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
       </div>
 
       <fieldset className="mt-5 rounded-xl border border-mist bg-cloud p-3">
+        <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
+          <MapPin size={15} className="text-summit" aria-hidden="true" />
+          {t('tuner.places_label')}
+        </legend>
+        <p className="mb-2 text-xs text-fog">{t('tuner.places_hint')}</p>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs font-semibold text-ridge">
+            {t('tuner.place_from')}
+            <input
+              type="text"
+              value={departure}
+              disabled={disabled}
+              placeholder={t('tuner.place_from_placeholder')}
+              onChange={(e) => setDeparture(e.target.value)}
+              className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 text-sm font-normal text-trail placeholder:text-fog"
+            />
+          </label>
+          {!roundTrip && (
+            <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs font-semibold text-ridge">
+              {t('tuner.place_to')}
+              <input
+                type="text"
+                value={destination}
+                disabled={disabled}
+                placeholder={t('tuner.place_to_placeholder')}
+                onChange={(e) => setDestination(e.target.value)}
+                className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 text-sm font-normal text-trail placeholder:text-fog"
+              />
+            </label>
+          )}
+        </div>
+        <label className="mt-2 flex min-h-11 items-center gap-2 text-sm font-semibold text-trail">
+          <input
+            type="checkbox"
+            checked={roundTrip}
+            disabled={disabled}
+            onChange={(e) => setRoundTrip(e.target.checked)}
+            className="h-5 w-5 shrink-0 rounded border-mist accent-summit"
+          />
+          {t('tuner.round_trip')}
+        </label>
+      </fieldset>
+
+      <fieldset className="mt-4 rounded-xl border border-mist bg-cloud p-3">
         <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
           <CalendarDays size={15} className="text-summit" aria-hidden="true" />
           {t('tuner.dates_label')}
@@ -91,7 +151,7 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
           </label>
           {duration !== null && season && (
             <p className="rounded-badge bg-gold/20 px-2.5 py-1.5 text-xs font-semibold text-trail">
-              {duration} {t('trips.days')} · {t(`season.${season}`)} —{' '}
+              {t('trips.days_count', { count: duration })} · {t(`season.${season}`)} —{' '}
               {t('tuner.dates_season_hint')}
             </p>
           )}
@@ -161,7 +221,7 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
       <button
         type="button"
         disabled={disabled || datesInvalid}
-        onClick={() => onConfirm(tuning, dates)}
+        onClick={() => onConfirm(tuning, dates, places)}
         className="glow-cta mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3 font-display font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:opacity-60"
       >
         <Sparkles size={18} aria-hidden="true" />

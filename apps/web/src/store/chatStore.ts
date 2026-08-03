@@ -43,6 +43,8 @@ interface ChatState {
     lang: Lang,
     plan: PlanId,
     dates?: TripDates | null,
+    /** Départ/arrivée saisis explicitement (boucle = arrivée == départ). */
+    places?: Partial<TripRequest>,
   ) => Promise<void>;
   send: (content: string, lang: Lang, plan: PlanId) => Promise<void>;
   /** Relance la génération avec la conversation existante (ex. après upgrade de plan). */
@@ -120,15 +122,17 @@ export const useChatStore = create<ChatState>((set, get) => {
       set({ messages: [{ role: 'user', content }], status: 'idle', error: null, result: null });
     },
 
-    confirmTuning: async (tuning, lang, plan, dates = null) => {
+    confirmTuning: async (tuning, lang, plan, dates = null, places = {}) => {
       // Les dates fixent la durée EXACTE via l'override d'enum (jamais re-déduite)
       const duration = dates ? tripDurationDays(dates.start, dates.end) : null;
       set({
         tuning,
         dates,
-        ...(duration !== null
-          ? { overrides: { ...get().overrides, duration_days: duration, start_date: dates!.start } }
-          : {}),
+        overrides: {
+          ...get().overrides,
+          ...places,
+          ...(duration !== null ? { duration_days: duration, start_date: dates!.start } : {}),
+        },
       });
       await run(get().messages, lang, plan);
     },

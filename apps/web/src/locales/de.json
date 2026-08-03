@@ -52,7 +52,14 @@
     "date_end": "Rückkehr",
     "dates_hint": "Ohne Daten leitet die KI die Dauer aus deiner Anfrage ab.",
     "dates_season_hint": "Aktivitäten werden an die Saison angepasst",
-    "dates_invalid": "Das Rückreisedatum muss nach der Abfahrt liegen."
+    "dates_invalid": "Das Rückreisedatum muss nach der Abfahrt liegen.",
+    "places_label": "Start und Ziel",
+    "places_hint": "Optional — gib deinen echten Startpunkt an für genaue Fahrzeiten (Zuhause, Bahnhof, Mietstation).",
+    "place_from": "Startpunkt",
+    "place_from_placeholder": "z. B.: Straßburg, Bahnhof Colmar…",
+    "place_to": "Zielpunkt",
+    "place_to_placeholder": "z. B.: Genf, Bahnhof Lyon…",
+    "round_trip": "Rundtour — zurück zum Startpunkt"
   },
   "trips": {
     "compare_title": "3 Routen im Wettbewerb",
@@ -73,7 +80,9 @@
     "back": "Zurück zu den Vorschlägen",
     "not_found": "Trip nicht gefunden.",
     "error_action": "Die Aktion ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
-    "copy_manual": "Automatisches Kopieren ist hier nicht verfügbar — wähle den Link unten aus, um ihn zu kopieren."
+    "copy_manual": "Automatisches Kopieren ist hier nicht verfügbar — wähle den Link unten aus, um ihn zu kopieren.",
+    "days_count_one": "{{count}} Tag",
+    "days_count_other": "{{count}} Tage"
   },
   "difficulty": {
     "easy": "Leicht",
@@ -91,7 +100,8 @@
   },
   "map": {
     "preview": "Routenvorschau",
-    "no_token": "Interaktive Karte mit Mapbox-Token verfügbar (vereinfachte Vorschau)"
+    "no_token": "Interaktive Karte mit Mapbox-Token verfügbar (vereinfachte Vorschau)",
+    "segment_time": "Tag {{day}}: {{minutes}} Min Fahrt, {{km}} km"
   },
   "paywall": {
     "title": "Werde Abenteurer",
@@ -300,6 +310,18 @@
     "tdm_optout_body": "Avant tout accès, nous vérifions et respectons robots.txt (RFC 9309), ai.txt, les balises meta noai / notdm, le protocole TDMRep et les mentions d'opposition exprimées en langage naturel. Le statut d'opt-out est re-vérifié à chaque accès et historisé dans notre registre de sources (tdm_sources). Notre robot s'identifie par le user-agent « TRIPTIC-TDM », avec une URL d'information et un contact.",
     "tdm_rights_title": "Widerspruch & Löschung",
     "tdm_rights_body": "Éditeur d'un site ou personne concernée : vous pouvez demander l'exclusion d'un site ou l'effacement des faits issus d'une source. L'effacement s'exécute par suppression des fiches concernées et ajout du site à notre liste d'exclusion permanente.",
-    "tdm_contact_label": "Kontakt:"
+    "tdm_contact_label": "Kontakt:",
+    "src_commons": "Georeferenzierte Fotos der Reiseorte (Koordinatensuche), im Kartenkarussell mit Urheber und Lizenz angezeigt."
+  },
+  "carousel": {
+    "label": "Fotos von {{place}}",
+    "open": "Fotos von {{place}} ansehen",
+    "close": "Fotos schließen",
+    "prev": "Vorheriges Foto",
+    "next": "Nächstes Foto",
+    "loading": "Fotos werden geladen…",
+    "empty": "Kein Foto für diesen Ort verfügbar.",
+    "photo_alt": "{{place}} — Foto {{n}}",
+    "video_alt": "{{place}} — Video {{n}}"
   }
 }
