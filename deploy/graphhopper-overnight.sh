@@ -54,13 +54,16 @@ command -v docker >/dev/null || { log "✗ Docker absent"; status ECHEC "docker 
 command -v osmium >/dev/null || { apt-get update -qq && apt-get install -y osmium-tool >/dev/null 2>&1; }
 mkdir -p "$DATA_DIR/pbf" "$DATA_DIR/custom_models"
 
-# europe-latest 30 Go + extrait ~4 Go + graphe ~15 Go + marge
+# Besoin disque selon ce qui reste à faire : 60 Go si europe-latest est à
+# télécharger (~35 Go) + extrait + graphe ; 25 Go s'il est déjà là
+need_gb=60
+[[ -f "$SRC_PBF" ]] && need_gb=25
 avail_gb=$(( $(df --output=avail -k /opt | tail -1 | tr -d ' ') / 1024 / 1024 ))
-log "Espace libre sur /opt : ${avail_gb} Go"
-if (( avail_gb < 60 )); then
-  log "✗ Moins de 60 Go libres — la nuit s'arrêterait en plein import."
-  log "  Piste : rm -f $DATA_DIR/pbf/france-latest.osm.pbf (libère ~4,7 Go)"
-  status ECHEC "disque insuffisant (${avail_gb} Go < 60 Go)"
+log "Espace libre sur /opt : ${avail_gb} Go (requis : ${need_gb} Go)"
+if (( avail_gb < need_gb )); then
+  log "✗ Disque insuffisant — la nuit s'arrêterait en plein import."
+  log "  Piste : rm -f $DATA_DIR/pbf/france-latest.osm.pbf et les anciens extraits régionaux"
+  status ECHEC "disque insuffisant (${avail_gb} Go < ${need_gb} Go)"
   exit 1
 fi
 
