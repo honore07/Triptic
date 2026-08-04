@@ -98,8 +98,10 @@ run_stage() { # $1 = nom, $2 = bbox, $3 = heures max
   local cfg="$DATA_DIR/config-$name.yml"
 
   log "=== Palier $name — découpe osmium (bbox $bbox) ==="
+  # --output-format explicite : osmium déduit sinon le format de l'extension,
+  # et le suffixe .tmp (atomicité) le mettait en échec immédiat
   if ! osmium extract --bbox "$bbox" --set-bounds --strategy complete_ways \
-        --overwrite -o "$pbf.tmp" "$SRC_PBF"; then
+        --overwrite --output-format pbf -o "$pbf.tmp" "$SRC_PBF"; then
     log "✗ osmium extract a échoué ($name)"
     return 1
   fi
