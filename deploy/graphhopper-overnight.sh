@@ -32,6 +32,13 @@ IMAGE=israelhikingmap/graphhopper:latest
 # sait pas router d'un îlot à l'autre)
 BBOX_NORDEST="4.7,47.2,8.35,49.7"
 BBOX_INTL="4.5,43.4,11.6,49.8"   # + Jura, Alpes FR, Suisse, Italie du NO
+# Point-témoin par palier (lon lat) : il DOIT être dans la bbox du graphe
+# construit, sinon le build a menti. C'est ce contrôle qui a manqué le 03/08 :
+# l'entrypoint de l'image écrasait graph.location (-Ddw...=default-gh) et les
+# conteneurs rechargeaient l'ancien graphe Alsace en 30 s, « sains » mais vides
+# de toute nouveauté.
+WITNESS_NORDEST="6.1834 48.6937"   # Nancy
+WITNESS_INTL="6.8694 45.9237"      # Chamonix
 
 log() { echo "[$(date '+%F %T')] $*"; }
 
@@ -94,8 +101,22 @@ fi
 # ------------------------------------------------------------------ palier
 # Construit un graphe dans un conteneur séparé et ne bascule qu'en cas de
 # succès. Renvoie 0 si la nouvelle couverture est en service.
-run_stage() { # $1 = nom, $2 = bbox, $3 = heures max
-  local name="$1" bbox="$2" max_h="$3"
+# La bbox du graphe servi (GET /info) contient-elle le point-témoin ?
+graph_covers() { # $1 = port, $2 = "lon lat"
+  local port="$1" lon lat
+  read -r lon lat <<< "$2"
+  curl -fsS -m 10 "http://localhost:$port/info" 2>/dev/null | awk -v lon="$lon" -v lat="$lat" '
+    match($0, /"bbox":\[[^]]*\]/) {
+      s = substr($0, RSTART + 8, RLENGTH - 9)
+      n = split(s, b, ",")
+      if (n >= 4 && lon >= b[1] && lon <= b[3] && lat >= b[2] && lat <= b[4]) exit 0
+      exit 1
+    }
+    END { if (NR == 0) exit 1 }'
+}
+
+run_stage() { # $1 = nom, $2 = bbox, $3 = heures max, $4 = point-témoin "lon lat"
+  local name="$1" bbox="$2" max_h="$3" witness="$4"
   local pbf="$DATA_DIR/triptic-$name.osm.pbf"
   local newgraph="$DATA_DIR/graph-cache-$name"
   local cfg="$DATA_DIR/config-$name.yml"
@@ -120,17 +141,27 @@ run_stage() { # $1 = nom, $2 = bbox, $3 = heures max
   log "=== Palier $name — construction hors ligne (le routing actuel reste UP) ==="
   rm -rf "$newgraph"
   docker rm -f triptic-gh-build >/dev/null 2>&1 || true
+  # -o explicite : sans lui, l'entrypoint impose graph.location=default-gh
+  # (propriété -Ddw qui écrase le config.yml) et recharge l'ancien graphe
   docker run -d --name triptic-gh-build \
     -e JAVA_OPTS="-Xmx4g -Xms1g" \
     -v /opt/graphhopper/data:/data \
     -p "127.0.0.1:$BUILD_PORT:8989" \
     "$IMAGE" \
-    --input "/data/triptic-$name.osm.pbf" -c "/data/config-$name.yml" --host 0.0.0.0 >/dev/null
+    --input "/data/triptic-$name.osm.pbf" -c "/data/config-$name.yml" \
+    -o "/data/graph-cache-$name" --host 0.0.0.0 >/dev/null
 
   local deadline=$(( $(date +%s) + max_h * 3600 ))
   while (( $(date +%s) < deadline )); do
     if curl -fsS "http://localhost:$BUILD_PORT/health" >/dev/null 2>&1; then
-      log "  ✓ graphe $name construit et sain"
+      # Sain ne suffit pas : la bbox doit couvrir le point-témoin du palier
+      if ! graph_covers "$BUILD_PORT" "$witness"; then
+        log "✗ Graphe $name « sain » mais bbox SANS le point-témoin ($witness) :"
+        log "  le build a rechargé un ancien graphe au lieu d'importer — abandon du palier"
+        docker rm -f triptic-gh-build >/dev/null 2>&1 || true
+        return 1
+      fi
+      log "  ✓ graphe $name construit, sain, bbox validée (témoin : $witness)"
       docker rm -f triptic-gh-build >/dev/null 2>&1 || true
 
       log "=== Palier $name — bascule ==="
@@ -141,10 +172,11 @@ run_stage() { # $1 = nom, $2 = bbox, $3 = heures max
       docker compose -f "$COMPOSE_FILE" up -d --force-recreate >/dev/null
 
       for _ in $(seq 1 120); do   # 30 min : rechargement d'un graphe déjà bâti
-        if curl -fsS http://localhost:8989/health >/dev/null 2>&1; then
+        if curl -fsS http://localhost:8989/health >/dev/null 2>&1 \
+           && graph_covers 8989 "$witness"; then
           echo "$name" > /opt/graphhopper/COUVERTURE.txt
           rm -rf "$DATA_DIR/graph-cache.old"
-          log "  ✓ EN SERVICE : couverture $name"
+          log "  ✓ EN SERVICE : couverture $name (bbox validée sur le port public)"
           return 0
         fi
         sleep 15
@@ -175,7 +207,7 @@ run_stage() { # $1 = nom, $2 = bbox, $3 = heures max
 # ------------------------------------------------------------------- nuit
 ACQUIS="Alsace (inchangée)"
 
-if run_stage nordest "$BBOX_NORDEST" 3; then
+if run_stage nordest "$BBOX_NORDEST" 3 "$WITNESS_NORDEST"; then
   ACQUIS="Alsace + Lorraine"
   status EN_COURS "palier 1 acquis ($ACQUIS) — palier Alpes en cours"
 else
@@ -183,7 +215,7 @@ else
   status EN_COURS "palier 1 échoué — palier Alpes en cours"
 fi
 
-if run_stage intl "$BBOX_INTL" 12; then
+if run_stage intl "$BBOX_INTL" 12 "$WITNESS_INTL"; then
   ACQUIS="Alsace + Lorraine + Jura + Alpes FR/CH/IT"
   log "=== ✓ NUIT RÉUSSIE : $ACQUIS ==="
   status SUCCES "$ACQUIS"
