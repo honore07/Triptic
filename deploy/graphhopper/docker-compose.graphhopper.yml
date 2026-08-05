@@ -8,7 +8,9 @@ services:
   graphhopper:
     image: israelhikingmap/graphhopper:latest
     container_name: triptic-graphhopper
-    command: ["--input", "/data/triptic.osm.pbf", "-c", "/data/config.yml", "--host", "0.0.0.0"]
+    # -o obligatoire : l'entrypoint de l'image passe -Ddw.graphhopper.graph.location
+    # (défaut /data/default-gh) qui ÉCRASE le graph.location du config.yml
+    command: ["--input", "/data/triptic.osm.pbf", "-c", "/data/config.yml", "-o", "/data/graph-cache", "--host", "0.0.0.0"]
     environment:
       # KVM 2 = 8 Go RAM : on plafonne la JVM, MMAP fait le reste (config.yml)
       JAVA_OPTS: "-Xmx4g -Xms1g"

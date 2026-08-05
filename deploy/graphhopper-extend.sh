@@ -58,7 +58,7 @@ fi
 
 echo "=== 4. Découpe osmium (bbox $BBOX — source unique, zéro doublon) ==="
 osmium extract --bbox "$BBOX" --set-bounds --strategy complete_ways \
-  --overwrite -o "$DATA_DIR/triptic.osm.pbf.new" "$FRANCE_PBF"
+  --overwrite --output-format pbf -o "$DATA_DIR/triptic.osm.pbf.new" "$FRANCE_PBF"
 mv -f "$DATA_DIR/triptic.osm.pbf.new" "$DATA_DIR/triptic.osm.pbf"
 echo "  → triptic.osm.pbf : $(du -h "$DATA_DIR/triptic.osm.pbf" | cut -f1)"
 
