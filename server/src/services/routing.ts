@@ -25,12 +25,6 @@ export interface LatLng {
   lng: number;
 }
 
-const PROFILE_BY_MODE: Record<SegmentMode, string> = {
-  car: 'car_scenic',
-  foot: 'foot',
-  bike: 'bike',
-};
-
 const REQUEST_TIMEOUT_MS = 10_000;
 /** Cache in-memory borné (FIFO) — migration Redis quand il sera installé. */
 const CACHE_MAX = 500;
@@ -44,11 +38,17 @@ interface GraphHopperPath {
 
 export class RoutingService {
   private readonly cache = new Map<string, RoutedLeg>();
+  private readonly profileByMode: Record<SegmentMode, string>;
 
   constructor(
     private readonly baseUrl: string | null,
     private readonly fetchImpl: typeof fetch = fetch,
-  ) {}
+    /** Profil GraphHopper pour la rando — `foot` par défaut, `foot_scenic`
+     * une fois le graphe VPS reconstruit avec ce profil. */
+    footProfile = 'foot',
+  ) {
+    this.profileByMode = { car: 'car_scenic', foot: footProfile, bike: 'bike' };
+  }
 
   get enabled(): boolean {
     return this.baseUrl !== null && this.baseUrl !== '';
@@ -63,16 +63,20 @@ export class RoutingService {
     from: LatLng,
     targetKm: number,
     mode: Exclude<SegmentMode, 'car'> = 'foot',
+    /** Graine GraphHopper : change le cap de départ, donc la boucle obtenue.
+     * Permet de proposer plusieurs randos distinctes depuis un même point. */
+    seed = 0,
   ): Promise<RoutedLeg | null> {
     if (!this.enabled) return null;
-    const key = `rt:${mode}:${from.lat.toFixed(4)},${from.lng.toFixed(4)}:${targetKm}`;
+    const key = `rt:${mode}:${from.lat.toFixed(4)},${from.lng.toFixed(4)}:${targetKm}:${seed}`;
     const cached = this.cache.get(key);
     if (cached) return cached;
     const leg = await this.request({
       points: [[from.lng, from.lat]],
-      profile: PROFILE_BY_MODE[mode],
+      profile: this.profileByMode[mode],
       algorithm: 'round_trip',
       'round_trip.distance': Math.round(targetKm * 1000),
+      'round_trip.seed': seed,
       'ch.disable': true,
       elevation: true,
       points_encoded: false,
@@ -94,7 +98,7 @@ export class RoutingService {
     if (cached) return cached;
     const leg = await this.request({
       points: points.map((p) => [p.lng, p.lat]),
-      profile: PROFILE_BY_MODE[mode],
+      profile: this.profileByMode[mode],
       elevation: true,
       points_encoded: false,
       instructions: false,

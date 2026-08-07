@@ -24,6 +24,11 @@ interface ChatState {
   status: ChatStatus;
   error: string | null;
   result: TripsPayload | null;
+  /**
+   * Chips de réponse rapide de la DERNIÈRE question du moteur (déjà dans la
+   * langue de l'utilisateur). Effacées dès qu'un nouveau message part.
+   */
+  quickReplies: string[];
   /** Curseurs 1-5 confirmés par l'utilisateur (null = TripTuner pas encore validé). */
   tuning: TripTuning | null;
   /**
@@ -54,7 +59,7 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>((set, get) => {
   async function run(messages: ChatMessage[], lang: Lang, plan: PlanId): Promise<void> {
-    set({ messages, status: 'generating', error: null, result: null });
+    set({ messages, status: 'generating', error: null, result: null, quickReplies: [] });
     try {
       await generateTripsStream(
         messages,
@@ -68,6 +73,7 @@ export const useChatStore = create<ChatState>((set, get) => {
             case 'question':
               set({
                 messages: [...get().messages, { role: 'assistant', content: event.data.message }],
+                quickReplies: event.data.quick_replies ?? [],
                 status: 'idle',
               });
               break;
@@ -96,6 +102,7 @@ export const useChatStore = create<ChatState>((set, get) => {
     status: 'idle',
     error: null,
     result: null,
+    quickReplies: [],
     tuning: null,
     overrides: {},
     dates: null,
@@ -106,6 +113,7 @@ export const useChatStore = create<ChatState>((set, get) => {
         status: 'idle',
         error: null,
         result: null,
+        quickReplies: [],
         tuning: null,
         overrides: {},
         dates: null,

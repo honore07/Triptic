@@ -14,5 +14,12 @@ export const env = {
   jwtSecret: process.env['JWT_SECRET'],
   /** GraphHopper self-hosted (VPS) — null = routing désactivé, fallback LLM. */
   graphhopperUrl: process.env['GRAPHHOPPER_URL'] ?? null,
+  /**
+   * Profil de rando utilisé pour les treks. Défaut `foot` (toujours présent
+   * dans le graphe). Passer à `foot_scenic` UNIQUEMENT après reconstruction du
+   * graphe VPS avec ce profil (deploy/RUNBOOK-foot-scenic.md) — sinon 400 et
+   * repli estimation.
+   */
+  graphhopperFootProfile: process.env['GRAPHHOPPER_FOOT_PROFILE'] ?? 'foot',
   isProd: (process.env['NODE_ENV'] ?? 'development') === 'production',
 };

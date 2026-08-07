@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Clock, Crosshair, Footprints, Mountain, Plus, Search, Sparkles } from 'lucide-react';
 import type { Lang, PlaceKind } from '@triptic/shared';
 import {
+  ApiError,
   parseExploreFilters,
   searchArea,
   searchTrails,
@@ -21,6 +22,23 @@ import { useUserStore } from '../store/userStore';
 
 /** Zone par défaut (Vosges) quand la carte n'a pas encore remonté ses bounds. */
 const DEFAULT_BBOX: ExploreBbox = { south: 47.8, west: 6.8, north: 48.3, east: 7.4 };
+
+/**
+ * Clé i18n du message d'échec — le serveur distingue « base de lieux absente »
+ * (503 db_unavailable), « routeur absent » (503 routing_unavailable) et une
+ * vraie panne ; l'UI doit le dire au lieu d'un « la recherche a échoué ».
+ * Panne réseau (fetch rejeté) = pas d'ApiError.
+ */
+function errorKeyFor(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'explore.error_network';
+  if (error.status === 503 && error.code === 'db_unavailable') {
+    return 'explore.error_db_unavailable';
+  }
+  if (error.status === 503 && error.code === 'routing_unavailable') {
+    return 'explore.error_routing_unavailable';
+  }
+  return 'explore.error';
+}
 
 /**
  * Écran « Explorer » (roadmap 4.2/4.3) : carte navigable + envie du jour en
@@ -42,6 +60,7 @@ export function Explore() {
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [from, setFrom] = useState<{ lat: number; lng: number } | null>(null);
   const [status, setStatus] = useState<'idle' | 'parsing' | 'searching' | 'error'>('idle');
+  const [errorKey, setErrorKey] = useState('explore.error');
   const [geoError, setGeoError] = useState(false);
   const [searched, setSearched] = useState(false);
   const [targetDay, setTargetDay] = useState(1);
@@ -83,7 +102,8 @@ export function Explore() {
       }
       setSearched(true);
       setStatus('idle');
-    } catch {
+    } catch (error) {
+      setErrorKey(errorKeyFor(error));
       setStatus('error');
     }
   };
@@ -93,14 +113,21 @@ export function Explore() {
     const text = wish.trim();
     if (!text || status !== 'idle') return;
     setStatus('parsing');
+    let next: Set<PlaceKind> | null = null;
     try {
       const filters = await parseExploreFilters(text, lang, plan);
-      const next = new Set<PlaceKind>(filters.kinds);
+      next = new Set<PlaceKind>(filters.kinds);
       setActiveKinds(next);
-      await runSearch(next);
-    } catch {
-      setStatus('error');
+    } catch (error) {
+      // Les boucles rando ignorent les kinds et sont servies sans base : un
+      // service de filtres HS ne doit pas bloquer ce mode en amont.
+      if (!trailMode) {
+        setErrorKey(errorKeyFor(error));
+        setStatus('error');
+        return;
+      }
     }
+    await runSearch(next ?? activeKinds);
   };
 
   const locate = () => {
@@ -252,8 +279,18 @@ export function Explore() {
       <p className="text-xs text-fog">{t('explore.coverage_note')}</p>
 
       {status === 'error' && (
-        <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
-          {t('explore.error')}
+        <p
+          role="alert"
+          className={`rounded-xl px-4 py-3 text-sm ${
+            // Service manquant (503) : ce n'est ni la faute de l'utilisateur ni
+            // une panne — ton « warning », pas « erreur ».
+            errorKey === 'explore.error_db_unavailable' ||
+            errorKey === 'explore.error_routing_unavailable'
+              ? 'bg-amber-tint text-amber-deep'
+              : 'bg-storm/10 text-storm'
+          }`}
+        >
+          {t(errorKey)}
         </p>
       )}
 

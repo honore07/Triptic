@@ -78,7 +78,7 @@ function sseWrite(res: Response, event: string, data: unknown): void {
 /**
  * POST /api/ai/generate-trips — réponse en Server-Sent Events :
  *   event: status   {step}
- *   event: question {message}            (le moteur a besoin d'une précision)
+ *   event: question {message, quick_replies?}  (le moteur a besoin d'une précision)
  *   event: trips    {generation, validated, remaining}
  *   event: error    {error}
  *   event: done     {}
@@ -140,7 +140,10 @@ export function createAiRouter(
       });
 
       if (result.type === 'question') {
-        sseWrite(res, 'question', { message: result.message });
+        sseWrite(res, 'question', {
+          message: result.message,
+          ...(result.quick_replies ? { quick_replies: result.quick_replies } : {}),
+        });
       } else {
         quota.consume(userId, plan);
         const visible = result.generation.trips.slice(0, limits.trip_proposals);

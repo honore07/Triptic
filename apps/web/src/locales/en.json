@@ -29,7 +29,8 @@
     "status_routing": "Computing real road routes…",
     "status_photos": "Finding photos…",
     "error_generation": "Generation failed. Try again in a moment.",
-    "error_quota": "You have used your 3 free generations this month."
+    "error_quota": "You have used your 3 free generations this month.",
+    "quick_replies": "Suggested replies"
   },
   "tuner": {
     "title": "Let's fine-tune your adventure",
@@ -84,6 +85,21 @@
     "days_count_one": "{{count}} day",
     "days_count_other": "{{count}} days"
   },
+  "my_trips": {
+    "nav": "My trips",
+    "title": "My trips",
+    "hint": "Find all your adventures — drafts included.",
+    "loading": "Loading your trips…",
+    "error": "Loading failed. Check your connection and try again.",
+    "retry": "Try again",
+    "empty_title": "No trips yet.",
+    "empty_hint": "Describe your idea — TRIPTIC crafts 3 tailor-made routes for you.",
+    "empty_cta": "Plan my first trip",
+    "status_draft": "Draft",
+    "status_saved": "Saved",
+    "status_shared": "Shared",
+    "open": "Open {{title}}"
+  },
   "difficulty": {
     "easy": "Easy",
     "medium": "Moderate",
@@ -101,7 +117,11 @@
   "map": {
     "preview": "Route preview",
     "no_token": "Interactive map available with a Mapbox token (simplified preview shown)",
-    "segment_time": "Day {{day}}: {{minutes}} min travel, {{km}} km"
+    "segment_time": "Day {{day}}: {{minutes}} min travel, {{km}} km",
+    "mode_car": "Car",
+    "mode_foot": "Hike",
+    "mode_bike": "Bike",
+    "legend": "Travel mode legend"
   },
   "paywall": {
     "title": "Go Adventurer",
@@ -139,6 +159,8 @@
     "success_pending": "Thanks! Your place is saved and will be reviewed before publication.",
     "success_merged": "This place is already in the base — thanks anyway!",
     "error": "Submission failed. Try again in a moment.",
+    "error_invalid": "One of the details isn't valid. Check the name and coordinates, then try again.",
+    "error_unavailable": "Your submission is fine, but the places database isn't available right now. What you typed is kept — try again later.",
     "kind_peak": "Summit",
     "kind_lake": "Lake",
     "kind_waterfall": "Waterfall",
@@ -262,7 +284,10 @@
     "error": "Search failed. Try again in a moment.",
     "chip_trails": "Hiking loops",
     "target_km": "Target distance:",
-    "generated_loop": "Loop generated on the trail network (no mapped loop here)"
+    "generated_loop": "Loop generated on the trail network (no mapped loop here)",
+    "error_db_unavailable": "Place search is unavailable: the places database can't be reached right now. “Hiking loops” mode still works.",
+    "error_routing_unavailable": "Route calculation is unavailable: no loop can be generated right now. Try again later.",
+    "error_network": "Couldn't reach the server. Check your connection and try again."
   },
   "season": {
     "winter": "Winter",

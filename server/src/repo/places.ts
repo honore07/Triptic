@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { sql } from 'drizzle-orm';
+import { sql, type SQL } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { FOOD_KINDS, type PlaceKind, type PlaceRegion, type ShortlistPlace } from '@triptic/shared';
@@ -323,12 +323,13 @@ export class PgPlaceRepo {
    * Lieux actifs dans la zone visible de la carte (« search this area », 4.1).
    * Tri par notoriété — le temps de trajet est calculé par la route au-dessus.
    */
+  // (filtre de kinds : voir kindFilterSql en bas de fichier)
   async findInBbox(
     bbox: { south: number; west: number; north: number; east: number },
     kinds: PlaceKind[] | undefined,
     limit: number,
   ): Promise<(ShortlistPlace & { id: string })[]> {
-    const kindFilter = kinds && kinds.length > 0 ? sql`AND kind = ANY(${kinds})` : sql``;
+    const kindFilter = kindFilterSql(kinds);
     const rows = await this.db.execute(sql`
       SELECT id, name, kind, notoriety, summary,
              ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
@@ -492,4 +493,22 @@ export class PgPlaceRepo {
       tdm,
     };
   }
+}
+
+/**
+ * Filtre SQL sur les types de lieux (« Nature », « Culture & villages »… de
+ * la page Explore). Exporté pour être testable sans base.
+ *
+ * ⚠️ NE JAMAIS écrire `ANY(${kinds})` : Drizzle développe un tableau JS en
+ * liste de paramètres — `ANY($1, $2, $3)` — que Postgres rejette avec
+ * « op ANY/ALL (array) requires array on right side » (SQLSTATE 42809).
+ * Tous les filtres Explore tombaient ainsi en 500, en local ET en prod.
+ * `IN (...)` prend une liste de paramètres : c'est la forme correcte ici.
+ */
+export function kindFilterSql(kinds: PlaceKind[] | undefined): SQL {
+  if (!kinds || kinds.length === 0) return sql``;
+  return sql`AND kind IN (${sql.join(
+    kinds.map((kind) => sql`${kind}`),
+    sql`, `,
+  )})`;
 }

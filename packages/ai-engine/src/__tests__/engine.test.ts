@@ -514,3 +514,62 @@ describe('generateTrips', () => {
     }
   });
 });
+
+describe('questions personnalisées — quick_replies', () => {
+  it('parse une question avec quick_replies (trim, vides écartés, plafond 4)', () => {
+    const parsed = engineOutputSchema.parse({
+      type: 'question',
+      message: 'Vous partez à combien ?',
+      quick_replies: [' Solo ', 'En couple', '', 'En famille', 'Entre amis', 'Autre'],
+    });
+    expect(parsed.type).toBe('question');
+    if (parsed.type === 'question') {
+      expect(parsed.quick_replies).toEqual(['Solo', 'En couple', 'En famille', 'Entre amis']);
+    }
+  });
+
+  it('reste compatible avec une question sans quick_replies', () => {
+    const parsed = engineOutputSchema.parse({ type: 'question', message: 'Où veux-tu aller ?' });
+    if (parsed.type === 'question') {
+      expect(parsed.quick_replies).toBeUndefined();
+    }
+  });
+
+  it('generateTrips propage les quick_replies de la question', async () => {
+    const provider = mockProvider(
+      JSON.stringify({
+        type: 'question',
+        message: 'Quel budget ?',
+        quick_replies: ['Petit budget', 'Confort'],
+      }),
+      '{"valid": true, "issues": []}',
+    );
+    const result = await generateTrips(
+      provider,
+      [{ role: 'user', content: '3 jours dans les Vosges' }],
+      { lang: 'fr', maxProposals: 3 },
+    );
+    expect(result).toEqual({
+      type: 'question',
+      message: 'Quel budget ?',
+      quick_replies: ['Petit budget', 'Confort'],
+    });
+  });
+
+  it('le prompt système cadre les questions (2 max) et exige les quick_replies', () => {
+    const prompt = buildSystemPrompt('fr', 3);
+    expect(prompt).toContain('QUESTIONS DE CLARIFICATION');
+    expect(prompt).toContain('maximum 2 questions ciblées AU TOTAL');
+    expect(prompt).toContain('quick_replies');
+    expect(prompt).toContain('composition du groupe, budget, ambiance');
+  });
+
+  it('le prompt système impose distances par mode et vrais sentiers', () => {
+    const prompt = buildSystemPrompt('fr', 3);
+    expect(prompt).toContain(
+      'trek 15-25 km/j max, bikepacking 60-120 km/j, roadtrip (van/voiture) 100-300 km/j',
+    );
+    expect(prompt).toContain('ne longent JAMAIS simplement les routes principales');
+    expect(prompt).toContain('cols, crêtes, itinéraires de randonnée longue distance');
+  });
+});

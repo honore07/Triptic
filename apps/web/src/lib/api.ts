@@ -14,6 +14,39 @@ import type { ExplorePlace } from './explore';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
+/**
+ * Échec HTTP portant le statut et le code d'erreur du serveur, pour que l'UI
+ * dise la vérité : 400 `invalid_body` = saisie à corriger, 503
+ * `db_unavailable` / `routing_unavailable` = service manquant (la saisie était
+ * bonne). Une panne réseau lève une TypeError, jamais une ApiError.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: string | undefined;
+
+  constructor(status: number, code: string | undefined, context: string) {
+    super(`${context} failed: ${status}${code ? ` (${code})` : ''}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+/**
+ * Construit l'ApiError d'une réponse non-ok en lisant le `error` du corps JSON.
+ * Corps absent ou non-JSON (404 HTML d'une route non montée) → code undefined.
+ */
+async function apiError(res: Response, context: string): Promise<ApiError> {
+  let code: string | undefined;
+  try {
+    const body = (await res.json()) as { error?: unknown };
+    if (typeof body.error === 'string') code = body.error;
+  } catch {
+    code = undefined;
+  }
+  return new ApiError(res.status, code, context);
+}
+
 export interface TripsPayload {
   generation: TripGeneration;
   locked_proposals: number;
@@ -24,7 +57,7 @@ export interface TripsPayload {
 
 export type GenerateEvent =
   | { event: 'status'; data: { step: string } }
-  | { event: 'question'; data: { message: string } }
+  | { event: 'question'; data: { message: string; quick_replies?: string[] } }
   | { event: 'trips'; data: TripsPayload }
   | { event: 'error'; data: { error: string } }
   | { event: 'done'; data: Record<string, never> };
@@ -162,6 +195,7 @@ export async function saveTrip(
   proposal: TripProposal,
   plan: PlanId,
   isPublic: boolean,
+  status: 'draft' | 'saved' = 'saved',
 ): Promise<Trip> {
   const { waypoints, title, mode, days, ...metadata } = proposal;
   const res = await fetch(`${API_URL}/api/trips`, {
@@ -175,10 +209,24 @@ export async function saveTrip(
       days: days ?? null,
       cover_photo: proposal.photo_url ?? null,
       is_public: isPublic,
+      status,
     }),
   });
   if (!res.ok) throw new Error(`saveTrip failed: ${res.status}`);
   return res.json();
+}
+
+/** GET /api/trips — les trips de l'utilisateur (brouillons inclus). */
+export async function listTrips(plan: PlanId): Promise<Trip[]> {
+  const res = await fetch(`${API_URL}/api/trips`, { headers: planHeaders(plan) });
+  if (!res.ok) throw new Error(`listTrips failed: ${res.status}`);
+  return res.json();
+}
+
+/** GET /api/trips/:id — null si introuvable ou inaccessible (404). */
+export async function fetchTrip(tripId: string, plan: PlanId): Promise<Trip | null> {
+  const res = await fetch(`${API_URL}/api/trips/${tripId}`, { headers: planHeaders(plan) });
+  return res.ok ? res.json() : null;
 }
 
 export interface ExploreBbox {
@@ -208,7 +256,7 @@ export async function searchArea(
     params.set('from_lng', String(from.lng));
   }
   const res = await fetch(`${API_URL}/api/places/bbox?${params}`);
-  if (!res.ok) throw new Error(`bbox search failed: ${res.status}`);
+  if (!res.ok) throw await apiError(res, 'bbox search');
   return ((await res.json()) as { places: ExplorePlace[] }).places;
 }
 
@@ -239,7 +287,7 @@ export async function searchTrails(
   });
   if (targetKm !== null) params.set('target_km', String(targetKm));
   const res = await fetch(`${API_URL}/api/places/trails?${params}`);
-  if (!res.ok) throw new Error(`trails search failed: ${res.status}`);
+  if (!res.ok) throw await apiError(res, 'trails search');
   return ((await res.json()) as { trails: TrailResult[] }).trails;
 }
 
@@ -254,7 +302,9 @@ export async function parseExploreFilters(
     headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
     body: JSON.stringify({ text, lang }),
   });
-  if (!res.ok) return { kinds: [], keywords: [] };
+  // Un échec remonte (au lieu de renvoyer une liste vide) : « aucun filtre
+  // détecté » et « le service de filtres est tombé » ne se disent pas pareil.
+  if (!res.ok) throw await apiError(res, 'parse-filters');
   return res.json();
 }
 
@@ -300,7 +350,7 @@ export async function updateTrip(
   tripId: string,
   proposal: TripProposal,
   plan: PlanId,
-  patch?: { is_public?: boolean },
+  patch?: { is_public?: boolean; status?: Trip['status'] },
 ): Promise<Trip | null> {
   const { waypoints, title, mode, days, ...metadata } = proposal;
   const res = await fetch(`${API_URL}/api/trips/${tripId}`, {
@@ -329,7 +379,7 @@ export async function submitPlace(input: SubmitPlaceInput): Promise<'pending' | 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-  if (!res.ok) throw new Error(`submitPlace failed: ${res.status}`);
+  if (!res.ok) throw await apiError(res, 'submitPlace');
   const data = (await res.json()) as { status: 'pending' | 'merged' };
   return data.status;
 }
