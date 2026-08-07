@@ -170,6 +170,23 @@ export const blogFactSchema = z.object({
   lng: z.number().min(-180).max(180).nullable(),
   /** 0-4 tags d'ambiance d'un seul mot (vérifiés par le détecteur de copie). */
   tags: z.array(z.string().max(20)).max(4).default([]),
+  // Infos pratiques factuelles (extension roadmap) — toutes optionnelles, ne
+  // sortent que si la source les donne. Enums/nombres : faits, pas expression.
+  /** Altitude en mètres si mentionnée. */
+  elevation_m: z.number().int().min(-500).max(9000).nullable().optional(),
+  /** Borne basse du tarif indicatif en euros (0 = gratuit). */
+  price_min_eur: z.number().min(0).max(100000).nullable().optional(),
+  /** Borne haute du tarif indicatif en euros. */
+  price_max_eur: z.number().min(0).max(100000).nullable().optional(),
+  /** true si la source dit explicitement « gratuit / accès libre ». */
+  price_free: z.boolean().nullable().optional(),
+  /** Meilleures saisons — sous-ensemble strict de 4 valeurs. */
+  best_season: z
+    .array(z.enum(['spring', 'summer', 'autumn', 'winter']))
+    .max(4)
+    .optional(),
+  /** Difficulté si la source la donne (rando/accès). */
+  difficulty: z.enum(['easy', 'medium', 'hard']).nullable().optional(),
 });
 export type BlogFact = z.infer<typeof blogFactSchema>;
 
@@ -181,15 +198,23 @@ function buildExtractionPrompt(): string {
   return `Tu extrais des FAITS GÉOGRAPHIQUES d'un article de blog outdoor pour la base de lieux TRIPTIC.
 
 RÈGLES ABSOLUES (conformité juridique — exception TDM, faits non protégés / expression protégée) :
-1. Tu ne sors QUE des données structurées : nom du lieu, type, coordonnées si présentes, tags d'UN SEUL mot
+1. Tu ne sors QUE des données structurées : nom du lieu, type, coordonnées si présentes, tags d'UN SEUL mot, et infos pratiques factuelles (voir plus bas)
 2. INTERDIT de recopier une phrase, une description, un avis ou une tournure de l'article
 3. INTERDIT de sortir des noms de personnes, emails, téléphones, pseudonymes
 4. Ne liste que des LIEUX PHYSIQUES réels (sommet, lac, refuge, village, restaurant…)
 5. Si l'article oppose une réserve à la fouille de données (« no scraping », « no AI », « reproduction interdite »…), réponds {"facts": [], "tdm_reservation": true}
+6. Les infos pratiques sont des FAITS BRUTS attachés à UN lieu (un chiffre, une saison, un niveau) — jamais un classement éditorial de l'auteur ni une phrase. Ne les remplis QUE si l'article les donne clairement ; sinon laisse null / [].
+
+INFOS PRATIQUES FACTUELLES (toutes optionnelles) :
+- elevation_m : altitude du lieu en mètres (nombre) si mentionnée
+- price_min_eur / price_max_eur : tarif indicatif en euros (nombre). Prix unique → mets la même valeur aux deux. Fourchette « 12-18€ » → 12 et 18.
+- price_free : true si l'accès est explicitement gratuit / libre
+- best_season : parmi ["spring","summer","autumn","winter"], les saisons conseillées par la source
+- difficulty : "easy" | "medium" | "hard" si la source donne un niveau (rando/accès)
 
 Types STRICTS : peak, pass, lake, waterfall, gorge, glacier, viewpoint, refuge, camp, castle, village, museum, attraction, restaurant, cafe, bar, fast_food, trail, poi
 
-Réponds UNIQUEMENT avec : {"facts": [{"name": string, "kind": string, "lat": number|null, "lng": number|null, "tags": string[]}], "tdm_reservation"?: boolean}`;
+Réponds UNIQUEMENT avec : {"facts": [{"name": string, "kind": string, "lat": number|null, "lng": number|null, "tags": string[], "elevation_m"?: number|null, "price_min_eur"?: number|null, "price_max_eur"?: number|null, "price_free"?: boolean|null, "best_season"?: string[], "difficulty"?: string|null}], "tdm_reservation"?: boolean}`;
 }
 
 export interface ExtractionResult {

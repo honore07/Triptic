@@ -1,17 +1,26 @@
 # TRIPTIC — Analyse d'intérêt légitime (LIA) : pipeline TDM blogs → faits
 
-> **Statut : brouillon v1 (2026-07-27) — à faire relire une fois par un avocat
+> **Statut : brouillon v2 (2026-08-06) — à faire relire une fois par un avocat
 > avec le jeu de règles versionné de l'agent de conformité
-> (`server/src/agents/complianceAgent.ts`, version 1.0.0).**
+> (`server/src/agents/complianceAgent.ts`, version 1.1.0).**
 > Cadre : CNIL 2025 / EDPB Opinion 28/2024.
+>
+> **v2 (2026-08-06)** — extension du périmètre des faits conservés aux **infos
+> pratiques factuelles** (altitude, tarif indicatif, saisons conseillées,
+> difficulté). Reste dans le cadre : ce sont des faits attachés à un lieu, non
+> protégés ; la reprise d'un classement/palmarès éditorial reste exclue
+> (contrôle « expression » de l'agent). Voir §1 et §3.
 
 ## 1. Traitement
 
-Extraction automatisée de **faits géographiques** (nom de lieu, type,
-coordonnées, tags d'un mot) depuis des articles de blogs outdoor publics,
+Extraction automatisée de **faits sur des lieux** (nom, type, coordonnées, tags
+d'un mot, et infos pratiques factuelles : altitude, tarif indicatif, gratuité,
+saisons conseillées, difficulté) depuis des articles de blogs outdoor publics,
 pour enrichir la base de lieux TRIPTIC. Base légale du volet propriété
 intellectuelle : exception de fouille de textes et données (art. 4 directive
-(UE) 2019/790, art. L122-5-3-III CPI), opt-out systématiquement honoré.
+(UE) 2019/790, art. L122-5-3-III CPI), opt-out systématiquement honoré. La
+reprise de la sélection ou du classement éditorial de l'auteur (ex. « top 10 »)
+reste exclue — seul le fait brut attaché à un lieu est conservé.
 
 ## 2. Finalité (test de finalité)
 
@@ -23,9 +32,13 @@ finalité de profilage de personnes.
 
 - Seuls des **faits sur des lieux** sont conservés — jamais le texte, jamais
   les photos, jamais l'auteur.
-- Minimisation : schéma de sortie contraint (enums/coordonnées/tags d'un
-  mot), plafond de 15 faits par source, pas de champ libre (`summary = null`
-  pour toute fiche `source='web'`).
+- Minimisation : schéma de sortie contraint (enums / coordonnées / tags d'un
+  mot / nombres et enums pour les infos pratiques), plafond de 15 faits par
+  source, pas de champ libre (`summary = null` pour toute fiche `source='web'`).
+  Les infos pratiques (altitude, tarif, saison, difficulté) sont des **valeurs
+  structurées** (nombre, booléen, enum) — jamais du texte libre — et servent
+  directement la finalité (des itinéraires réalistes : coût, saison praticable,
+  niveau requis). Elles sont donc **nécessaires** et proportionnées.
 - Les données personnelles ne sont **pas nécessaires** à la finalité : double
   filtre (regex email/téléphone/handle + contrôle LLM noms de personnes et
   données sensibles art. 9) avec rejet.

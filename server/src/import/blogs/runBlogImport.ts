@@ -108,8 +108,15 @@ async function main(): Promise<void> {
       lat: fact.lat,
       lng: fact.lng,
       region: regionForPoint(fact.lat, fact.lng),
+      elevation_m: fact.elevation_m ?? null,
       tags: fact.tags,
       summary: null, // JAMAIS de texte issu du blog
+      // Infos pratiques factuelles (faits bruts, pas d'expression)
+      price_min_eur: fact.price_min_eur ?? null,
+      price_max_eur: fact.price_max_eur ?? null,
+      price_free: fact.price_free ?? null,
+      best_season: fact.best_season ?? null,
+      difficulty: fact.difficulty ?? null,
       notoriety: 25,
       confidence: crossChecked ? 60 : 30,
       status,
