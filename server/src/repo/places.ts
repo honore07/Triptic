@@ -224,18 +224,41 @@ export class PgPlaceRepo {
    * Coordonnées d'un lieu NON-web déjà cartographié portant ce nom (le mieux
    * noté). Sert à ancrer un fait de blog — qui n'a pas de GPS — sur un lieu
    * réel connu (OSM/DATAtourisme/Wikidata) au lieu de le jeter faute de point.
+   *
+   * Résolution tolérante (les blogs écrivent « Le Grand Ballon », OSM a
+   * « Grand Ballon ») : 1. exact, 2. sans article de tête, 3. similarité
+   * trigram ≥ 0,6 (index GIN idx_places_name_trgm). Retourne le mieux noté.
    */
   async resolveByName(name: string): Promise<{ lat: number; lng: number } | null> {
-    const rows = await this.db.execute(sql`
+    const stripped = name.replace(/^(l'|d'|le\s+|la\s+|les\s+|du\s+|des\s+)/i, '').trim() || name;
+
+    // 1-2. Match exact (nom ou nom sans article) — index btree idx_places_name_norm.
+    const exact = await this.db.execute(sql`
       SELECT ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
       FROM places
       WHERE source <> 'web'
-        AND lower(immutable_unaccent(name)) = lower(immutable_unaccent(${name}))
+        AND lower(immutable_unaccent(name)) IN (
+          lower(immutable_unaccent(${name})), lower(immutable_unaccent(${stripped}))
+        )
       ORDER BY notoriety DESC
       LIMIT 1
     `);
-    const r = (rows as unknown as { lat: number; lng: number }[])[0];
-    return r ? { lat: r.lat, lng: r.lng } : null;
+    const e = (exact as unknown as { lat: number; lng: number }[])[0];
+    if (e) return { lat: e.lat, lng: e.lng };
+
+    // 3. Similarité trigram ≥ 0,6 (l'opérateur % passe par l'index GIN).
+    const fuzzy = await this.db.execute(sql`
+      SELECT ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng,
+             similarity(lower(immutable_unaccent(name)), lower(immutable_unaccent(${stripped}))) AS score
+      FROM places
+      WHERE source <> 'web'
+        AND lower(immutable_unaccent(name)) % lower(immutable_unaccent(${stripped}))
+        AND similarity(lower(immutable_unaccent(name)), lower(immutable_unaccent(${stripped}))) >= 0.6
+      ORDER BY score DESC, notoriety DESC
+      LIMIT 1
+    `);
+    const f = (fuzzy as unknown as { lat: number; lng: number }[])[0];
+    return f ? { lat: f.lat, lng: f.lng } : null;
   }
 
   /**
