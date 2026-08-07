@@ -233,13 +233,31 @@ export async function extractFacts(
   provider: LlmProvider,
   pageText: string,
 ): Promise<ExtractionResult> {
-  const raw = await provider.complete({
-    system: buildExtractionPrompt(),
-    messages: [{ role: 'user', content: sanitizeUserInput(pageText.slice(0, 12000)) }],
-    maxTokens: 4000,
-  });
-  const parsed = extractJson(raw) as { tdm_reservation?: boolean };
-  const output = extractionOutputSchema.parse(parsed);
+  const input = sanitizeUserInput(pageText.slice(0, 12000));
+
+  // Le LLM renvoie parfois un JSON malformé (surtout sur les pages riches). Un
+  // JSON invalide ne doit pas faire perdre toute la page ni crasher l'import :
+  // on réessaie une fois, puis on abandonne proprement (page sans faits).
+  let raw: { facts?: unknown; tdm_reservation?: boolean } | null = null;
+  for (let attempt = 1; attempt <= 2 && raw === null; attempt += 1) {
+    const response = await provider.complete({
+      system: buildExtractionPrompt(),
+      messages: [{ role: 'user', content: input }],
+      maxTokens: 4000,
+    });
+    try {
+      const candidate = extractJson(response) as { facts?: unknown; tdm_reservation?: boolean };
+      extractionOutputSchema.parse(candidate); // valide la forme (facts: array, ≤ 30)
+      raw = candidate;
+    } catch (error) {
+      logger.warn({ attempt, err: (error as Error).message }, 'Blog mining — réponse LLM illisible');
+    }
+  }
+  if (raw === null) {
+    logger.warn('Blog mining — extraction abandonnée (JSON invalide 2x)');
+    return { facts: [], tdmReservation: false, rejected: 0 };
+  }
+  const output = extractionOutputSchema.parse(raw);
 
   let rejected = 0;
   const facts: BlogFact[] = [];
@@ -266,7 +284,7 @@ export async function extractFacts(
   if (rejected > 0) logger.info({ rejected }, 'Blog mining — champs rejetés (copie/RGPD)');
   return {
     facts: facts.slice(0, MAX_FACTS_PER_SOURCE),
-    tdmReservation: parsed.tdm_reservation === true,
+    tdmReservation: raw.tdm_reservation === true,
     rejected,
   };
 }
