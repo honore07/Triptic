@@ -197,11 +197,18 @@ export class PgPlaceRepo {
         const traceWkt = toTraceWkt(p.trace);
         await this.db.execute(sql`
           UPDATE places SET
-            summary     = COALESCE(summary, ${p.summary ?? null}),
-            notoriety   = GREATEST(notoriety, ${p.notoriety ?? 20}),
-            wikidata_id = COALESCE(wikidata_id, ${p.wikidata_id ?? null}),
-            trace       = COALESCE(trace, ${traceWkt ? sql`ST_GeogFromText(${traceWkt})` : null}),
-            updated_at  = now()
+            summary       = COALESCE(summary, ${p.summary ?? null}),
+            notoriety     = GREATEST(notoriety, ${p.notoriety ?? 20}),
+            wikidata_id   = COALESCE(wikidata_id, ${p.wikidata_id ?? null}),
+            trace         = COALESCE(trace, ${traceWkt ? sql`ST_GeogFromText(${traceWkt})` : null}),
+            -- Enrichissement infos pratiques (blog) : on ne remplit que les trous
+            elevation_m   = COALESCE(elevation_m, ${p.elevation_m ?? null}),
+            price_min_eur = COALESCE(price_min_eur, ${p.price_min_eur ?? null}),
+            price_max_eur = COALESCE(price_max_eur, ${p.price_max_eur ?? null}),
+            price_free    = COALESCE(price_free, ${p.price_free ?? null}),
+            best_season   = COALESCE(best_season, ${(p.best_season ?? null) as unknown as string[] | null}::text[]),
+            difficulty    = COALESCE(difficulty, ${p.difficulty ?? null}),
+            updated_at    = now()
           WHERE id = ${match.id}
         `);
         merged += 1;
@@ -211,6 +218,24 @@ export class PgPlaceRepo {
       }
     }
     return { inserted, merged };
+  }
+
+  /**
+   * Coordonnées d'un lieu NON-web déjà cartographié portant ce nom (le mieux
+   * noté). Sert à ancrer un fait de blog — qui n'a pas de GPS — sur un lieu
+   * réel connu (OSM/DATAtourisme/Wikidata) au lieu de le jeter faute de point.
+   */
+  async resolveByName(name: string): Promise<{ lat: number; lng: number } | null> {
+    const rows = await this.db.execute(sql`
+      SELECT ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
+      FROM places
+      WHERE source <> 'web'
+        AND lower(immutable_unaccent(name)) = lower(immutable_unaccent(${name}))
+      ORDER BY notoriety DESC
+      LIMIT 1
+    `);
+    const r = (rows as unknown as { lat: number; lng: number }[])[0];
+    return r ? { lat: r.lat, lng: r.lng } : null;
   }
 
   /**

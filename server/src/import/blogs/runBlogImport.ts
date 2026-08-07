@@ -18,7 +18,8 @@ import { PgPlaceRepo, type PlaceInput } from '../../repo/places.js';
 import { PgTdmRepo } from '../../repo/tdm.js';
 import { reviewFact, statusForDecision } from '../../agents/complianceAgent.js';
 import { checkOptOut, extractFacts, htmlToText } from '../../services/blogMining.js';
-import { regionForPoint } from '../osm/regions.js';
+import { geocodePlace } from '../../services/geocode.js';
+import { IMPORT_REGIONS, regionForPoint } from '../osm/regions.js';
 
 function parseArg(name: string): string | undefined {
   const prefix = `--${name}=`;
@@ -73,21 +74,41 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  // 4. Recoupement + agent de conformité, fait par fait
+  // 4. Résolution des coordonnées + recoupement + agent de conformité, fait par fait.
+  // Les blogs ne donnent quasi jamais de GPS : on ancre chaque nom (a) sur un
+  // lieu déjà cartographié de même nom, sinon (b) via géocodage Nominatim borné
+  // à la zone. Un lieu géocodé n'est pas recoupé ⇒ quarantaine (garde-fou homonymes).
+  const regionBbox = IMPORT_REGIONS.find((r) => r.id === parseArg('region'))?.bboxes[0];
   let approved = 0;
   let quarantined = 0;
   let rejected = 0;
   let skippedNoCoords = 0;
+  let resolvedDb = 0;
+  let resolvedGeo = 0;
   const sourceExtractedCount = known?.extracted_count ?? 0;
 
   for (const fact of extraction.facts) {
-    if (fact.lat === null || fact.lng === null) {
-      // Sans coordonnées, un fait n'est pas un lieu insérable ; s'il est déjà
-      // connu par ailleurs il n'apporte rien — on passe.
+    let lat = fact.lat;
+    let lng = fact.lng;
+    if (lat === null || lng === null) {
+      const dbMatch = await placeRepo.resolveByName(fact.name);
+      if (dbMatch) {
+        ({ lat, lng } = dbMatch);
+        resolvedDb += 1;
+      } else {
+        const geo = await geocodePlace(fact.name, regionBbox);
+        if (geo) {
+          ({ lat, lng } = geo);
+          resolvedGeo += 1;
+        }
+      }
+    }
+    if (lat === null || lng === null) {
+      // Ni GPS, ni lieu connu, ni géocodage : rien à insérer.
       skippedNoCoords += 1;
       continue;
     }
-    const crossChecked = await tdmRepo.crossCheck(fact.name, fact.lat, fact.lng);
+    const crossChecked = await tdmRepo.crossCheck(fact.name, lat, lng);
     const verdict = await reviewFact(provider, fact, {
       sourceUrl: url,
       optOut,
@@ -105,9 +126,9 @@ async function main(): Promise<void> {
     const place: PlaceInput = {
       name: fact.name,
       kind: fact.kind,
-      lat: fact.lat,
-      lng: fact.lng,
-      region: regionForPoint(fact.lat, fact.lng),
+      lat,
+      lng,
+      region: regionForPoint(lat, lng),
       elevation_m: fact.elevation_m ?? null,
       tags: fact.tags,
       summary: null, // JAMAIS de texte issu du blog
@@ -140,6 +161,8 @@ async function main(): Promise<void> {
       quarantined,
       rejected,
       skippedNoCoords,
+      resolvedDb,
+      resolvedGeo,
       copyRejected: extraction.rejected,
     },
     'Import blog terminé (gated par l’agent de conformité)',
