@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LocateFixed, MapPinPlus, Send } from 'lucide-react';
-import { submitPlace } from '../lib/api';
+import { ApiError, submitPlace } from '../lib/api';
 
 /** Types proposables par les utilisateurs (sous-ensemble UI de PlaceKind). */
 const KINDS = [
@@ -16,7 +16,22 @@ const KINDS = [
   'poi',
 ] as const;
 
-type Status = 'idle' | 'sending' | 'pending' | 'merged' | 'error';
+/**
+ * 'invalid'     — le serveur a refusé la saisie (400 invalid_body)
+ * 'unavailable' — saisie bonne, base de lieux absente (503 db_unavailable)
+ * 'error'       — panne réseau ou erreur serveur inattendue
+ */
+type Status = 'idle' | 'sending' | 'pending' | 'merged' | 'invalid' | 'unavailable' | 'error';
+
+/** Mappe l'échec d'envoi sur l'état affiché — jamais un message générique
+ *  quand le serveur a dit précisément ce qui manquait. */
+function statusFromError(error: unknown): Status {
+  if (error instanceof ApiError) {
+    if (error.status === 400) return 'invalid';
+    if (error.status === 503) return 'unavailable';
+  }
+  return 'error';
+}
 
 /**
  * AddPlaceForm — contribution utilisateur à la base de lieux (phase E).
@@ -65,8 +80,10 @@ export function AddPlaceForm() {
         setName('');
         setSummary('');
       }
-    } catch {
-      setStatus('error');
+    } catch (error) {
+      // La saisie est conservée : sur 503 elle est valide, il n'y a
+      // simplement rien où l'écrire pour l'instant.
+      setStatus(statusFromError(error));
     }
   };
 
@@ -205,6 +222,13 @@ export function AddPlaceForm() {
           )}
           {status === 'merged' && (
             <span className="font-semibold text-ridge">{t('places.success_merged')}</span>
+          )}
+          {status === 'invalid' && (
+            <span className="font-semibold text-storm">{t('places.error_invalid')}</span>
+          )}
+          {/* Service manquant, pas faute de l'utilisateur → warning, pas erreur */}
+          {status === 'unavailable' && (
+            <span className="font-semibold text-amber-deep">{t('places.error_unavailable')}</span>
           )}
           {status === 'error' && (
             <span className="font-semibold text-storm">{t('places.error')}</span>

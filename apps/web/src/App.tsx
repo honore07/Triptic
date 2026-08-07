@@ -1,6 +1,6 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Compass, MapPinPlus } from 'lucide-react';
+import { Backpack, Compass, MapPinPlus } from 'lucide-react';
 import { LangSwitcher } from './components/LangSwitcher';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
@@ -9,7 +9,9 @@ import { Explore } from './pages/Explore';
 import { Home } from './pages/Home';
 import { LegalAttributions } from './pages/LegalAttributions';
 import { LegalTdm } from './pages/LegalTdm';
+import { MyTrips } from './pages/MyTrips';
 import { Plan } from './pages/Plan';
+import { SavedTrip } from './pages/SavedTrip';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
 
@@ -37,6 +39,14 @@ export function App() {
         </Link>
         <nav className="flex items-center gap-4">
           <Link
+            to="/trips"
+            className="flex items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+          >
+            <Backpack size={15} aria-hidden="true" />
+            <span className="hidden sm:inline">{t('my_trips.nav')}</span>
+            <span className="sr-only sm:hidden">{t('my_trips.nav')}</span>
+          </Link>
+          <Link
             to="/explore"
             className="flex items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
           >
@@ -60,6 +70,8 @@ export function App() {
         <Route path="/plan" element={<Plan />} />
         <Route path="/trip" element={<TripPage />} />
         <Route path="/trip/:slug" element={<PublicTrip />} />
+        <Route path="/trips" element={<MyTrips />} />
+        <Route path="/trips/:id" element={<SavedTrip />} />
         <Route path="/contribute" element={<Contribute />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/legal/attributions" element={<LegalAttributions />} />

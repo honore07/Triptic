@@ -145,6 +145,23 @@ describe('TripPage', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(/L'action a échoué/);
   });
+
+  it("promeut un brouillon auto-sauvegardé en 'saved' via PATCH — jamais de re-POST", async () => {
+    const draft: Trip = { ...savedTrip, status: 'draft' };
+    updateTrip.mockResolvedValue({ ...savedTrip, status: 'saved' });
+    useTripStore.setState({ saved: draft });
+    renderTrip();
+
+    const saveButton = screen.getByRole('button', { name: 'Sauvegarder' });
+    expect(saveButton).toBeEnabled();
+    fireEvent.click(saveButton);
+
+    await waitFor(() =>
+      expect(updateTrip).toHaveBeenCalledWith('t1', proposal, 'free', { status: 'saved' }),
+    );
+    expect(saveTrip).not.toHaveBeenCalled();
+    await screen.findByRole('button', { name: 'Sauvegardé ✓' });
+  });
 });
 
 describe('tripStore.applyDays', () => {

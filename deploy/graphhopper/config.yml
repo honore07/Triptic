@@ -1,5 +1,7 @@
 # TRIPTIC — configuration GraphHopper (roadmap 0.2)
-# 3 profils : car_scenic (belles routes), foot, bike — élévation activée.
+# Profils : car_scenic (belles routes, utilisé par l'app), car_fast (témoin
+# neutre, diagnostic uniquement), foot, foot_scenic (belles randos, utilisé
+# par l'app), bike — élévation activée.
 # Le round-trip (boucles rando, phase 5) utilise les profils flexibles
 # foot/bike (pas de CH dessus) : algorithm=round_trip dans la requête.
 graphhopper:
@@ -21,7 +23,10 @@ graphhopper:
 
   # Les encoded values incluent celles exigées par les custom models intégrés
   # de GH 12 (car/foot/bike + *_elevation) — liste issue de l'erreur de boot
-  graph.encoded_values: car_access, car_average_speed, foot_access, foot_average_speed, foot_priority, bike_access, bike_average_speed, bike_priority, road_class, road_environment, roundabout, average_slope, ferry_speed, max_speed, hike_rating, foot_road_access, mtb_rating, bike_network, bike_road_access
+  # foot_network : appartenance d'une voie à un itinéraire de rando balisé
+  # (INTERNATIONAL/NATIONAL/REGIONAL/LOCAL vs MISSING) — signal clé du profil
+  # foot_scenic pour préférer les beaux sentiers aux voies ordinaires.
+  graph.encoded_values: car_access, car_average_speed, foot_access, foot_average_speed, foot_priority, bike_access, bike_average_speed, bike_priority, road_class, road_environment, roundabout, average_slope, ferry_speed, max_speed, hike_rating, foot_road_access, mtb_rating, bike_network, bike_road_access, foot_network
 
   custom_models.directory: /data/custom_models
 
@@ -30,8 +35,21 @@ graphhopper:
     # tunnels → favorise tertiaires, cols et routes de forêt (décision Jules).
     - name: car_scenic
       custom_model_files: [car.json, car_scenic.json]
+    # Voiture « rapide » NEUTRE : même base car.json que car_scenic (mêmes
+    # vitesses, mêmes règles d'accès), SANS l'overlay scenic — sert de témoin
+    # de comparaison la plus juste possible (autoroute/voie rapide autorisées
+    # sans pénalité). Diagnostic uniquement : jamais utilisée par l'app
+    # (RoutingService ne route que sur car_scenic pour les roadtrips).
+    - name: car_fast
+      custom_model_files: [car.json]
     - name: foot
       custom_model_files: [foot.json, foot_elevation.json]
+    # Rando « scenic » : pénalise routes primaires/secondaires/tertiaires et
+    # voies résidentielles, et défavorise les tronçons hors itinéraire balisé
+    # (foot_network == MISSING) → privilégie sentiers, chemins et GR-like OSM.
+    # Reste flexible (hors CH) pour rester utilisable en round_trip (boucles).
+    - name: foot_scenic
+      custom_model_files: [foot.json, foot_elevation.json, foot_scenic.json]
     - name: bike
       custom_model_files: [bike.json, bike_elevation.json]
 
@@ -39,6 +57,7 @@ graphhopper:
   # distances instantanées. foot/bike restent flexibles → round_trip possible.
   profiles_ch:
     - profile: car_scenic
+    - profile: car_fast
   profiles_lm: []
 
   routing.non_ch.max_waypoint_distance: 1000000

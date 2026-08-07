@@ -29,7 +29,8 @@
     "status_routing": "Echte Routen werden berechnet…",
     "status_photos": "Fotos werden gesucht…",
     "error_generation": "Generierung fehlgeschlagen. Versuche es gleich noch einmal.",
-    "error_quota": "Du hast deine 3 kostenlosen Generierungen diesen Monat aufgebraucht."
+    "error_quota": "Du hast deine 3 kostenlosen Generierungen diesen Monat aufgebraucht.",
+    "quick_replies": "Antwortvorschläge"
   },
   "tuner": {
     "title": "Verfeinern wir dein Abenteuer",
@@ -84,6 +85,21 @@
     "days_count_one": "{{count}} Tag",
     "days_count_other": "{{count}} Tage"
   },
+  "my_trips": {
+    "nav": "Meine Trips",
+    "title": "Meine Trips",
+    "hint": "Finde alle deine Abenteuer — Entwürfe inklusive.",
+    "loading": "Deine Trips werden geladen…",
+    "error": "Laden fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
+    "retry": "Erneut versuchen",
+    "empty_title": "Noch keine Trips.",
+    "empty_hint": "Beschreibe deine Idee — TRIPTIC erstellt 3 maßgeschneiderte Routen für dich.",
+    "empty_cta": "Meinen ersten Trip planen",
+    "status_draft": "Entwurf",
+    "status_saved": "Gespeichert",
+    "status_shared": "Geteilt",
+    "open": "{{title}} öffnen"
+  },
   "difficulty": {
     "easy": "Leicht",
     "medium": "Mittel",
@@ -101,7 +117,11 @@
   "map": {
     "preview": "Routenvorschau",
     "no_token": "Interaktive Karte mit Mapbox-Token verfügbar (vereinfachte Vorschau)",
-    "segment_time": "Tag {{day}}: {{minutes}} Min Fahrt, {{km}} km"
+    "segment_time": "Tag {{day}}: {{minutes}} Min Fahrt, {{km}} km",
+    "mode_car": "Auto",
+    "mode_foot": "Wanderung",
+    "mode_bike": "Rad",
+    "legend": "Legende der Fortbewegungsarten"
   },
   "paywall": {
     "title": "Werde Abenteurer",
@@ -139,6 +159,8 @@
     "success_pending": "Danke! Dein Ort ist gespeichert und wird vor der Veröffentlichung geprüft.",
     "success_merged": "Dieser Ort ist bereits in der Basis — trotzdem danke!",
     "error": "Senden fehlgeschlagen. Versuche es gleich noch einmal.",
+    "error_invalid": "Eine der Angaben ist ungültig. Prüfe Name und Koordinaten und versuche es erneut.",
+    "error_unavailable": "Deine Angaben sind in Ordnung, aber die Ortsdatenbank ist gerade nicht verfügbar. Deine Eingaben bleiben erhalten — versuche es später erneut.",
     "kind_peak": "Gipfel",
     "kind_lake": "See",
     "kind_waterfall": "Wasserfall",
@@ -262,7 +284,10 @@
     "error": "Suche fehlgeschlagen. Versuche es gleich noch einmal.",
     "chip_trails": "Rundwanderungen",
     "target_km": "Ziel-Distanz:",
-    "generated_loop": "Auf dem Wegenetz generierte Runde (keine kartierte Runde hier)"
+    "generated_loop": "Auf dem Wegenetz generierte Runde (keine kartierte Runde hier)",
+    "error_db_unavailable": "Ortssuche nicht verfügbar: Die Ortsdatenbank ist gerade nicht erreichbar. Der Modus „Rundwanderungen“ funktioniert weiterhin.",
+    "error_routing_unavailable": "Routenberechnung nicht verfügbar: Es kann gerade keine Runde generiert werden. Versuche es später erneut.",
+    "error_network": "Server nicht erreichbar. Prüfe deine Verbindung und versuche es erneut."
   },
   "season": {
     "winter": "Winter",

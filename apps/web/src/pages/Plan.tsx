@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
 import { ChatBubble, TypingBubble } from '../components/ChatBubble';
+import { QuickReplies } from '../components/QuickReplies';
 import { RequestChips } from '../components/RequestChips';
 import { TripCompare } from '../components/TripCompare';
 import { TripTuner } from '../components/TripTuner';
@@ -21,6 +22,7 @@ export function Plan() {
     error,
     result,
     tuning,
+    quickReplies,
     begin,
     confirmTuning,
     send,
@@ -94,6 +96,13 @@ export function Plan() {
           <ChatBubble key={i} message={message} />
         ))}
         {busy && <TypingBubble label={t(`chat.status_${status}`, t('chat.thinking'))} />}
+        {!busy && !result && quickReplies.length > 0 && (
+          <QuickReplies
+            replies={quickReplies}
+            disabled={busy}
+            onPick={(reply) => void send(reply, lang, plan)}
+          />
+        )}
         {status === 'error' && (
           <p role="alert" className="fade-up rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
             {error === 'quota_exceeded' ? t('chat.error_quota') : t('chat.error_generation')}

@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ExpressionSpecification } from 'mapbox-gl';
 import type { TripDay, TripSegment, Waypoint } from '@triptic/shared';
 import { fetchPlaceMedia, type PlaceMedia } from '../lib/api';
 import { MAP_COLORS } from '../lib/mapColors';
+import {
+  MODE_LABEL_KEYS,
+  fallbackLineStyle,
+  lineColorExpression,
+  lineDasharrayExpression,
+  lineWidthExpression,
+  modeIconSvg,
+  tripModes,
+} from '../lib/mapStyles';
+import { MapLegend } from './MapLegend';
 import { PlaceCarousel } from './PlaceCarousel';
 import { RoutePreview } from './RoutePreview';
 
@@ -56,12 +67,13 @@ export function createTimeBubble(
   ].join(' ');
   el.setAttribute('aria-label', label);
 
-  const dot = document.createElement('span');
-  dot.className = `inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
-    segment.mode === 'car' ? 'bg-summit' : 'bg-pine'
-  }`;
-  dot.setAttribute('aria-hidden', 'true');
-  el.appendChild(dot);
+  // Icône du mode (voiture / pied / vélo) : on identifie le segment d'un
+  // coup d'œil. currentColor — lisible sur bulle sombre comme claire.
+  const icon = document.createElement('span');
+  icon.className = 'inline-flex shrink-0';
+  icon.innerHTML = modeIconSvg(segment.mode);
+  icon.setAttribute('aria-hidden', 'true');
+  el.appendChild(icon);
 
   const text = document.createElement('span');
   text.textContent = `${segment.routed ? '' : '~'}${Math.round(segment.duration_min)} min · ${Math.round(
@@ -124,9 +136,10 @@ function dayCoordinates(day: TripDay): [number, number][] {
 /**
  * Carte du trip : Mapbox GL si un token est configuré (affichage uniquement —
  * jamais de stockage de tuiles), sinon aperçu SVG offline.
- * Avec des segments routés (GraphHopper) : tracé réel, couleur par mode
- * (voiture copper, pied/vélo pine pointillé) ; sans routing : trait droit
- * pointillé historique.
+ * Avec des segments routés (GraphHopper) : tracé réel stylé par mode —
+ * voiture copper plein, trek pine pointillé, vélo shadow grey tireté —
+ * sur casing blanc de contraste, plus légende si plusieurs modes ;
+ * sans routing : trait droit pointillé historique.
  */
 export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   const { t } = useTranslation();
@@ -192,26 +205,37 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
               })),
             },
           });
+          // Casing blanc sous le tracé : contraste garanti sur toute la
+          // carte (forêt sombre, neige) quel que soit le fond outdoors.
           map.addLayer({
-            id: 'route-car',
+            id: 'route-casing',
             type: 'line',
             source: 'route',
-            filter: ['==', ['get', 'mode'], 'car'],
-            paint: { 'line-color': MAP_COLORS.summit, 'line-width': 4, 'line-opacity': 0.9 },
-          });
-          map.addLayer({
-            id: 'route-trail',
-            type: 'line',
-            source: 'route',
-            filter: ['!=', ['get', 'mode'], 'car'],
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
             paint: {
-              'line-color': MAP_COLORS.pine,
-              'line-width': 3,
-              'line-dasharray': [0.5, 1.5],
+              'line-color': '#FFFFFF',
+              'line-width': lineWidthExpression(3) as ExpressionSpecification,
+              'line-opacity': 0.9,
+            },
+          });
+          // Un seul layer, stylé par mode via expressions data-driven :
+          // car plein copper, foot pointillé pine, bike tirets shadow grey.
+          map.addLayer({
+            id: 'route-line',
+            type: 'line',
+            source: 'route',
+            layout: { 'line-join': 'round' },
+            paint: {
+              'line-color': lineColorExpression() as ExpressionSpecification,
+              'line-width': lineWidthExpression() as ExpressionSpecification,
+              'line-dasharray': lineDasharrayExpression() as ExpressionSpecification,
             },
           });
         } else {
-          // Fallback historique : trait droit pointillé entre waypoints
+          // Repli (routeur down / hors couverture) : trait droit entre
+          // waypoints, mais VISIBLE et dans la couleur du mode dominant —
+          // franchement tireté pour signaler « estimation, pas un sentier ».
+          const fallback = fallbackLineStyle(days);
           map.addSource('route', {
             type: 'geojson',
             data: {
@@ -224,10 +248,22 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
             },
           });
           map.addLayer({
+            id: 'route-casing',
+            type: 'line',
+            source: 'route',
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: { 'line-color': '#FFFFFF', 'line-width': 6, 'line-opacity': 0.85 },
+          });
+          map.addLayer({
             id: 'route',
             type: 'line',
             source: 'route',
-            paint: { 'line-color': MAP_COLORS.summit, 'line-width': 3, 'line-dasharray': [0.1, 2] },
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: {
+              'line-color': fallback.color,
+              'line-width': 3,
+              'line-dasharray': fallback.dasharray,
+            },
           });
         }
 
@@ -237,11 +273,13 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
           (d.segments ?? []).forEach((segment, index) => {
             const anchor = segmentAnchor(segment, d, index);
             if (!anchor) return;
-            const label = t('map.segment_time', {
+            // Le mode fait partie du nom accessible : l'icône seule ne
+            // suffit pas pour un lecteur d'écran.
+            const label = `${t(MODE_LABEL_KEYS[segment.mode])} — ${t('map.segment_time', {
               day: d.day,
               minutes: Math.round(segment.duration_min),
               km: Math.round(segment.distance_km),
-            });
+            })}`;
             const element = createTimeBubble(
               segment,
               segment.routed ? label : `${label} — ${t('days.estimated')}`,
@@ -321,6 +359,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
         role="application"
         aria-label={t('map.preview')}
       />
+      <MapLegend modes={tripModes(days)} />
       {gallery && (
         <PlaceCarousel
           title={gallery.place}

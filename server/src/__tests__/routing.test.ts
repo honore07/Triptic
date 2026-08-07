@@ -63,6 +63,30 @@ describe('RoutingService', () => {
     expect((JSON.parse(request[1].body) as { profile: string }).profile).toBe('car_scenic');
   });
 
+  it('mappe foot → profil configurable (foot_scenic une fois le graphe reconstruit)', async () => {
+    const fetchMock = okFetch();
+    const service = new RoutingService(
+      'http://localhost:8989',
+      fetchMock as unknown as typeof fetch,
+      'foot_scenic',
+    );
+    await service.route(POINTS, 'foot');
+    const request = fetchMock.mock.calls[0] as unknown as [string, { body: string }];
+    expect((JSON.parse(request[1].body) as { profile: string }).profile).toBe('foot_scenic');
+    // car et bike ne sont pas affectés par l'override foot
+    await service.route(POINTS, 'car');
+    const carReq = fetchMock.mock.calls[1] as unknown as [string, { body: string }];
+    expect((JSON.parse(carReq[1].body) as { profile: string }).profile).toBe('car_scenic');
+  });
+
+  it('défaut foot = profil foot (sans override)', async () => {
+    const fetchMock = okFetch();
+    const service = new RoutingService('http://localhost:8989', fetchMock as unknown as typeof fetch);
+    await service.route(POINTS, 'foot');
+    const request = fetchMock.mock.calls[0] as unknown as [string, { body: string }];
+    expect((JSON.parse(request[1].body) as { profile: string }).profile).toBe('foot');
+  });
+
   it('retourne null sur erreur HTTP ou réseau (jamais de throw)', async () => {
     const httpError = vi.fn(async () => new Response('boom', { status: 500 }));
     const network = vi.fn(async () => {

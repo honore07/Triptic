@@ -109,11 +109,20 @@ export const tripProposalSchema = z
     message: 'waypoints[] (min 2) ou days[] avec assez d’activités requis',
   });
 
+/**
+ * Chips de réponse rapide accompagnant une question de clarification.
+ * Tolérant aux dérives LLM : trim, vides écartés, plafonné à 4 suggestions.
+ */
+export const quickRepliesSchema = z
+  .array(z.string())
+  .transform((replies) => replies.map((r) => r.trim()).filter((r) => r.length > 0).slice(0, 4));
+
 /** Sortie attendue du LLM : soit une question de clarification, soit les 3 trips. */
 export const engineOutputSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('question'),
     message: z.string(),
+    quick_replies: quickRepliesSchema.optional(),
   }),
   z.object({
     type: z.literal('trips'),

@@ -30,6 +30,8 @@ const saveTripSchema = z.object({
   days: z.array(tripDaySchema).min(1).nullable().default(null),
   cover_photo: z.string().url().nullable().default(null),
   is_public: z.boolean().default(false),
+  /** 'draft' = auto-sauvegarde à la sélection ; 'saved' = choix explicite. */
+  status: z.enum(['draft', 'saved', 'shared']).default('saved'),
 });
 
 const recomputeRequestSchema = z.object({
@@ -133,7 +135,7 @@ export function createTripsRouter(
       slug: body.is_public ? `${slugify(body.title)}-${randomUUID().slice(0, 6)}` : null,
       is_public: body.is_public,
       mode: body.mode,
-      status: 'saved',
+      status: body.status,
       metadata: body.metadata as never,
       waypoints: body.waypoints,
       days: body.days,

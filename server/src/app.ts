@@ -38,7 +38,8 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
   const app = express();
   const tripRepo = repo ?? new MemoryTripRepo();
   const quotaService = quota ?? new QuotaService();
-  const routingService = routing ?? new RoutingService(env.graphhopperUrl);
+  const routingService =
+    routing ?? new RoutingService(env.graphhopperUrl, undefined, env.graphhopperFootProfile);
 
   // QA 6.5 — ne pas exposer la techno du serveur
   app.disable('x-powered-by');
@@ -78,9 +79,11 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
   app.use('/api/trips', createTripsRouter(tripRepo, routingService, new WeatherService()));
   app.use('/api/public', createPublicTripsRouter(tripRepo));
   app.use('/api/photos', createPhotosRouter(provider));
-  if (placeRepo) {
-    app.use('/api/places', createPlacesRouter(placeRepo, routingService));
-  }
+  // Monté INCONDITIONNELLEMENT : sans base, les routes qui l'exigent
+  // répondent 503 « db_unavailable » (explicite) au lieu de disparaître en
+  // 404 HTML, et /trails continue de générer des boucles via GraphHopper —
+  // seule source de sortie à la journée qui ne dépend pas de PostGIS.
+  app.use('/api/places', createPlacesRouter(placeRepo, routingService));
 
   // Production sans reverse proxy dédié (VPS : Traefik occupe 80/443) :
   // Express sert aussi la PWA buildée + fallback SPA.

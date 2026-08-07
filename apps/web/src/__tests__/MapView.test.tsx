@@ -64,16 +64,16 @@ describe('createTimeBubble', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('porte un nom accessible et masque la pastille décorative', () => {
+  it('porte un nom accessible et masque l’icône décorative', () => {
     const el = createTimeBubble(segment({ routed: true }), 'Jour 1 : 24 min', null);
     expect(el.getAttribute('aria-label')).toBe('Jour 1 : 24 min');
     expect(el.querySelector('span')?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('colore la pastille selon le mode', () => {
-    const car = createTimeBubble(segment({ mode: 'car' }), 'x', null);
-    const foot = createTimeBubble(segment({ mode: 'foot' }), 'x', null);
-    expect(car.querySelector('span')?.className).toContain('bg-summit');
-    expect(foot.querySelector('span')?.className).toContain('bg-pine');
+  it('affiche l’icône du mode de déplacement du segment', () => {
+    for (const mode of ['car', 'foot', 'bike'] as const) {
+      const el = createTimeBubble(segment({ mode }), 'x', null);
+      expect(el.querySelector('svg')?.getAttribute('data-mode')).toBe(mode);
+    }
   });
 });

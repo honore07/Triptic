@@ -4,9 +4,11 @@ import { AddPlaceForm } from '../components/AddPlaceForm';
 import { setLang } from '../lib/i18n';
 import * as api from '../lib/api';
 
-vi.mock('../lib/api', () => ({
-  submitPlace: vi.fn(),
-}));
+// ApiError reste la vraie classe : le composant l'utilise avec `instanceof`
+vi.mock('../lib/api', async () => {
+  const actual = await vi.importActual<typeof import('../lib/api')>('../lib/api');
+  return { ApiError: actual.ApiError, submitPlace: vi.fn() };
+});
 
 const submitPlace = vi.mocked(api.submitPlace);
 
@@ -55,11 +57,45 @@ describe('AddPlaceForm', () => {
     await waitFor(() => expect(screen.getByText(/déjà dans la base/)).toBeInTheDocument());
   });
 
-  it("affiche l'erreur si l'API échoue", async () => {
-    submitPlace.mockRejectedValue(new Error('500'));
+  it("affiche l'erreur générique sur panne réseau (fetch rejeté)", async () => {
+    submitPlace.mockRejectedValue(new TypeError('Failed to fetch'));
     render(<AddPlaceForm />);
     fillAndSubmit();
     await waitFor(() => expect(screen.getByText(/L'envoi a échoué/)).toBeInTheDocument());
+  });
+
+  it('400 invalid_body → message de validation, pas « envoi échoué »', async () => {
+    submitPlace.mockRejectedValue(new api.ApiError(400, 'invalid_body', 'submitPlace'));
+    render(<AddPlaceForm />);
+    fillAndSubmit();
+    await waitFor(() =>
+      expect(screen.getByText(/Une information saisie n'est pas valide/)).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/L'envoi a échoué/)).not.toBeInTheDocument();
+  });
+
+  it('503 db_unavailable → service indisponible, la saisie est conservée', async () => {
+    submitPlace.mockRejectedValue(new api.ApiError(503, 'db_unavailable', 'submitPlace'));
+    render(<AddPlaceForm />);
+    fillAndSubmit();
+    await waitFor(() =>
+      expect(screen.getByText(/base de lieux n'est pas disponible/)).toBeInTheDocument(),
+    );
+    // Ne pas laisser croire à une saisie invalide ni à un envoi raté
+    expect(screen.queryByText(/L'envoi a échoué/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/n'est pas valide/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Nom du lieu/)).toHaveValue('Cascade du Frankenthal');
+  });
+
+  it('les 3 messages d’état sont annoncés (aria-live)', async () => {
+    submitPlace.mockRejectedValue(new api.ApiError(503, 'db_unavailable', 'submitPlace'));
+    const { container } = render(<AddPlaceForm />);
+    fillAndSubmit();
+    await waitFor(() =>
+      expect(container.querySelector('[aria-live="polite"]')).toHaveTextContent(
+        /base de lieux n'est pas disponible/,
+      ),
+    );
   });
 
   it('affiche une erreur visible quand la géolocalisation est indisponible (QA 1.1)', () => {

@@ -71,7 +71,12 @@ export interface GroundingInfo {
 }
 
 export type GenerateResult =
-  | { type: 'question'; message: string }
+  | {
+      type: 'question';
+      message: string;
+      /** Suggestions de réponse rapide (chips UI), déjà dans la langue user. */
+      quick_replies?: string[];
+    }
   | {
       type: 'trips';
       generation: TripGeneration;
@@ -103,7 +108,13 @@ export async function generateTrips(
   let output = await completeAndParse(provider, system, cleanMessages);
 
   if (output.type === 'question') {
-    return { type: 'question', message: output.message };
+    return {
+      type: 'question',
+      message: output.message,
+      ...(output.quick_replies && output.quick_replies.length > 0
+        ? { quick_replies: output.quick_replies }
+        : {}),
+    };
   }
 
   // Grounding — révision des trips avec les lieux RÉELS de la base places.
