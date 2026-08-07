@@ -65,7 +65,7 @@ describe('faits, pas expression (6 — anti-copie + RGPD)', () => {
     expect(containsPersonalData('Lac Blanc')).toBe(false);
   });
 
-  it('extractFacts rejette les champs copiés et plafonne par source', async () => {
+  it('rejette un nom copié, assainit les tags sans jeter le fait, et plafonne', async () => {
     const facts = Array.from({ length: 20 }, (_, i) => ({
       name: `Lieu ${i}`,
       kind: 'lake',
@@ -73,17 +73,18 @@ describe('faits, pas expression (6 — anti-copie + RGPD)', () => {
       lng: 7.1,
       tags: ['baignade'],
     }));
-    facts[0] = { ...facts[0]!, name: 'un moment suspendu entre les sapins givrés' };
-    facts[1] = { ...facts[1]!, tags: ['superbe vue panoramique'] }; // tag multi-mots = expression
+    facts[0] = { ...facts[0]!, name: 'un moment suspendu entre les sapins givrés' }; // nom copié → rejeté
+    facts[1] = { ...facts[1]!, tags: ['vue panoramique'] }; // tag multi-mots (≤20c) → retiré, fait gardé
     const provider: LlmProvider = {
       name: 'mock',
       complete: async () => JSON.stringify({ facts }),
       correct: async () => '{}',
     };
     const result = await extractFacts(provider, SOURCE);
-    expect(result.rejected).toBe(2);
-    expect(result.facts.length).toBe(MAX_FACTS_PER_SOURCE); // 18 restants plafonnés à 15
+    expect(result.rejected).toBe(1); // seul le nom copié
+    expect(result.facts.length).toBe(MAX_FACTS_PER_SOURCE); // 19 valides plafonnés à 15
     expect(result.facts.every((f) => !f.name.includes('suspendu'))).toBe(true);
+    expect(result.facts.every((f) => f.tags.every((t) => !t.includes(' ')))).toBe(true); // tags assainis
   });
 
   it('remonte la réserve TDM signalée par le modèle', async () => {

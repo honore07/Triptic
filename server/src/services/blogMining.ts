@@ -197,6 +197,8 @@ const extractionOutputSchema = z.object({ facts: z.array(z.unknown()).max(30) })
 function buildExtractionPrompt(): string {
   return `Tu extrais des FAITS GÉOGRAPHIQUES d'un article de blog outdoor pour la base de lieux TRIPTIC.
 
+EXHAUSTIVITÉ : liste TOUS les lieux physiques nommés de l'article (sommets, lacs, cascades, cols, refuges, fermes-auberges, villages, châteaux, points de vue…), pas seulement les principaux. Une page cite souvent 8 à 15 lieux — ne t'arrête pas à 1 ou 2. Chaque lieu distinct = un fait.
+
 RÈGLES ABSOLUES (conformité juridique — exception TDM, faits non protégés / expression protégée) :
 1. Tu ne sors QUE des données structurées : nom du lieu, type, coordonnées si présentes, tags d'UN SEUL mot, et infos pratiques factuelles (voir plus bas)
 2. INTERDIT de recopier une phrase, une description, un avis ou une tournure de l'article
@@ -243,7 +245,10 @@ export async function extractFacts(
     const response = await provider.complete({
       system: buildExtractionPrompt(),
       messages: [{ role: 'user', content: input }],
-      maxTokens: 4000,
+      // Deepseek v4 raisonne avant de répondre : 4000 tokens partaient dans le
+      // raisonnement, la liste de faits était tronquée (rendement ~0,6/page au
+      // 1er run). 8000 laisse la place à tous les lieux d'une page.
+      maxTokens: 8000,
     });
     try {
       const candidate = extractJson(response) as { facts?: unknown; tdm_reservation?: boolean };
@@ -268,17 +273,19 @@ export async function extractFacts(
       continue;
     }
     const fact = parsedFact.data;
-    const fields = [fact.name, ...fact.tags].join(' ');
-    if (
-      hasCopiedPhrase(fact.name, pageText) ||
-      containsPersonalData(fields) ||
-      // Tags multi-mots = expression potentielle → rejet
-      fact.tags.some((tag) => tag.trim().includes(' '))
-    ) {
+    // Le NOM est essentiel : copié (≥6 mots) ou données perso ⇒ on rejette le fait.
+    if (hasCopiedPhrase(fact.name, pageText) || containsPersonalData(fact.name)) {
       rejected += 1;
       continue;
     }
-    facts.push(fact);
+    // Les tags sont secondaires : on RETIRE les mauvais (multi-mots = expression,
+    // copiés, ou données perso) au lieu de jeter tout le fait — sinon on perdait
+    // ~la moitié des lieux valides pour un simple tag bruité (1er run complet).
+    const tags = fact.tags.filter(
+      (tag) =>
+        !tag.trim().includes(' ') && !containsPersonalData(tag) && !hasCopiedPhrase(tag, pageText),
+    );
+    facts.push({ ...fact, tags });
   }
 
   if (rejected > 0) logger.info({ rejected }, 'Blog mining — champs rejetés (copie/RGPD)');
