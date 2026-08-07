@@ -1,0 +1,134 @@
+# === Alpes françaises — 2026-08-07 ===
+# Découverte : 5 angles, ~45 domaines, 57 articles retenus (63 trouvés, -6 dédup/anti-mirroring).
+# Massifs couverts : Écrins, Vanoise, Queyras, Ubaye, Mercantour, Belledonne, Beaufortain,
+#   Vercors, Chartreuse, Cerces/Clarée, Aravis, Champsaur, Maurienne, Haute-Savoie.
+# Lancer avec --region=alpes-fr. Opt-out + recoupement OSM vérifiés PAR LE PIPELINE.
+
+# --- RANDO & NATURE (lacs d'altitude, cascades, cols, points de vue) ---
+
+# nomade-blog.fr — Écrins/Valgaudemar : lacs Lauzon, Vallonpierre, cirque du Gioberney
+https://nomade-blog.fr/randonnee-de-3-jours-dans-le-parc-national-des-ecrins/
+# trace-ta-route.com — Beaufortain : lac de Presset, Pierra Menta, cols
+https://www.trace-ta-route.com/randonnee-trek-traversee-beaufortain/
+# lapprentie-voyageuse.com — Ubaye : lac des Neuf Couleurs, Chambeyron, Lauzanier
+https://lapprentie-voyageuse.com/2021/07/05/plus-belles-rando-ubaye/
+# marine-explore.com — Belledonne : Sept Laux, lac de Crop, refuge de la Pra
+https://marine-explore.com/2025/01/09/randonnees-belledonne/
+# tas2cailloux.com — Belledonne : lac du Crozet, cascade de l'Oursière
+https://tas2cailloux.com/randonnees/8-idees-randonnees-en-belledonne/
+# isabellefabre.fr — Mercantour haute Tinée : lacs Rabuons, Vens, mont Ténibre
+https://isabellefabre.fr/randonnees-et-bivouacs-dans-le-parc-du-mercantour/
+# unepartdumonde.fr — Vanoise : vallée des Encombres, lacs Pierre Blanche, du Lou
+https://unepartdumonde.fr/randonnee-bivouac-parc-de-la-vanoise/
+# wildroad.fr — Vanoise : lac de la Glière, Grande Sassière, cols
+https://wildroad.fr/parc-national-de-la-vanoise-randonnee-bivouac-glaciers/
+# itinera-magica.com — Vercors : Grand Veymont, Mont Aiguille, cirque d'Archiane
+https://www.itinera-magica.com/randonnees-vercors-ete/
+# pascal-sombardier.com — Chartreuse : cascades Oule, Glésy, cirque de Saint-Même
+https://www.pascal-sombardier.com/2023/01/les-cascades-de-chartreuse.html
+# foutrak.com — Tour du Queyras : lacs Foréant, Egorgéou, Col Vieux
+https://www.foutrak.com/le-tour-du-queyras-en-4-jours/
+# plaisirdescimes.com — Aravis : lac de Tardevant, refuge de Gramusset
+https://www.plaisirdescimes.com/2026/07/lac-de-tardevant-par-les-chalets-de-la-bombardellaz-depuis-les-confins.html
+
+# --- VILLAGES & PATRIMOINE (villages perchés, forts, chapelles, hameaux) ---
+
+# leblogcashpistache.fr — Roya/Bévéra : Sospel, Saorge, La Brigue, chapelle N-D des Fontaines
+https://www.leblogcashpistache.fr/visiter-menton-villages-perches-mercantour/
+# mon-grand-est.fr — Beaufortain : hameau classé de Boudin, chapelle Saint-Jacques
+https://mon-grand-est.fr/village-de-boudin/
+# trace-ta-route.com — Maurienne/Tarentaise : Bonneval, Bessans, forts de l'Esseillon
+https://www.trace-ta-route.com/road-trip-savoie-maurienne-tarentaise/
+# lesglobeblogueurs.com — Queyras : Saint-Véran, Fort Queyras, chapelle de Clausis
+https://lesglobeblogueurs.com/queyras/
+# sentier-nature.com — Chartreuse : château de Montbel, Saint-Pierre-d'Entremont
+https://www.sentier-nature.com/montagne/post/2015/01/27/entremont-circuit-chateau-montbel
+# ladromemontagne.fr — Vercors : village abandonné de Valchevrière
+https://www.ladromemontagne.fr/village-abandonne-vercors-continue-nourrir-legendes-locales/
+# brodev.over-blog.com — Haute-Maurienne : Bonneval-sur-Arc, chapelles, vieux pont
+https://brodev.over-blog.com/2021/10/bonneval-sur-arc-plus-beau-village-de-france-2nde-partie-le-village.html
+# blogvoyages.fr — Champsaur-Valgaudemar : Prapic, La Chapelle-en-Valgaudemar
+https://blogvoyages.fr/champsaur-valgaudemar-que-faire/
+# ber-dranreb04.overblog.com — Haute-Ubaye : Maljasset, vallon de Maurin
+https://ber-dranreb04.overblog.com/2015/09/vallon-de-maurin-retour-du-marinet-ubaye.html
+# voyagepassions.com — Clarée : Névache, Plampinet, patrimoine baroque
+https://voyagepassions.com/2022/03/22/road-trip-pour-nevache-dans-la-vallee-de-la-claree/
+# voyage-en-photos.fr — Queyras : Ceillac, Saint-Véran, cols Agnel/Izoard
+https://voyage-en-photos.fr/sejour-photo-queyras-spots-rando-hautes-alpes/
+# pretpourlaventure.com — Beaufortain : Hauteluce, Arêches, lac de Saint-Guérin
+https://www.pretpourlaventure.com/que-faire-dans-le-beaufortain
+
+# --- BIVOUAC & VAN LIFE (spots d'altitude, lacs, cols en van) ---
+
+# wildroad.fr — Taillefer : lac Fourchu, plateau des lacs, lac du Poursollet
+https://wildroad.fr/bivouac-ecrins-plateau-des-lacs-taillefer/
+# toporando.fr — Valgaudemar : lac Bleu, lac de Lauzon
+https://toporando.fr/randonnee-bivouac-dans-les-ecrins-au-lac-bleu/
+# toporando.fr — Oisans : lac de la Muzelle, lac du Lauvitel
+https://toporando.fr/2-jours-randonnee-bivouac-dans-les-ecrins/
+# oresetaudace.com — Belledonne : lacs Robert, Petit Doménon, cols Freydane/Loup
+https://www.oresetaudace.com/belledonne-3-jours-de-bivouac-sur-les-plus-hauts-cols-de-belledonne/
+# mon-sejour-en-montagne.com — Belledonne : lacs du Doménon, lac du Crozet
+https://www.mon-sejour-en-montagne.com/experience/lacs-du-domenon-la-randonnee-secrete-de-belledonne-a-couper-le-souffle/
+# mikadessagne.wordpress.com — Vanoise : Plan du Lac, lac du Lait, lac Blanc
+https://mikadessagne.wordpress.com/2016/03/22/randonnee-bivouac-plan-du-lac-en-vanoise/
+# la-cote-en-rando.fr — Mercantour : lac Nègre, lac Graveirette, col de Salèse
+https://la-cote-en-rando.fr/bivouac-au-lac-negre-mercantour/
+# happytrek.fr — Mercantour : lac d'Allos, lac Nègre, vallée des Merveilles
+https://happytrek.fr/randonnee/4-beaux-spots-de-bivouac-dans-le-mercantour/
+# cahierdevoyage.willemain.com — Cerces/Thabor : lac des Cerces, lac des Bataillères
+https://cahierdevoyage.willemain.com/content/Bivouac-Tour-du-Thabor/Lac-des-Cerces-Lac-des-Batailleres/index.htm
+# wildroad.fr — Beaufortain : lac de Presset, lac de la Portette, col du Bresson
+https://wildroad.fr/bivouac-massif-beaufortain-lac-de-presset/
+# getloomi.com — Queyras GR5 : lac Miroir, lac Sainte-Anne, col Girardin
+https://getloomi.com/2-jours-de-bivouac-dans-le-queyras-sur-le-gr5
+# levanmigrateur.com — Alpes en van : plateau d'Emparis, col du Galibier
+https://levanmigrateur.com/road-trip-dans-les-alpes-en-van-itineraire/
+
+# --- REFUGES & TABLES (refuges gardés, bergeries, auberges — tarifs à capter) ---
+
+# rectoverso.co — Écrins : refuges Gioberney, Vallonpierre, Pré de la Chaumette
+https://www.rectoverso.co/itineraires/randonnee-parc-national-ecrins-refuge
+# trace-ta-route.com — Queyras : refuges Furfande, Agnel, gîtes (tarifs demi-pension)
+https://www.trace-ta-route.com/dormir-gite-etape-refuge-randonnee-queyras/
+# montagneentrek.com — GR58 Queyras : bergeries des Bertins, de Souliers, abris
+https://www.montagneentrek.com/gr58-tour-du-queyras-en-6-jours/
+# instant-nomade.com — Tour glaciers Vanoise : refuges Vanoise, Arpont, Peclet-Polset (tarif)
+https://instant-nomade.com/2024/11/11/tour-des-glaciers-de-la-vanoise-en-7-jours-organisation-de-la-randonnee-itineraire-materiel-conseils-pratiques/
+# florinetournier.com — Vanoise : refuges du Col, Arpont, Fond d'Aussois (tarif)
+https://florinetournier.com/tour-des-glaciers-de-la-vanoise-en-4-jours/
+# therecreationalist.blog — Vanoise hut-to-hut : refuges Col du Palet, de la Leisse (EN)
+https://therecreationalist.blog/2018/08/28/hut-to-hut-hiking-in-vanoise-national-park/
+# rando-roadtrip.com — Belledonne GR738 : refuges de la Pra, Jean Collet, Sept Laux
+https://rando-roadtrip.com/belledonne-4-jours-de-randonnee-de-refuge-en-refuge
+# la-cremerie.blog — Belledonne : refuges de la Pra, Jean Collet, habert d'Aiguebelle
+https://la-cremerie.blog/traversee-de-belledonne-4j-jour-1/
+# i-trekkings.net — Beaufortain : refuges Lachat, Croix du Bonhomme, Presset
+https://www.i-trekkings.net/carnet-outdoor/tour-du-beaufortain/
+# makingtheroad.fr — Mercantour : refuge des Merveilles, auberge de Casterino
+https://www.makingtheroad.fr/mercantour-vallee-des-merveilles-randonnee-2-jours-blog/
+# wanderspirit.de — GR52 Mercantour : Boréon, Madone de Fenestre, refuge de Nice (DE)
+https://wanderspirit.de/gr-52-infos/
+# pasquedescollants.com — Ubaye : cabane de Rubren, refuge Franco Boerio, Maljasset
+https://pasquedescollants.com/carnet-escapades-nuit-en-refuge-la-magie-de-la-haute-vallee-ubaye/
+# i-trekkings.net — Cerces/Thabor : refuges Buffère, Chardonnet, Drayères, Thabor
+https://www.i-trekkings.net/carnet-outdoor/tour-du-mont-thabor/
+
+# --- BAIGNADE & EAU (lacs alpins, vasques, cascades) ---
+
+# itinerance.net — Mercantour : 10 lacs (Allos, Nègre, Trecolpas, Rabuons, Vens…)
+https://itinerance.net/parc-national-du-mercantour/baignades-lacs-mercantour/
+# alpesrandonnees.fr — Mercantour : lac d'Allos
+https://alpesrandonnees.fr/lac-allos-randonnee-mercantour/
+# leblogcashpistache.fr — Ubaye : lac des Sagnes, cascade des Sagnes, vallon de Pelouse
+https://www.leblogcashpistache.fr/randonnee-en-famille-ubaye-alpes/
+# sunxplore.fr — Hautes-Alpes : gorges et vasques de la Méouge, pont romain
+https://sunxplore.fr/baignade-et-promenade-au-coeur-des-gorges-de-la-meouge-dans-les-hautes-alpes/
+# itinera-magica.com — Vercors : piscines naturelles du Cholet, cascades, gorges de la Bourne
+https://www.itinera-magica.com/que-voir-vercors-royans/
+# sarahcontesesaventures.com — Clarée/Cerces : lacs Béraudes, Ponsonnière, Cerces, Rond
+https://sarahcontesesaventures.com/vallee-claree-automne/
+# mon-sejour-en-montagne.com — Chartreuse : gorges du Guiers Mort, coins de baignade
+https://www.mon-sejour-en-montagne.com/experience/balade-fraicheur-les-gorges-tonifiantes-du-guiers-mort-en-chartreuse/
+# hikesandtravels.com — Haute-Savoie : lacs Lessy, Mont Charvin, Bénit, Cornu
+https://hikesandtravels.com/10-idees-rando-avec-lac-en-haute-savoie/
