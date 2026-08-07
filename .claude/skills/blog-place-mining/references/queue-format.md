@@ -30,13 +30,22 @@ conformité ; une page refusée n'arrête pas la boucle.
 cd /opt/triptic && git pull origin main && pnpm install --frozen-lockfile
 ```
 
+`--region=<id>` borne le géocodage Nominatim à la bbox de la zone (réduit les
+homonymes). Ids : `alsace-vosges`, `alpes-fr`, `alpes-ch`, `alpes-it`
+(`server/src/import/osm/regions.ts`). Omettre le flag = géocodage sur tout le
+périmètre pilote puis filtre par région.
+
 ```bash
-cd /opt/triptic/server && ZONE=<zone-slug> && \
+cd /opt/triptic/server && ZONE=<zone-slug> && REGION=<region-id> && \
   grep -vE '^\s*(#|$)' src/import/blogs/queues/$ZONE.txt | while read -r url; do
     echo "=== $(date +%H:%M:%S) $url ==="
-    pnpm import:blog -- --url="$url"
+    pnpm import:blog -- --url="$url" --region="$REGION"
   done 2>&1 | tee /tmp/import-blog-$ZONE.log
 ```
+
+Résolution des coordonnées (les blogs n'ont pas de GPS) : chaque nom est ancré
+(a) sur un lieu déjà cartographié de même nom (→ recoupé, peut passer `active`),
+sinon (b) géocodé via Nominatim (→ non recoupé, `pending` pour revue).
 
 Contrôle après :
 
