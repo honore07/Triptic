@@ -6,6 +6,7 @@ import {
   createPlacesRouter,
   expandBbox,
   isDuplicateLoop,
+  isNearTarget,
   type PlacesApi,
 } from '../routes/places.js';
 
@@ -369,9 +370,11 @@ describe('minimum de propositions sur Explore', () => {
   it('trails garde les boucles mappées et complète le reste', async () => {
     const routing = {
       enabled: true,
+      // distances proches de la cible par défaut (12 km) : sinon le filtre de
+      // pertinence les écarte, à raison — cf. « pertinence des boucles ».
       roundTrip: vi.fn(async (_f: unknown, _k: number, _m: string, seed: number) => ({
         geometry: [[7.1, 48.05]] as [number, number][],
-        distance_km: 20 + seed,
+        distance_km: 10 + seed * 0.5,
         duration_min: 200,
         elevation_gain_m: 800 + seed * 50,
       })),
@@ -386,5 +389,102 @@ describe('minimum de propositions sur Explore', () => {
     // la vraie boucle balisée reste en tête
     expect(res.body.trails[0].generated).toBe(false);
     expect(res.body.trails[0].name).toBe('Tour du Hohneck');
+  });
+});
+
+/**
+ * Qualité des boucles générées (07/08) : GraphHopper round_trip dérive selon
+ * la graine — pour 20 km demandés il proposait 47 km / 4 082 m D+ / 13 h.
+ * Inutilisable pour une sortie à la journée.
+ */
+describe('pertinence des boucles générées', () => {
+  it('isNearTarget écarte les distances hors sujet', () => {
+    expect(isNearTarget(20, 20)).toBe(true);
+    expect(isNearTarget(28, 20)).toBe(true); // un peu plus long : acceptable
+    expect(isNearTarget(47, 20)).toBe(false); // 13 h de marche pour 20 km demandés
+    expect(isNearTarget(4, 20)).toBe(false); // beaucoup trop court
+  });
+
+  it('trails ne propose que des boucles proches de la cible, les plus justes d’abord', async () => {
+    // distances renvoyées volontairement dispersées, dont des aberrations
+    const byDistance = [45, 21, 60, 19, 25, 8, 22, 50, 20, 23, 40, 24];
+    const routing = {
+      enabled: true,
+      roundTrip: vi.fn(async (_f: unknown, _km: number, _m: string, seed: number) => {
+        const km = byDistance[seed % byDistance.length]!;
+        return {
+          geometry: [[7.1, 48.05]] as [number, number][],
+          distance_km: km,
+          duration_min: km * 15,
+          elevation_gain_m: km * 80,
+        };
+      }),
+    };
+    const app = express();
+    app.use(express.json());
+    app.use(authMiddleware);
+    app.use(
+      '/api/places',
+      createPlacesRouter(
+        { ...makeApp().api, findTrailsNear: vi.fn(async () => []) },
+        routing as never,
+      ),
+    );
+    const res = await request(app).get('/api/places/trails?lat=48.05&lng=7.1&target_km=20');
+    expect(res.status).toBe(200);
+    const distances = res.body.trails.map((t: { distance_km: number }) => t.distance_km);
+    // aucune aberration : 20 km demandés -> rien au-delà de 32 ni sous 11
+    expect(distances.every((d: number) => d >= 11 && d <= 32)).toBe(true);
+    // classées de la plus proche de la cible à la plus éloignée
+    const ecarts = distances.map((d: number) => Math.abs(d - 20));
+    expect([...ecarts].sort((a, b) => a - b)).toEqual(ecarts);
+  });
+
+  it('503 explicite si le routeur est configuré mais injoignable', async () => {
+    // enabled=true (URL configurée) mais chaque appel échoue → null
+    const routing = { enabled: true, roundTrip: vi.fn(async () => null) };
+    const app = express();
+    app.use(express.json());
+    app.use(authMiddleware);
+    app.use(
+      '/api/places',
+      createPlacesRouter(
+        { ...makeApp().api, findTrailsNear: vi.fn(async () => []) },
+        routing as never,
+      ),
+    );
+    const res = await request(app).get('/api/places/trails?lat=48.05&lng=7.1');
+    expect(res.status).toBe(503);
+    expect(res.body.error).toBe('routing_unavailable');
+  });
+
+  it('une base injoignable ne casse pas la génération de boucles', async () => {
+    const routing = {
+      enabled: true,
+      roundTrip: vi.fn(async (_f: unknown, _k: number, _m: string, seed: number) => ({
+        geometry: [[7.1, 48.05]] as [number, number][],
+        distance_km: 12 + (seed % 3),
+        duration_min: 180,
+        elevation_gain_m: 600 + seed * 40,
+      })),
+    };
+    const app = express();
+    app.use(express.json());
+    app.use(authMiddleware);
+    app.use(
+      '/api/places',
+      createPlacesRouter(
+        {
+          ...makeApp().api,
+          findTrailsNear: vi.fn(async () => {
+            throw new Error('connection refused');
+          }),
+        },
+        routing as never,
+      ),
+    );
+    const res = await request(app).get('/api/places/trails?lat=48.05&lng=7.1&target_km=12');
+    expect(res.status).toBe(200);
+    expect(res.body.trails.length).toBeGreaterThan(0);
   });
 });

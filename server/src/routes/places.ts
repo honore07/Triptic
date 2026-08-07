@@ -91,11 +91,33 @@ const trailsSchema = z.object({
  */
 const MIN_SUGGESTIONS = 10;
 
-/** Graines tentées en plus du strict nécessaire (échecs + doublons). */
-const SEED_OVERSHOOT = 4;
+/**
+ * Graines tentées en plus du strict nécessaire. Large, car une bonne moitié
+ * est écartée : échec du routeur, doublon, ou distance trop loin de la cible.
+ * Borné pour ne pas saturer GraphHopper (KVM 2) sur une seule recherche.
+ */
+const SEED_OVERSHOOT = 18;
 
 /** Facteurs d'élargissement successifs d'une zone trop pauvre en résultats. */
 const BBOX_WIDEN_STEPS = [2.5, 6] as const;
+
+/**
+ * Tolérance autour de la distance demandée pour une boucle générée.
+ * GraphHopper `round_trip` dérive fortement selon la graine : pour 20 km il
+ * peut rendre 47 km (13 h de marche, 4 000 m D+). Proposer ça à quelqu'un qui
+ * a demandé 20 km est inutilisable — on borne donc à [0,55× ; 1,6×], fourchette
+ * réglée pour écarter les aberrations tout en gardant 10 propositions.
+ */
+const TARGET_MIN_RATIO = 0.55;
+const TARGET_MAX_RATIO = 1.6;
+
+/** La boucle générée reste-t-elle dans une fourchette crédible de la cible ? */
+export function isNearTarget(distanceKm: number, targetKm: number): boolean {
+  return distanceKm >= targetKm * TARGET_MIN_RATIO && distanceKm <= targetKm * TARGET_MAX_RATIO;
+}
+
+/** Distances demandées à GraphHopper, en fraction de la cible (cf. ci-dessus). */
+const REQUEST_RATIOS = [1, 0.85, 0.7, 0.6] as const;
 
 export interface Bbox {
   south: number;
@@ -301,27 +323,34 @@ export function createPlacesRouter(repo?: PlacesApi, routing?: RoutingService): 
       return;
     }
     const { lat, lng, radius, target_km, mode } = parsed.data;
+    const targetKm = target_km ?? 12;
     try {
-      // Sans base : pas de boucle mappée à proposer, mais la génération
-      // GraphHopper reste possible — c'est elle qui porte le mode « journée ».
-      const trails = repo
-        ? await repo.findTrailsNear(lat, lng, radius, target_km ?? null, MIN_SUGGESTIONS)
-        : [];
-      const withDuration: TrailSuggestion[] = trails.map((trail) => ({
+      // Sans base : pas de boucle mappée, mais la génération GraphHopper
+      // reste possible — c'est elle qui porte le mode « journée ». Une base
+      // injoignable ne doit donc PAS faire échouer toute la recherche.
+      let mapped: Awaited<ReturnType<PlacesApi['findTrailsNear']>> = [];
+      if (repo) {
+        try {
+          mapped = await repo.findTrailsNear(lat, lng, radius, target_km ?? null, MIN_SUGGESTIONS);
+        } catch (error) {
+          logger.warn({ error, context: 'places-trails' }, 'Mapped trails unavailable');
+        }
+      }
+      const suggestions: TrailSuggestion[] = mapped.map((trail) => ({
         ...trail,
         generated: false,
         duration_min: hikeDurationMin(trail.distance_km, 0),
       }));
-      if (withDuration.length >= MIN_SUGGESTIONS) {
-        res.json({ trails: withDuration });
+      if (suggestions.length >= MIN_SUGGESTIONS) {
+        res.json({ trails: suggestions });
         return;
       }
       if (!routing?.enabled) {
         // Le routeur complète les zones sans boucle mappée. Sans lui ET sans
         // boucle en base, le dire — plutôt qu'une liste vide que l'UI
         // présenterait comme « aucun résultat dans cette zone ».
-        if (withDuration.length > 0) {
-          res.json({ trails: withDuration });
+        if (suggestions.length > 0) {
+          res.json({ trails: suggestions });
           return;
         }
         res.status(503).json({ error: repo ? 'routing_unavailable' : 'db_unavailable' });
@@ -330,16 +359,38 @@ export function createPlacesRouter(repo?: PlacesApi, routing?: RoutingService): 
       // On complète jusqu'à MIN_SUGGESTIONS avec des boucles générées sur le
       // réseau OSM piéton. Chaque graine change le cap de départ, donc la
       // rando obtenue : on en tente plus que nécessaire car certaines
-      // échouent ou retombent sur un tracé déjà proposé.
-      const missing = MIN_SUGGESTIONS - withDuration.length;
+      // échouent, retombent sur un tracé déjà proposé, ou s'éloignent trop
+      // de la distance demandée.
+      const missing = MIN_SUGGESTIONS - suggestions.length;
       const seeds = Array.from({ length: missing + SEED_OVERSHOOT }, (_, i) => i);
       const loops = await Promise.all(
-        seeds.map((seed) => routing.roundTrip({ lat, lng }, target_km ?? 12, mode, seed)),
+        seeds.map((seed) =>
+          // GraphHopper dépasse presque toujours la distance demandée : on
+          // sous-demande sur une partie des graines pour que davantage de
+          // boucles retombent dans la fourchette utile (sinon on en jette la
+          // moitié et il n'en reste pas assez à proposer).
+          routing.roundTrip({ lat, lng }, targetKm * REQUEST_RATIOS[seed % REQUEST_RATIOS.length]!, mode, seed),
+        ),
       );
-      for (const [index, loop] of loops.entries()) {
-        if (!loop || withDuration.length >= MIN_SUGGESTIONS) continue;
-        if (isDuplicateLoop(loop, withDuration)) continue;
-        withDuration.push({
+      const usable = loops.filter((loop) => loop !== null);
+      if (usable.length === 0 && suggestions.length === 0) {
+        // Routeur configuré mais injoignable (tunnel coupé, service down) :
+        // le dire franchement au lieu d'une liste vide « aucune rando ici ».
+        res.status(503).json({ error: 'routing_unavailable' });
+        return;
+      }
+      // Le round-trip GraphHopper dérive beaucoup selon la graine : pour
+      // 20 km demandés il peut rendre 47 km / 4 000 m D+ (13 h de marche).
+      // On écarte les hors-sujet, puis on classe du plus proche de la cible.
+      const onTarget = usable
+        .filter((loop) => isNearTarget(loop.distance_km, targetKm))
+        .sort(
+          (a, b) => Math.abs(a.distance_km - targetKm) - Math.abs(b.distance_km - targetKm),
+        );
+      for (const [index, loop] of onTarget.entries()) {
+        if (suggestions.length >= MIN_SUGGESTIONS) break;
+        if (isDuplicateLoop(loop, suggestions)) continue;
+        suggestions.push({
           id: `generated-${index}`,
           name: null,
           summary: null,
@@ -352,7 +403,7 @@ export function createPlacesRouter(repo?: PlacesApi, routing?: RoutingService): 
           generated: true,
         });
       }
-      res.json({ trails: withDuration });
+      res.json({ trails: suggestions });
     } catch (error) {
       logger.error({ error, context: 'places-trails' }, 'Trails search failed');
       res.status(500).json({ error: 'places_unavailable' });
