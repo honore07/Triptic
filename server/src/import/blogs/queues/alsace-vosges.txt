@@ -1,0 +1,160 @@
+# === Alsace / massif des Vosges — 2026-08-06 ===
+# Découverte : 5 angles, 38 domaines, 50 articles retenus (54 trouvés, -4 dédup/anti-mirroring).
+# Anti-mirroring appliqué : vosgesquipeut.fr 5->3, ltd-rando68 4->3, caersbart.be dédup.
+# L'opt-out (robots.txt/ai.txt/noai/CGU) et le recoupement OSM sont VÉRIFIÉS PAR LE PIPELINE, page par page.
+
+# --- RANDO & NATURE (cascades, lacs, gorges, points de vue, cols) ---
+
+# vosgesquipeut.fr — Wormsa : lacs Fischboedle & Schiessrothried, Hohneck, refuge Rudloff
+https://vosgesquipeut.fr/rando-dans-les-vosges-dans-la-vallee-de-munster-a-travers-la-wormsa/
+
+# alaconquetedelest.fr — lac de Fischboedle (vallée de Munster)
+https://alaconquetedelest.fr/2018/05/decouverte-lac-de-fischboedle-valle-de-munster/
+# alaconquetedelest.fr — circuit des 3 rochers (Vosges du Nord, La Petite Pierre)
+https://alaconquetedelest.fr/2020/07/le-circuit-des-3-rochers-dans-les-vosges-du-nord/
+
+# ltd-rando68.over-blog.com — Stosswihr : cascades Stolz Ablass, cirque du Frankenthal
+https://ltd-rando68.over-blog.com/2022/04/stosswihr-mon-circuit-des-cascades-r-499-10-1-km-d-479-m-3-h-3/6.html
+# ltd-rando68.over-blog.com — Masevaux : Fuchsfelsen, Rossberg, chaumes de la Doller
+https://ltd-rando68.over-blog.com/2017/04/masevaux-fuchsfelsen-et-rossberg-r-64.html
+
+# wildroad.fr — GR5 3 jours : lac des Perches, Neuweiher, Ballon d'Alsace
+https://wildroad.fr/randonnee-massif-des-vosges-3-jours-sur-le-gr5/
+
+# carnetsderando.net — Vosges secrètes : Cuveaux, cascade de Faymont, Fontaine Stanislas
+https://www.carnetsderando.net/vosges-secretes-5-randonnees-faciles-pour-voir-les-vosges-sous-un-nouveau-jour/
+
+# mapetiterando.fr — cascade & tour de Mérelle (au-dessus de Gérardmer)
+https://mapetiterando.fr/randonnee/cette-rando-dans-les-vosges-cache-une-cascade-une-tour-secrete-et-une-vue-jusquaux-alpes/
+
+# sunhikes.com (de) — cascade du Rudlin, Lac Vert, Le Tanet (Plainfaing)
+https://www.sunhikes.com/de/rudlin-wasserfall-ein-stiller-schatz-in-den-vogesen
+
+# wildnis-wandern.de — 3 lacs : Blanc, Noir, des Truites ; Gazon du Faing
+https://wildnis-wandern.de/drei-seen-tour-am-vogesen-hauptkamm/
+
+# indenbergen.de — 6 itinéraires : Petit Ballon, cascade & château du Nideck
+https://www.indenbergen.de/weblog/wanderrouten-vogesen/
+
+# people-abroad.de — Pays de la Déodatie : Tête de la Biche, cascade des Molières
+https://www.people-abroad.de/blog/vogesen-weitwandern/
+
+# caersbart.be (en) — GR5 : Tête des Faux, Lac Vert, belvédère de Hirschsteine
+https://www.caersbart.be/gr-5-vosges/
+
+# --- VILLAGES & PATRIMOINE (villages oubliés, ruines, chapelles) ---
+
+# ber-dranreb04.overblog.com — Heidenkirche & village disparu de Birsbach (Vosges du Nord)
+https://ber-dranreb04.overblog.com/2019/02/l-eglise-de-heidenkirche-et-le-village-disparu-de-birsbach-gd-est.html
+
+# randoalsacevosges.over-blog.com — ermitage du Val Saint-Jean, chapelle Saint-Alexis (Kaysersberg)
+https://randoalsacevosges.over-blog.com/2020/11/les-ruines-de-l-ermitage-du-val-saint-jean.html
+
+# histoiresdeforets.com — ermitages isolés : Falkenfels, Thannenkirch, Lac de la Maix
+https://histoiresdeforets.com/vosges/lhistoire-des-ermites-patrimoine-immateriel-des-forets-des-vosges/
+
+# lesvoyageursdebelgique.com — chapelle de Climbach (Vosges du Nord)
+https://lesvoyageursdebelgique.com/2023/01/28/la-chapelle-de-climbach/
+
+# yapaslefeuaulac.ch — Ferrette : château, grotte des nains, Erdwibalaschlucht (Sundgau)
+https://www.yapaslefeuaulac.ch/escapade-dans-le-sundgau-alsacien-entre-grotte-des-nains-et-montagne-des-lamas/
+# yapaslefeuaulac.ch — Sundgau : Friesen, Dannemarie, vallée de la Largue
+https://www.yapaslefeuaulac.ch/visiter-sundgau-tourisme-memoire-alsace/
+
+# mes-photos-57400.over-blog.com — châteaux Wineck, Wittschloessel, Schoeneck (Dambach)
+https://mes-photos-57400.over-blog.com/article-randonnee-du-wineck-wittschloessel-et-schoeneck-58722746.html
+
+# vosgesquipeut.fr — 4 châteaux d'Obersteinbach : Windstein, Wineck, Petit Arnsberg
+https://vosgesquipeut.fr/les-4-chateaux-autour-dobersteinbach-dans-les-vosges-du-nord/
+
+# mein-wochenende-im-elsass.com (de) — château du Landsberg (Barr)
+https://www.mein-wochenende-im-elsass.com/wandern-schloss-landsberg/
+
+# --- BIVOUAC & VAN LIFE (spots de nuit, aires, coins van) ---
+
+# chouchouetphilou.wordpress.com — bivouac 3j : Belbriette, étang des Dames, Tanet
+https://chouchouetphilou.wordpress.com/2020/07/02/3-jours-de-rando-bivouac-dans-les-vosges/
+
+# soandbia.com — bivouac lac d'Altenweiher, Rainkopf, Kastelberg
+https://soandbia.com/vosges/
+
+# curlwildfree.com — road trip van hiver : lacs Blanc, Noir, Blanchemer, Corbeaux
+https://www.curlwildfree.com/road-trip-en-hiver-dans-les-vosges/destinations-tous-les-articles/france/
+
+# allersimple-vanlife.fr — van 15j : étangs du Frac, Mollière, lac Lispach, Saut du Bouchot
+https://www.allersimple-vanlife.fr/post/road-trip-dans-les-vosges-15-jours-en-van
+
+# timeoffaroundtheworld.com (en) — van : Longemer, Lac Blanc/Noir, Route des Crêtes
+https://timeoffaroundtheworld.com/2026/05/01/vosges-with-kids-by-campervan-lakes-villages-hikes-scenic-stops/
+
+# madamebougeotte.com — trek bivouac 4j : Lispach, Altenweiher, refuges Champis & Hus
+https://madamebougeotte.com/recit-voyages/trek-vosges-rando-bivouac/
+
+# hin-fahren.de (de) — Route des Crêtes en van : cols Bagenelles, Calvaire, Markstein
+https://hin-fahren.de/reisetipp-elsass-auf-der-route-des-cretes-durch-die-vogesen/
+
+# vanlife-voyages.com — van : lacs Blanc, Corbeaux, Forlet, Lande ; Tête des Faux
+https://vanlife-voyages.com/road-trip-vosges/
+
+# les-randonnees-de-marie.fr — sites de bivouac : Gérardmer, Hohneck, forêt de Champdray
+https://les-randonnees-de-marie.fr/bivouac-vosges-sites-nature/
+
+# zuhause-im-wohnmobil.de (de) — Stellplätze : Munster, col de la Schlucht, Petit Ballon
+https://www.zuhause-im-wohnmobil.de/reisebericht-frankreich-vogesen/
+
+# --- REFUGES & TABLES (fermes-auberges, refuges, buvettes — tarifs à capter) ---
+
+# mon-week-end-en-alsace.com — 12 fermes-auberges : Molkenrain, Freundstein, Kahlenwasen…
+https://www.mon-week-end-en-alsace.com/meilleures-fermes-auberges-alsace/
+
+# vosgesquipeut.fr — fermes-auberges à pied : Freundstein, Grand Ballon, Haag, Ostein
+https://vosgesquipeut.fr/micro-aventure-a-la-decouverte-des-meilleures-ferme-auberge-des-vosges/
+
+# rando-bivouac.over-blog.com — Rothenbach : fermes-auberges Firstmiss, Steinwasen
+https://rando-bivouac.over-blog.com/article-23392658.html
+
+# empreintedelavie.com — trek Hohneck 3j : ferme-auberge du Frankenthal, auberge du sommet
+https://www.empreintedelavie.com/vosges-un-trek-de-3-jours-autour-du-hohneck/
+
+# carnetsderando.net — Grand Ballon 3j : chalet-hôtel, fermes Rothenbrunnen & Haag
+https://www.carnetsderando.net/vosges-3-jours-autour-grand-ballon/
+
+# voyage-en-photos.fr — Tour Grand Ballon : refuges Storkenkopf, fermes Kahlenwasen & Strohberg
+https://voyage-en-photos.fr/rando-grand-ballon-petit-markstein-trek-itinerance-photo-vosges/
+
+# ltd-rando68.over-blog.com — Grand Tour du Petit Ballon : fermes Rothenbrunnen, Buchwald
+https://ltd-rando68.over-blog.com/2019/07/col-de-boenlesgrab-le-grand-tour-du-petit-ballon-r-257.html
+
+# von-unterwegs.de (de) — fermes-auberges : Kastelberg, Gresson, Le Haag, Gaschney
+https://von-unterwegs.de/ferme-auberges-die-urigen-berggasthoefe-der-vogesen/
+
+# wildroad.fr — refuges non gardés : Haycot, refuge des Fontaines, chalet Saint-Hubert (Brézouard)
+https://wildroad.fr/massif-des-vosges-randonner-dormir-refuge-non-garde/
+
+# escapadeur.eu — Thann à Munster : chalet-hôtel Grand Ballon, refuge Schiessrothried
+https://escapadeur.eu/alsace/randonnee-vosges/randonner-sans-voiture-vosges-thann-munster/
+
+# --- BAIGNADE & EAU (lacs baignables, vasques, cascades) ---
+
+# docteur-voyage.fr — baignade Vosges : lac des Corbeaux, marmites de la Vologne, Fecht
+https://www.docteur-voyage.fr/ou-se-baigner-dans-les-vosges/
+# docteur-voyage.fr — baignade Alsace : Kruth-Wildenstein, étang de Hanau, Nideck
+https://www.docteur-voyage.fr/ou-se-baigner-en-alsace/
+
+# lespepitesdefrance.com — 6 cascades : Pissoire, Heidenbad, Saut de l'Ognon, Tendon
+https://lespepitesdefrance.com/blog/6-plus-belles-cascades-vosges/
+
+# lespetitsbaroudeurs.com — 3 cascades : Tendon, Pissoire, Saut du Bouchot
+https://www.lespetitsbaroudeurs.com/blog/les-3-plus-belles-cascades-des-vosges-en-famille/
+
+# my-weekend-in-alsace.com (en) — lac de Kruth-Wildenstein (vallée de la Thur)
+https://www.my-weekend-in-alsace.com/swimming-vosges-lake-kruth-wildenstein/
+
+# lamaisonduvoyageur.com — Bas-Rhin secret : cascade de Kalbsgiessen, Moder, forêt d'Erstein
+https://www.lamaisonduvoyageur.com/bas-rhin-alsace-hors-des-sentiers-battus-lieux-secrets-a-explorer/
+
+# ferienhausmiete.de (de) — plans d'eau : Lac Vert, Longemer, plateau des Mille Étangs
+https://www.ferienhausmiete.de/blog/vogesen-unsere-top-tipps-fuer-den-sommer/
+
+# naturfotocamp.de (de) — cascades : Saut du Bouchot, Saut des Cuves, Tendon, Charlemagne
+https://naturfotocamp.de/blog/post/vis-a-vis-avec-les-cascades-des-vosges

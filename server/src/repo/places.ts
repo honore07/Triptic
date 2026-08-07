@@ -15,6 +15,12 @@ export interface PlaceInput {
   elevation_m?: number | null;
   tags?: string[];
   summary?: string | null;
+  /** Infos pratiques factuelles (migration 0006) — optionnelles. */
+  price_min_eur?: number | null;
+  price_max_eur?: number | null;
+  price_free?: boolean | null;
+  best_season?: string[] | null;
+  difficulty?: string | null;
   notoriety?: number;
   confidence?: number;
   status?: 'active' | 'pending' | 'rejected';
@@ -118,6 +124,11 @@ export class PgPlaceRepo {
             elevation_m: p.elevation_m ?? null,
             tags: p.tags ?? [],
             summary: p.summary ?? null,
+            price_min_eur: p.price_min_eur ?? null,
+            price_max_eur: p.price_max_eur ?? null,
+            price_free: p.price_free ?? null,
+            best_season: p.best_season ?? null,
+            difficulty: p.difficulty ?? null,
             notoriety: p.notoriety ?? 20,
             confidence: p.confidence ?? 50,
             status: p.status ?? 'active',
@@ -141,9 +152,15 @@ export class PgPlaceRepo {
             kind: sql`excluded.kind`,
             location: sql`excluded.location`,
             region: sql`excluded.region`,
-            elevation_m: sql`excluded.elevation_m`,
+            elevation_m: sql`COALESCE(excluded.elevation_m, places.elevation_m)`,
             tags: sql`excluded.tags`,
             summary: sql`excluded.summary`,
+            // Une info pratique connue n'est pas écrasée par un import qui ne la donne pas
+            price_min_eur: sql`COALESCE(excluded.price_min_eur, places.price_min_eur)`,
+            price_max_eur: sql`COALESCE(excluded.price_max_eur, places.price_max_eur)`,
+            price_free: sql`COALESCE(excluded.price_free, places.price_free)`,
+            best_season: sql`COALESCE(excluded.best_season, places.best_season)`,
+            difficulty: sql`COALESCE(excluded.difficulty, places.difficulty)`,
             notoriety: sql`excluded.notoriety`,
             wikidata_id: sql`excluded.wikidata_id`,
             wikipedia: sql`excluded.wikipedia`,

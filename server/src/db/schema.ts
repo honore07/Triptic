@@ -86,6 +86,12 @@ export const places = pgTable('places', {
   elevation_m: integer('elevation_m'),
   tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
   summary: text('summary'),
+  // Infos pratiques factuelles (extension TDM blogs, migration 0006)
+  price_min_eur: integer('price_min_eur'),
+  price_max_eur: integer('price_max_eur'),
+  price_free: boolean('price_free'),
+  best_season: text('best_season').array(), // {spring,summer,autumn,winter}
+  difficulty: text('difficulty'), // easy | medium | hard
   notoriety: integer('notoriety').notNull().default(20),
   confidence: integer('confidence').notNull().default(50),
   status: text('status').notNull().default('active'),
