@@ -116,7 +116,9 @@ export async function reviewFact(
           }),
         },
       ],
-      maxTokens: 800,
+      // Deepseek v4 (reasoner) raisonne avant de répondre : sous ~4000 tokens
+      // la réponse revient vide → parse KO → quarantaine « LLM indisponible ».
+      maxTokens: 4000,
     });
     const verdict = llmVerdictSchema.parse(extractJson(raw));
     if (verdict.tdm_reservation) reasons.push('réserve TDM détectée dans la page/CGU');

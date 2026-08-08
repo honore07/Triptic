@@ -195,6 +195,13 @@ export class PgPlaceRepo {
       const match = (existing as unknown as { id: string }[])[0];
       if (match) {
         const traceWkt = toTraceWkt(p.trace);
+        // best_season est un enum sûr (spring/summer/autumn/winter) : on
+        // construit le littéral text[] nous-mêmes. Interpoler le tableau JS
+        // directement produisait un SQL invalide (syntax error near ")").
+        const seasonSql =
+          p.best_season && p.best_season.length > 0
+            ? sql`${`{${p.best_season.join(',')}}`}::text[]`
+            : sql`NULL::text[]`;
         await this.db.execute(sql`
           UPDATE places SET
             summary       = COALESCE(summary, ${p.summary ?? null}),
@@ -206,7 +213,7 @@ export class PgPlaceRepo {
             price_min_eur = COALESCE(price_min_eur, ${p.price_min_eur ?? null}),
             price_max_eur = COALESCE(price_max_eur, ${p.price_max_eur ?? null}),
             price_free    = COALESCE(price_free, ${p.price_free ?? null}),
-            best_season   = COALESCE(best_season, ${(p.best_season ?? null) as unknown as string[] | null}::text[]),
+            best_season   = COALESCE(best_season, ${seasonSql}),
             difficulty    = COALESCE(difficulty, ${p.difficulty ?? null}),
             updated_at    = now()
           WHERE id = ${match.id}
