@@ -1,0 +1,88 @@
+# === Alpes italiennes — 2026-08-09 ===
+# 4 angles (rando, villages, refuges, baignade), 38 articles, blogs indépendants it/de/en/fr.
+# Régions : Piémont, Val d'Aoste, Lombardie, Dolomites/Haut-Adige, Trentin, Frioul/Carnie.
+# Lancer avec --region=alpes-it.
+
+# --- RANDO & NATURE ---
+# montagnadiviaggi.it (it) — Dolomiti segrete : Welsperg, Val Canali, Limides
+https://www.montagnadiviaggi.it/2024/04/dolomiti-poco-conosciute-insolite-segrete.html
+# wildheartgipsysoul.wordpress.com (it) — Dolomiti meno conosciute
+https://wildheartgipsysoul.wordpress.com/2020/08/03/i-posti-meno-conosciuti-e-da-non-perdere-delle-dolomiti-parte-2/
+# diariodiavventure.com (it) — Val d'Aosta : itinerari in giornata
+https://diariodiavventure.com/escursioni-valle-aosta/
+# theitaliansmoothie.com (it) — Carnia : Lago Dimon, Paluzza
+https://theitaliansmoothie.com/2021/04/09/trekking-invernale-da-castel-valdaier-verso-il-lago-dimon-epic-fail-pranzo-memorabile-a-paluzza/
+# theitaliansmoothie.com (it) — Carnia : Creta di Timau, Cima Avostanis
+https://theitaliansmoothie.com/2019/09/27/escursione-ad-anello-della-creta-di-timau/
+# aventureros.it (it) — Carnia : Lago Avostanis, Casera Pramosio
+https://aventureros.it/lago-avostanis-una-camminata-per-tutti/
+# cascatetrekking.com (it) — Gran Paradiso : Col Rosset, Ceresole, Nivolet
+https://www.cascatetrekking.com/trekking/italia/piemonte/torino/ceresole-reale-col-rosset/
+# girovagandointrentino.it (it) — Val di Non : Lago Trenta, Malga Bordolona
+https://girovagandointrentino.it/escursioni/malga-bordolona-lago-trenta/
+# trekkingintrentino.blogspot.com (it) — Lagorai : Lago di Bocche, Passo Valles
+http://trekkingintrentino.blogspot.com/2011/10/malga-e-lago-bocche.html
+# elimeli.it (it) — Friuli : 10 escursioni ad anello
+https://www.elimeli.it/appunti-di-viaggio/italia/friuli-venezia-giulia/escursioni-ad-anello/
+# herwildway.com (en) — Gran Paradiso : Lake Djouan, Col Fenetre
+https://herwildway.com/2019/01/18/gran-paradiso-national-park-italy/
+# globusliebe.com (de) — Südtirol : 13 Touren (Geheimtipps)
+https://globusliebe.com/wandern-in-suedtirol/
+
+# --- VILLAGES & PATRIMOINE ---
+# montagnadiviaggi.it (it) — Carnia : Sauris, Pesariis, Illegio, Sutrio
+https://www.montagnadiviaggi.it/2019/12/carnia-cosa-vedere.html
+# madame-fernweh.de (de) — Südtirol : Glurns, Passeiertal, Kloster Neustift
+https://madame-fernweh.de/geheimtipps-suedtirol/
+# viaggiacorrisogna.it (it) — Carnia : Ovaro, Sauris, Sappada, Forni Avoltri
+https://www.viaggiacorrisogna.it/cosa-vedere-in-carnia/
+# rafaroundtheworld.com (it) — Friuli : Sauris, Sutrio, Val Saisera, Erto
+https://rafaroundtheworld.com/2020/05/10/itinerario-in-friuli-venezia-giulia/
+# michelanellevalli.com (it) — Valle Maira : Elva et hameaux occitans
+https://michelanellevalli.com/elva-anima-autentica-della-valle-maira/
+# ilmondosecondogipsy.it (it) — Alto Adige : Val di Funes, Val d'Ultimo, Val Sarentino
+https://www.ilmondosecondogipsy.it/5-valli-poco-conosciute-in-alto-adige/
+# donnavagabonda.com (it) — Val d'Aosta : Forte di Bard, châteaux Fenis, Sarriod
+https://donnavagabonda.com/pianificazione-del-viaggio-castelli-borghi-e-natura-valdostani/
+# fringeintravel.com (it) — Valchiavenna : Val Codera, Codera, Cii
+https://fringeintravel.com/val-codera-come-arrivare-alla-valle-raggiungibile-solo-a-piedi/
+# ilpunto.unannoinpiemonte.com (it) — Monte Rosa : villages Walser (Rimella, Alagna)
+http://ilpunto.unannoinpiemonte.com/?p=2333
+
+# --- REFUGES & TABLES ---
+# volpidelvajolet.it (it) — Dolomiti : 10 rifugi (Lagazuoi, Nuvolau, Locatelli…)
+https://www.volpidelvajolet.it/2026/05/i-10-rifugi-piu-belli-delle-dolomiti.html
+# inafarawayland.com (en) — Dolomiti : rifugi (Vajolet, Pradidali, Locatelli…)
+https://inafarawayland.com/mountain-huts-in-the-dolomites-info/
+# kommwirmachendaseinfach.de (de) — Südtirol : Grasleitenhütte, Tierser Alpl
+https://kommwirmachendaseinfach.de/wandern-in-den-dolomiten-suedtirol-italien-tipps/
+# noiconlevaligie.com (it) — Valtellina/Stelvio : Malga Valle dell'Alpe, Passo Gavia
+https://www.noiconlevaligie.com/malga-valle-dellalpe
+# diariodibordoonline.com (it) — Orobie : Rifugio Curò, Barbellino, Cascate del Serio
+https://diariodibordoonline.com/2019/02/13/orobie-centrali/
+# theitaliansmoothie.com (it) — Carnia : Rifugio Marinelli, Coglians
+https://theitaliansmoothie.com/2019/09/11/cena-e-notte-al-rifugio-marinelli-con-il-cane-ecco-la-nostra-esperienza-vacanze-in-carnia-episodio-2/
+# storiedicibo.it (it) — Valle Maira : 5 rifugi (Gardetta, Campo Base…)
+https://www.storiedicibo.it/valle-maira-5-rifugi-da-cui-partire-zaino-in-spalla/
+# lorisastesano.com (it) — Valle Maira : rifugi Campo Base, Gardetta, Viviere
+https://lorisastesano.com/valle-maira-come-arrivare-dove-mangiare-dormire-cosa-fare-e-vedere/
+# civediamoquandotorno.it (it) — Valpelline : Rifugio Capanna Aosta, Prarayer
+https://www.civediamoquandotorno.it/2022/06/15/valle-daosta-valpelline-rifugio-capanna-aosta/
+# vmintrekland.altervista.org (it) — Dolomiti di Brenta : Tuckett, Brentei, Alimonta
+https://vmintrekland.altervista.org/due-giorni-di-trekking-nelle-dolomiti-di-brenta-notte-in-rifugio/
+
+# --- BAIGNADE & EAU ---
+# gitefuoriportainpiemonte.it (it) — Piémont : Antrona, Ceresole, laghi balneabili
+https://www.gitefuoriportainpiemonte.it/i-laghi-alpini-del-piemonte/
+# acchiappamappa.com (it) — Lombardie : Val di Mello, laghetti alpini
+https://acchiappamappa.com/dove-fare-il-bagno-in-lombardia/
+# ilmondosecondogipsy.it (it) — Val di Mello : Lago Bidet della Contessa, pozze
+https://www.ilmondosecondogipsy.it/val-di-mello-e-lago-bidet-della-contessa/
+# thetravellinglight.substack.com (en) — Monte Rosa : Lago di Frudière (Gressoney)
+https://thetravellinglight.substack.com/p/wild-summer-swimming-spots-in-italy-f46
+# lucavivan.com (it) — Val Tramontina : Pozze Smeraldine, Lago del Ciul
+https://www.lucavivan.com/pozze-smeraldine-val-tramontina-una-gita-in-friuli/
+# oltreconfine.net (it) — Tramonti di Sopra : Pozze Smeraldine, Lago di Ciùl
+https://oltreconfine.net/pozze-smeraldine-tramonti-di-sopra/
+# volutta.it (it) — Trentino : laghi segreti (Valagola, Malghette, Colbricon)
+https://volutta.it/laghi-segreti-del-trentino-acque-turchesi-e-silenzio-assoluto/
