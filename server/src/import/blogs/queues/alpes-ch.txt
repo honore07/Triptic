@@ -1,0 +1,86 @@
+# === Alpes suisses — 2026-08-09 ===
+# 4 angles (rando, villages, refuges, baignade), 37 articles, blogs indépendants fr/de/en/it.
+# Régions : Valais, Oberland bernois, Grisons/Engadine, Tessin, Glarnerland, Suisse centrale.
+# Lancer avec --region=alpes-ch.
+
+# --- RANDO & NATURE ---
+# unterwegs-zuhause.com (de) — Stockhorn : Hinterstockensee, Oberstockensee
+https://unterwegs-zuhause.com/wanderung-im-berner-oberland-zwei-bergseen-am-stockhorn-entdecken/
+# rapunzel-will-raus.ch (de) — Bernbiet : Seebergsee, Diemtigtal, Niesen
+https://www.rapunzel-will-raus.ch/wandern-bernbiet/
+# travelita-blog.com (en) — Engadine : Val Roseg, Lej da Vadret
+https://travelita-blog.com/val-roseg-hike/
+# retotravelling.wordpress.com (en) — Engadine : Lej da Staz, Val Fex, Muottas Muragl
+https://retotravelling.wordpress.com/2018/10/07/engadin/
+# madamebougeotte.com (fr) — Val d'Hérens : Lac Bleu, Ferpècle, Pyramides d'Euseigne
+https://madamebougeotte.com/recit-voyages/val-d-herens-suisse-randonnees/
+# hikesandtravels.com (fr) — Valais : Lac de Louvie, Moiry, Stellisee, Salanfe
+https://hikesandtravels.com/idees-rando-dans-le-valais/
+# gioiaadaltaquota.ch (it) — Tessin : Lago del Naret, Laghetto Laiòzz, Cristallina
+https://gioiaadaltaquota.ch/2021/09/26/lago-del-naret/
+# gioiaadaltaquota.ch (it) — Val Calanca : Lagh de Calvaresc
+https://gioiaadaltaquota.ch/2020/11/12/lago-calvaresc-quando-per-arrivarci-devi-metterci-il-cuore/
+# scheissaufsalter.com (de) — Glarnerland : Oberblegisee, Braunwald
+https://www.scheissaufsalter.com/post/oberblegisee-wanderung-ab-braunwald-versteckter-bergsee-im-herzen-des-glarnerlands
+
+# --- VILLAGES & PATRIMOINE ---
+# carnetdescapades.com (fr) — Valais : Val d'Hérens, Saillon, Sion
+https://www.carnetdescapades.com/europe/suisse/visiter-valais-authentique.html
+# labouclevoyageuse.fr (fr) — Val d'Anniviers : Grimentz, Zinal, Vercorin
+https://www.labouclevoyageuse.fr/carnet-suisse-val-danniviers/
+# thomascrauwels.ch (en) — Lötschental : Blatten, Kippel, Wiler
+https://www.thomascrauwels.ch/en/blog/lotschental-vallee-secrete-du-valais-entre-traditions-et-masques-ancestraux/
+# thomascrauwels.ch (en) — Gimmelwald, Mürren (Lauterbrunnen)
+https://www.thomascrauwels.ch/en/blog/gimmelwald-village-sans-route-dernier-bastion-de-lauthenticite-alpine/
+# acchiappamappa.com (it) — Val Bavona : Foroglio, Val Calnègia
+https://acchiappamappa.com/foroglio-ticino/
+# togetherinswitzerland.com (en) — Val Verzasca : Corippo, Lavertezzo, Sonogno
+https://togetherinswitzerland.com/corippo-switzerland-ticinos-smallest-charming-village/
+# sommertage.com (de) — Basse-Engadine : Guarda, Ardez, Tschlin, Tarasp
+https://www.sommertage.com/unterengadin-tipps/
+# stadtstreunen.at (de) — Val Müstair : Müstair, Santa Maria, Lü
+https://stadtstreunen.at/bainvgnue-en-val-muestair-geschichten-aus-graubuenden/
+# lucarota.com (it) — Val Bregaglia : Soglio, Maloja
+https://lucarota.com/2025/12/17/la-val-bregaglia-che-si-e-ci-racconta/
+
+# --- REFUGES & TABLES ---
+# hellolaroux.com (fr) — Arolla : Cabane Bertol, Cabane des Vignettes
+https://hellolaroux.com/cabane-bertol-suisse/
+# off-the-trail.de (de) — Aletsch : Oberaletschhütte, Belalp
+https://www.off-the-trail.de/oberaletschhuette/
+# off-the-trail.de (de) — Urbachtal : Gaulihütte SAC, Mattenalpsee
+https://www.off-the-trail.de/gaulihuette/
+# rencontrelemonde.com (fr) — Val Maggia : capanne Alzasca, Arena, Bosco Gurin
+https://rencontrelemonde.com/5-jours-de-trekking-tessin-vallee-maggia-bosco-gurin
+# globetrotterkyle.com (en) — Jungfrau : Faulhorn, Glecksteinhütte, Blüemlisalphütte
+https://globetrotterkyle.com/hut-to-hut-hiking-in-switzerland-an-epic-adventure/
+# windowseatodyssey.com (en) — Mürren : Rotstockhütte, Schilthornhütte
+https://windowseatodyssey.com/2025/09/22/hut-to-hut-in-the-swiss-alps/
+# lespetitsbaroudeurs.com (fr) — Valais : cabanes Moiry, Prafleuri, Lämmerenhütte
+https://www.lespetitsbaroudeurs.com/blog/5-randonnees-avec-cabanes-en-suisse/
+# i-trekkings.net (fr) — Haute-Engadine : Cabane Coaz, Fuorcla Surlej
+https://www.i-trekkings.net/carnet-outdoor/randonnee-en-engadine/
+# traildelou.canalblog.com (fr) — Val de Bagnes : cabanes Louvie, Panossière
+https://traildelou.canalblog.com/archives/2020/10/03/38536254.html
+# off-the-path.com (de) — Greina : Terrihütte, Medelserhütte
+https://www.off-the-path.com/huettenwanderung-graubuenden/
+# twoswisshikers.net (en) — Val Bavona : Capanna Pian di Crest
+https://www.twoswisshikers.net/articles/capanna-pian-di-crest/
+
+# --- BAIGNADE & EAU ---
+# thisexpansiveadventure.com (en) — Oberland : Oeschinensee, Bachalpsee, Brienzersee
+https://www.thisexpansiveadventure.com/blog/2021/five-accessible-wild-swimming-locations-to-try-in-the-bernese-alps-switzerland/
+# switzerlandscenic.ch (de) — 10 Bergseen : Lej da Staz, Caumasee, Seealpsee, Salanfe
+https://switzerlandscenic.ch/die-10-schoensten-bergseen-der-schweiz-geheimtipps-und-klassiker/
+# travellingcarola.com (de) — Bergseen : Lagh da Palü, Saoseo, Bannalpsee, Stellisee
+https://travellingcarola.com/bergseen/
+# reisememo.ch (de) — Engadine : Lej da Staz
+https://reisememo.ch/schweiz/lej-da-staz-wanderung-st-moritz
+# loga.ch (de) — Engadine : Cavloc, Lej da Staz, Silsersee
+https://loga.ch/blog/detail/die-atemberaubenden-bergseen-des-engadins
+# youpitrip.ch (fr) — Valais : Lac Bleu d'Arolla, Val d'Hérens
+https://www.youpitrip.ch/post/mes-4-randonn%C3%A9es-lacs-et-panoramas-pr%C3%A9f%C3%A9r%C3%A9es-en-valais
+# vivici.ch (it) — Tessin : Maggia, Verzasca, pozze
+https://vivici.ch/blog/dove-fare-bagno-ticino-bambini
+# bergliteratur.ch (de) — wild swim : Aua da Val Mora, Talalpsee, Walensee
+https://bergliteratur.ch/wild-swim/
