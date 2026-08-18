@@ -12,6 +12,12 @@ export const env = {
   appUrl: process.env['APP_URL'] ?? 'http://localhost:5173',
   databaseUrl: process.env['DATABASE_URL'],
   jwtSecret: process.env['JWT_SECRET'],
+  /**
+   * Projet Supabase (auth) — ex. https://xxxx.supabase.co. Défini → les JWT
+   * sont vérifiés via son JWKS (ES256). Absent → repli HS256 sur JWT_SECRET
+   * (tests), sinon utilisateur anonyme.
+   */
+  supabaseUrl: process.env['SUPABASE_URL'] ?? null,
   /** GraphHopper self-hosted (VPS) — null = routing désactivé, fallback LLM. */
   graphhopperUrl: process.env['GRAPHHOPPER_URL'] ?? null,
   /**

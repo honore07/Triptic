@@ -1,6 +1,8 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Backpack, Compass, MapPinPlus } from 'lucide-react';
+import { Backpack, Compass, LogOut, MapPinPlus, UserRound } from 'lucide-react';
+import { supabase } from './lib/supabase';
+import { useUserStore } from './store/userStore';
 import { LangSwitcher } from './components/LangSwitcher';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
@@ -14,6 +16,39 @@ import { Plan } from './pages/Plan';
 import { SavedTrip } from './pages/SavedTrip';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
+import { AuthPage } from './pages/Auth';
+
+/** Lien Compte (déconnecté) ou bouton Déconnexion (connecté). */
+function AccountNav() {
+  const { t } = useTranslation();
+  const email = useUserStore((s) => s.email);
+  if (!supabase) return null;
+  const client = supabase;
+  if (email) {
+    return (
+      <button
+        type="button"
+        onClick={() => void client.auth.signOut()}
+        title={email}
+        className="flex min-h-11 items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+      >
+        <LogOut size={15} aria-hidden="true" />
+        <span className="hidden sm:inline">{t('auth.logout')}</span>
+        <span className="sr-only sm:hidden">{t('auth.logout')}</span>
+      </button>
+    );
+  }
+  return (
+    <Link
+      to="/login"
+      className="flex min-h-11 items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+    >
+      <UserRound size={15} aria-hidden="true" />
+      <span className="hidden sm:inline">{t('auth.login_nav')}</span>
+      <span className="sr-only sm:hidden">{t('auth.login_nav')}</span>
+    </Link>
+  );
+}
 
 /** Page 404 (route catch-all) — message + retour accueil, jamais de page blanche. */
 function NotFound() {
@@ -62,6 +97,7 @@ export function App() {
             <span className="hidden sm:inline">{t('places.nav')}</span>
             <span className="sr-only sm:hidden">{t('places.nav')}</span>
           </Link>
+          <AccountNav />
           <LangSwitcher />
         </nav>
       </header>
@@ -74,6 +110,7 @@ export function App() {
         <Route path="/trips/:id" element={<SavedTrip />} />
         <Route path="/contribute" element={<Contribute />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/login" element={<AuthPage />} />
         <Route path="/legal/attributions" element={<LegalAttributions />} />
         <Route path="/legal/tdm" element={<LegalTdm />} />
         <Route path="*" element={<NotFound />} />

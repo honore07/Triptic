@@ -11,6 +11,7 @@ import type {
   TripTuning,
 } from '@triptic/shared';
 import type { ExplorePlace } from './explore';
+import { useUserStore } from '../store/userStore';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -63,9 +64,14 @@ export type GenerateEvent =
   | { event: 'done'; data: Record<string, never> };
 
 function planHeaders(plan: PlanId): HeadersInit {
-  // Sans auth Supabase, le plan passe par x-plan — honoré seulement si le
-  // serveur tourne en mode démo/dev (avec auth, le plan est dérivé du JWT)
-  return plan === 'free' ? {} : { 'x-plan': plan };
+  // Session Supabase → Authorization: Bearer (le serveur dérive l'identité
+  // du JWT). Le header x-plan reste pour le mode démo/dev sans auth —
+  // ignoré par le serveur en production.
+  const token = useUserStore.getState().accessToken;
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(plan === 'free' ? {} : { 'x-plan': plan }),
+  };
 }
 
 /**

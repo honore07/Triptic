@@ -348,5 +348,21 @@
     "empty": "Aucune photo disponible pour ce lieu.",
     "photo_alt": "{{place}} — photo {{n}}",
     "video_alt": "{{place}} — vidéo {{n}}"
+  },
+  "auth": {
+    "login_title": "Connexion",
+    "signup_title": "Créer un compte",
+    "email": "Email",
+    "password": "Mot de passe",
+    "password_hint": "6 caractères minimum",
+    "submit_login": "Se connecter",
+    "submit_signup": "Créer mon compte",
+    "switch_to_signup": "Pas encore de compte ? Inscris-toi",
+    "switch_to_login": "Déjà un compte ? Connecte-toi",
+    "error_invalid": "Email ou mot de passe incorrect.",
+    "error_signup": "Inscription impossible — vérifie l'email et réessaie.",
+    "logout": "Se déconnecter",
+    "login_nav": "Compte",
+    "unavailable": "La connexion n'est pas disponible pour le moment."
   }
 }

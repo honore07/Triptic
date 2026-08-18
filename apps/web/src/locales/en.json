@@ -348,5 +348,21 @@
     "empty": "No photo available for this place.",
     "photo_alt": "{{place}} — photo {{n}}",
     "video_alt": "{{place}} — video {{n}}"
+  },
+  "auth": {
+    "login_title": "Log in",
+    "signup_title": "Create an account",
+    "email": "Email",
+    "password": "Password",
+    "password_hint": "At least 6 characters",
+    "submit_login": "Log in",
+    "submit_signup": "Create my account",
+    "switch_to_signup": "No account yet? Sign up",
+    "switch_to_login": "Already have an account? Log in",
+    "error_invalid": "Incorrect email or password.",
+    "error_signup": "Sign-up failed — check the email and try again.",
+    "logout": "Log out",
+    "login_nav": "Account",
+    "unavailable": "Sign-in is unavailable right now."
   }
 }

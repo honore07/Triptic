@@ -348,5 +348,21 @@
     "empty": "Kein Foto für diesen Ort verfügbar.",
     "photo_alt": "{{place}} — Foto {{n}}",
     "video_alt": "{{place}} — Video {{n}}"
+  },
+  "auth": {
+    "login_title": "Anmelden",
+    "signup_title": "Konto erstellen",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "password_hint": "Mindestens 6 Zeichen",
+    "submit_login": "Anmelden",
+    "submit_signup": "Konto erstellen",
+    "switch_to_signup": "Noch kein Konto? Registrieren",
+    "switch_to_login": "Schon ein Konto? Anmelden",
+    "error_invalid": "E-Mail oder Passwort falsch.",
+    "error_signup": "Registrierung fehlgeschlagen — prüfe die E-Mail und versuche es erneut.",
+    "logout": "Abmelden",
+    "login_nav": "Konto",
+    "unavailable": "Die Anmeldung ist derzeit nicht verfügbar."
   }
 }

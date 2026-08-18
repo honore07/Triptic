@@ -5,6 +5,7 @@ import { tripDaySchema } from '@triptic/ai-engine';
 import { buildGpx } from '@triptic/map-utils';
 import { dateForTripDay, PLANS } from '@triptic/shared';
 import type { TripRepo } from '../repo/trips.js';
+import type { PgUserRepo } from '../repo/users.js';
 import { recomputeTrip } from '../services/recompute.js';
 import type { RoutingService } from '../services/routing.js';
 import {
@@ -56,6 +57,7 @@ export function createTripsRouter(
   repo: TripRepo,
   routing?: RoutingService,
   weather?: WeatherService,
+  users?: PgUserRepo,
 ): Router {
   const router = Router();
 
@@ -129,6 +131,8 @@ export function createTripsRouter(
       return;
     }
     const body = parsed.data;
+    // FK trips.user_id → users.id : provisionner le compte au premier trip
+    await users?.ensure(req.user);
     const trip = await repo.save({
       user_id: req.user.id,
       title: body.title,

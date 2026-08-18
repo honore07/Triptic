@@ -21,7 +21,8 @@ import { createAiRouter } from './routes/ai.js';
 import { createPlacesRouter } from './routes/places.js';
 import { createPhotosRouter } from './routes/photos.js';
 import { createPublicTripsRouter, createTripsRouter } from './routes/trips.js';
-import { QuotaService } from './services/quota.js';
+import { QuotaService, type Quota } from './services/quota.js';
+import type { PgUserRepo } from './repo/users.js';
 import { EnrichmentService } from './services/enrichment.js';
 import { renderIndexWithTripOg } from './services/og.js';
 import { RoutingService } from './services/routing.js';
@@ -30,7 +31,9 @@ import { WeatherService } from './services/weather.js';
 export interface AppDeps {
   provider: LlmProvider;
   repo?: TripRepo;
-  quota?: QuotaService;
+  quota?: Quota;
+  /** Provisioning des comptes Supabase (FK users) — prod avec BDD seulement. */
+  users?: PgUserRepo;
   /** Base de connaissance des lieux — active le grounding des générations. */
   placeRepo?: PgPlaceRepo;
   /** Routing GraphHopper — segments réels des trips (0.2/0.3). */
@@ -39,7 +42,15 @@ export interface AppDeps {
   webDist?: string;
 }
 
-export function createApp({ provider, repo, quota, placeRepo, routing, webDist }: AppDeps): Express {
+export function createApp({
+  provider,
+  repo,
+  quota,
+  users,
+  placeRepo,
+  routing,
+  webDist,
+}: AppDeps): Express {
   const app = express();
   const tripRepo = repo ?? new MemoryTripRepo();
   const quotaService = quota ?? new QuotaService();
@@ -87,6 +98,8 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
             'https://images.pexels.com',
             'https://upload.wikimedia.org',
             'https://commons.wikimedia.org',
+            // Auth Supabase (signup/login/refresh depuis le navigateur)
+            ...(env.supabaseUrl ? [env.supabaseUrl] : []),
           ],
           fontSrc: ["'self'"],
           frameAncestors: ["'self'"],
@@ -134,7 +147,7 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
   app.use(
     '/api/trips',
     methodAwareRateLimiter,
-    createTripsRouter(tripRepo, routingService, new WeatherService()),
+    createTripsRouter(tripRepo, routingService, new WeatherService(), users),
   );
   app.use('/api/public', readRateLimiter, createPublicTripsRouter(tripRepo));
   app.use('/api/photos', readRateLimiter, createPhotosRouter(provider));
