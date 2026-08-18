@@ -2,15 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web",
+      "name": "triptic-server",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "apps/web", "dev"],
-      "port": 5173
-    },
-    {
-      "name": "api",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "server", "dev"],
+      "runtimeArgs": ["--filter", "@triptic/server", "start"],
       "port": 3001
     }
   ]

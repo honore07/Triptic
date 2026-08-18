@@ -4,12 +4,17 @@ import { fileURLToPath } from 'node:url';
 import express, { type Express } from 'express';
 import compression from 'compression';
 import cors from 'cors';
+import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import type { LlmProvider } from '@triptic/ai-engine';
 import { env } from './env.js';
 import { logger } from './logger.js';
 import { authMiddleware } from './middleware/auth.js';
-import { aiRateLimiter } from './middleware/rateLimit.js';
+import {
+  aiRateLimiter,
+  methodAwareRateLimiter,
+  readRateLimiter,
+} from './middleware/rateLimit.js';
 import { MemoryTripRepo, type TripRepo } from './repo/trips.js';
 import type { PgPlaceRepo } from './repo/places.js';
 import { createAiRouter } from './routes/ai.js';
@@ -44,6 +49,56 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
   // QA 6.5 — ne pas exposer la techno du serveur
   app.disable('x-powered-by');
 
+  // Derrière Traefik (même hôte) en prod : 1 hop de proxy de confiance,
+  // sinon express-rate-limit voit l'IP du proxy pour tous les visiteurs.
+  if (env.isProd) app.set('trust proxy', 1);
+
+  // En-têtes de sécurité + CSP. Les hôtes listés couvrent : tuiles/styles
+  // Mapbox, photos Unsplash/Pexels/Wikimedia, workers blob de mapbox-gl.
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          workerSrc: ["'self'", 'blob:'],
+          childSrc: ['blob:'],
+          // mapbox-gl injecte des styles inline sur le canvas
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: [
+            "'self'",
+            'data:',
+            'blob:',
+            'https://images.unsplash.com',
+            'https://images.pexels.com',
+            'https://upload.wikimedia.org',
+            'https://commons.wikimedia.org',
+            'https://api.mapbox.com',
+          ],
+          // Les hôtes photos figurent AUSSI ici : le service worker Workbox
+          // (runtime caching) refait les requêtes images via fetch(), régi
+          // par connect-src et non img-src.
+          connectSrc: [
+            "'self'",
+            'https://api.mapbox.com',
+            'https://events.mapbox.com',
+            'https://*.tiles.mapbox.com',
+            'https://images.unsplash.com',
+            'https://images.pexels.com',
+            'https://upload.wikimedia.org',
+            'https://commons.wikimedia.org',
+          ],
+          fontSrc: ["'self'"],
+          frameAncestors: ["'self'"],
+        },
+      },
+      // Photos cross-origin (Unsplash/Wikimedia) sans en-têtes CORP :
+      // COEP les bloquerait toutes.
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+
   app.use(cors({ origin: env.appUrl, credentials: true }));
   // QA 6.1 — gzip sur tout ce qui est servi (API JSON + statiques).
   // Les streams SSE (/api/ai/*) sont exclus : la compression les bufferise.
@@ -76,14 +131,18 @@ export function createApp({ provider, repo, quota, placeRepo, routing, webDist }
     aiRateLimiter,
     createAiRouter(provider, quotaService, placeRepo, enrichment, routingService),
   );
-  app.use('/api/trips', createTripsRouter(tripRepo, routingService, new WeatherService()));
-  app.use('/api/public', createPublicTripsRouter(tripRepo));
-  app.use('/api/photos', createPhotosRouter(provider));
+  app.use(
+    '/api/trips',
+    methodAwareRateLimiter,
+    createTripsRouter(tripRepo, routingService, new WeatherService()),
+  );
+  app.use('/api/public', readRateLimiter, createPublicTripsRouter(tripRepo));
+  app.use('/api/photos', readRateLimiter, createPhotosRouter(provider));
   // Monté INCONDITIONNELLEMENT : sans base, les routes qui l'exigent
   // répondent 503 « db_unavailable » (explicite) au lieu de disparaître en
   // 404 HTML, et /trails continue de générer des boucles via GraphHopper —
   // seule source de sortie à la journée qui ne dépend pas de PostGIS.
-  app.use('/api/places', createPlacesRouter(placeRepo, routingService));
+  app.use('/api/places', methodAwareRateLimiter, createPlacesRouter(placeRepo, routingService));
 
   // Production sans reverse proxy dédié (VPS : Traefik occupe 80/443) :
   // Express sert aussi la PWA buildée + fallback SPA.
