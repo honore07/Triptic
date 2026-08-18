@@ -134,6 +134,27 @@ export function createApp({
     res.json({ status: 'ok', version: '0.1.0', provider: provider.name });
   });
 
+  // Identité + plan effectif + quota restant — l'UI s'aligne sur le serveur
+  // (le plan localStorage ne fait foi qu'en mode démo sans auth).
+  app.get('/api/me', async (req, res) => {
+    const { plan, email, authenticated } = req.user;
+    // Quota indisponible (BDD down) ≠ identité indisponible : remaining null
+    let remaining: number | null = null;
+    try {
+      const value = await quotaService.remaining(req.user.id, plan);
+      remaining = Number.isFinite(value) ? value : null;
+    } catch (error) {
+      logger.error({ error, context: 'me-quota' }, 'Quota lookup failed');
+    }
+    res.json({
+      authenticated,
+      email: email ?? null,
+      plan,
+      launch_offer: env.launchOffer && authenticated,
+      remaining,
+    });
+  });
+
   const enrichment = placeRepo
     ? new EnrichmentService(placeRepo, {
         webhookUrl: process.env['N8N_ENRICH_WEBHOOK_URL'],

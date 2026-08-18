@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Backpack, Compass, LogOut, MapPinPlus, UserRound } from 'lucide-react';
+import { Backpack, Compass, LogOut, MapPinPlus, PartyPopper, UserRound } from 'lucide-react';
+import { fetchMe } from './lib/api';
 import { supabase } from './lib/supabase';
 import { useUserStore } from './store/userStore';
 import { LangSwitcher } from './components/LangSwitcher';
@@ -17,6 +19,41 @@ import { SavedTrip } from './pages/SavedTrip';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
 import { AuthPage } from './pages/Auth';
+
+/**
+ * Aligne plan/quota/offre de lancement sur le serveur à chaque changement de
+ * session (le localStorage ne fait foi qu'en mode démo sans auth).
+ */
+function useServerPlan() {
+  const accessToken = useUserStore((s) => s.accessToken);
+  useEffect(() => {
+    if (!supabase) return;
+    void fetchMe().then((me) => {
+      const store = useUserStore.getState();
+      if (!me) return;
+      store.setLaunchOffer(me.launch_offer);
+      if (me.authenticated) {
+        store.setPlan(me.plan);
+        if (me.remaining !== null) store.setRemaining(me.remaining);
+      } else {
+        store.setPlan('free');
+      }
+    });
+  }, [accessToken]);
+}
+
+/** Bandeau « offre de lancement » — tout ouvert tant que le serveur l'applique. */
+function LaunchOfferBanner() {
+  const { t } = useTranslation();
+  const launchOffer = useUserStore((s) => s.launchOffer);
+  if (!launchOffer) return null;
+  return (
+    <p className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-1.5 text-xs font-semibold text-copper-deep">
+      <PartyPopper size={14} aria-hidden="true" />
+      {t('auth.launch_offer_banner')}
+    </p>
+  );
+}
 
 /** Lien Compte (déconnecté) ou bouton Déconnexion (connecté). */
 function AccountNav() {
@@ -65,9 +102,11 @@ function NotFound() {
 
 export function App() {
   const { t } = useTranslation();
+  useServerPlan();
   return (
     <BrowserRouter>
       <OnlineIndicator />
+      <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="font-display text-lg font-bold text-trail">
           TRIP<span className="text-summit">TIC</span>

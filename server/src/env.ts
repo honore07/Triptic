@@ -18,6 +18,17 @@ export const env = {
    * (tests), sinon utilisateur anonyme.
    */
   supabaseUrl: process.env['SUPABASE_URL'] ?? null,
+  /**
+   * Supabase configuré → les écritures et la génération exigent un compte.
+   * Jamais en environnement de test : les suites exercent le mode anonyme.
+   */
+  authRequired:
+    Boolean(process.env['SUPABASE_URL']) && process.env['NODE_ENV'] !== 'test',
+  /**
+   * Offre de lancement (avant Stripe) : tout compte connecté reçoit le plan
+   * explorateur. À retirer quand Stripe est branché.
+   */
+  launchOffer: process.env['LAUNCH_OFFER'] === 'true',
   /** GraphHopper self-hosted (VPS) — null = routing désactivé, fallback LLM. */
   graphhopperUrl: process.env['GRAPHHOPPER_URL'] ?? null,
   /**

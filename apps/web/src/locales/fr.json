@@ -136,7 +136,8 @@
     "plan_explorateur": "Explorateur",
     "cta": "Choisir Aventurier",
     "later": "Plus tard",
-    "explorateur_extra": "Tout Aventurier + offline monde entier + sync Garmin/Wahoo"
+    "explorateur_extra": "Tout Aventurier + offline monde entier + sync Garmin/Wahoo",
+    "feature_weather": "Météo sur tout le tracé + alertes"
   },
   "lang": {
     "label": "Langue"
@@ -363,6 +364,8 @@
     "error_signup": "Inscription impossible — vérifie l'email et réessaie.",
     "logout": "Se déconnecter",
     "login_nav": "Compte",
-    "unavailable": "La connexion n'est pas disponible pour le moment."
+    "unavailable": "La connexion n'est pas disponible pour le moment.",
+    "required_generation": "Crée un compte gratuit pour générer tes trips.",
+    "launch_offer_banner": "Offre de lancement : toutes les fonctionnalités sont ouvertes gratuitement."
   }
 }

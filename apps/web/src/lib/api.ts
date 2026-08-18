@@ -48,6 +48,26 @@ async function apiError(res: Response, context: string): Promise<ApiError> {
   return new ApiError(res.status, code, context);
 }
 
+/** GET /api/me — identité, plan effectif (offre de lancement incluse), quota. */
+export interface MePayload {
+  authenticated: boolean;
+  email: string | null;
+  plan: PlanId;
+  launch_offer: boolean;
+  remaining: number | null;
+}
+
+export async function fetchMe(): Promise<MePayload | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/me`, {
+      headers: planHeaders(useUserStore.getState().plan),
+    });
+    return res.ok ? res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface TripsPayload {
   generation: TripGeneration;
   locked_proposals: number;
@@ -101,7 +121,7 @@ export async function generateTripsStream(
     }),
   });
   if (!res.ok || !res.body) {
-    throw new Error(`generate-trips failed: ${res.status}`);
+    throw await apiError(res, 'generate-trips');
   }
   await readSse(res, onEvent as (event: { event: string; data: unknown }) => void);
 }

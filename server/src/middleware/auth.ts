@@ -52,7 +52,8 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
       .then(({ payload }) => {
         req.user = {
           id: payload.sub ?? 'anonymous',
-          plan: 'free',
+          // Offre de lancement : tout ouvert pour les comptes (avant Stripe)
+          plan: env.launchOffer ? 'explorateur' : 'free',
           email: typeof payload['email'] === 'string' ? payload['email'] : undefined,
           authenticated: Boolean(payload.sub),
         };

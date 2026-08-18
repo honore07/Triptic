@@ -136,7 +136,8 @@
     "plan_explorateur": "Profi-Entdecker",
     "cta": "Abenteurer wählen",
     "later": "Später",
-    "explorateur_extra": "Alles aus Abenteurer + weltweit offline + Garmin/Wahoo-Sync"
+    "explorateur_extra": "Alles aus Abenteurer + weltweit offline + Garmin/Wahoo-Sync",
+    "feature_weather": "Wetter entlang der ganzen Route + Warnungen"
   },
   "lang": {
     "label": "Sprache"
@@ -363,6 +364,8 @@
     "error_signup": "Registrierung fehlgeschlagen — prüfe die E-Mail und versuche es erneut.",
     "logout": "Abmelden",
     "login_nav": "Konto",
-    "unavailable": "Die Anmeldung ist derzeit nicht verfügbar."
+    "unavailable": "Die Anmeldung ist derzeit nicht verfügbar.",
+    "required_generation": "Erstelle ein kostenloses Konto, um deine Trips zu generieren.",
+    "launch_offer_banner": "Startangebot: Alle Funktionen sind kostenlos freigeschaltet."
   }
 }

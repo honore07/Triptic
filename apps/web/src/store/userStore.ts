@@ -12,6 +12,9 @@ interface UserState {
   /** Jeton d'accès courant (rafraîchi par supabase-js), lu par lib/api.ts. */
   accessToken: string | null;
   email: string | null;
+  /** true = le serveur applique l'offre de lancement (tout ouvert). */
+  launchOffer: boolean;
+  setLaunchOffer: (launchOffer: boolean) => void;
   setPlan: (plan: PlanId) => void;
   setRemaining: (remaining: number) => void;
   openPaywall: () => void;
@@ -26,6 +29,8 @@ export const useUserStore = create<UserState>((set) => ({
   session: null,
   accessToken: null,
   email: null,
+  launchOffer: false,
+  setLaunchOffer: (launchOffer) => set({ launchOffer }),
   setPlan: (plan) => {
     localStorage.setItem('triptic-plan', plan);
     set({ plan, paywallOpen: false });

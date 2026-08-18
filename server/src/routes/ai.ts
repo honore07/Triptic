@@ -15,6 +15,7 @@ import { recomputeTrip } from '../services/recompute.js';
 import { applyTripEstimates } from '../services/budget.js';
 import { findDayPhotos, findTripPhoto } from '../services/photos.js';
 import { enrichTripSegments } from '../services/segments.js';
+import { env } from '../env.js';
 import type { Quota } from '../services/quota.js';
 import type { RoutingService } from '../services/routing.js';
 import type { PgPlaceRepo } from '../repo/places.js';
@@ -91,6 +92,17 @@ export function createAiRouter(
   routing?: RoutingService,
 ): Router {
   const router = Router();
+
+  // Avec Supabase configuré : la génération exige un compte (quota par
+  // utilisateur + coût LLM). Renvoyé AVANT le passage en SSE → le front
+  // reçoit un 401 JSON classique.
+  router.use((req, res, next) => {
+    if (env.authRequired && !req.user.authenticated) {
+      res.status(401).json({ error: 'auth_required' });
+      return;
+    }
+    next();
+  });
 
   router.post('/generate-trips', async (req, res) => {
     const parsed = generateBodySchema.safeParse(req.body);

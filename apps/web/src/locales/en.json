@@ -136,7 +136,8 @@
     "plan_explorateur": "Explorer Pro",
     "cta": "Choose Adventurer",
     "later": "Later",
-    "explorateur_extra": "Everything in Adventurer + worldwide offline + Garmin/Wahoo sync"
+    "explorateur_extra": "Everything in Adventurer + worldwide offline + Garmin/Wahoo sync",
+    "feature_weather": "Weather along the whole route + alerts"
   },
   "lang": {
     "label": "Language"
@@ -363,6 +364,8 @@
     "error_signup": "Sign-up failed — check the email and try again.",
     "logout": "Log out",
     "login_nav": "Account",
-    "unavailable": "Sign-in is unavailable right now."
+    "unavailable": "Sign-in is unavailable right now.",
+    "required_generation": "Create a free account to generate your trips.",
+    "launch_offer_banner": "Launch offer: every feature is open for free."
   }
 }

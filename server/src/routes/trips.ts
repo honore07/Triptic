@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { tripDaySchema } from '@triptic/ai-engine';
 import { buildGpx } from '@triptic/map-utils';
 import { dateForTripDay, PLANS } from '@triptic/shared';
+import { env } from '../env.js';
 import type { TripRepo } from '../repo/trips.js';
 import type { PgUserRepo } from '../repo/users.js';
 import { recomputeTrip } from '../services/recompute.js';
@@ -125,6 +126,12 @@ export function createTripsRouter(
   });
 
   router.post('/', async (req, res) => {
+    // Avec Supabase configuré : les trips appartiennent à un compte, jamais
+    // au pool anonyme partagé (isolation des données entre visiteurs).
+    if (env.authRequired && !req.user.authenticated) {
+      res.status(401).json({ error: 'auth_required' });
+      return;
+    }
     const parsed = saveTripSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
@@ -149,6 +156,10 @@ export function createTripsRouter(
   });
 
   router.get('/', async (req, res) => {
+    if (env.authRequired && !req.user.authenticated) {
+      res.status(401).json({ error: 'auth_required' });
+      return;
+    }
     res.json(await repo.listByUser(req.user.id));
   });
 
@@ -162,6 +173,10 @@ export function createTripsRouter(
   });
 
   router.patch('/:id', async (req, res) => {
+    if (env.authRequired && !req.user.authenticated) {
+      res.status(401).json({ error: 'auth_required' });
+      return;
+    }
     const existing = await repo.getById(req.params.id);
     if (!existing || existing.user_id !== req.user.id) {
       res.status(404).json({ error: 'not_found' });
@@ -198,7 +213,8 @@ export function createTripsRouter(
       'Content-Disposition',
       `attachment; filename="${slugify(trip.title)}.gpx"`,
     );
-    res.send(buildGpx(trip.title, trip.waypoints));
+    // Géométrie routée (GraphHopper) quand elle existe — sinon ligne droite
+    res.send(buildGpx(trip.title, trip.waypoints, trip.days ?? undefined));
   });
 
   return router;

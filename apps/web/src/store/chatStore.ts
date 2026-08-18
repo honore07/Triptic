@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { tripDurationDays } from '@triptic/shared';
 import type { ChatMessage, Lang, PlanId, TripRequest, TripTuning } from '@triptic/shared';
-import { generateTripsStream, type TripsPayload } from '../lib/api';
+import { ApiError, generateTripsStream, type TripsPayload } from '../lib/api';
 
 /** Dates du trip choisies dans l'onboarding (ISO yyyy-mm-dd). */
 export interface TripDates {
@@ -92,8 +92,10 @@ export const useChatStore = create<ChatState>((set, get) => {
       if (get().status !== 'idle' && get().status !== 'error') {
         set({ status: 'idle' });
       }
-    } catch {
-      set({ status: 'error', error: 'generation_failed' });
+    } catch (err) {
+      // 401 = compte requis (Supabase configuré) → l'UI propose la connexion
+      const authRequired = err instanceof ApiError && err.status === 401;
+      set({ status: 'error', error: authRequired ? 'auth_required' : 'generation_failed' });
     }
   }
 
