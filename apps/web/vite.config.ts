@@ -48,6 +48,11 @@ export default defineConfig({
         start_url: '/',
         icons: [
           { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          // PNG requis pour l'installabilité Android/iOS (l'icône SVG seule
+          // dégrade l'install prompt) — générés depuis icon.svg (charte v2).
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),

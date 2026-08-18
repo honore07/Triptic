@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { tripDurationDays } from '@triptic/shared';
 import type { ChatMessage, Lang, PlanId, TripRequest, TripTuning } from '@triptic/shared';
 import { ApiError, generateTripsStream, type TripsPayload } from '../lib/api';
@@ -57,7 +58,9 @@ interface ChatState {
   reset: () => void;
 }
 
-export const useChatStore = create<ChatState>((set, get) => {
+export const useChatStore = create<ChatState>()(
+  persist(
+    (set, get) => {
   async function run(messages: ChatMessage[], lang: Lang, plan: PlanId): Promise<void> {
     set({ messages, status: 'generating', error: null, result: null, quickReplies: [] });
     try {
@@ -157,4 +160,21 @@ export const useChatStore = create<ChatState>((set, get) => {
       await run(messages, lang, plan);
     },
   };
-});
+    },
+    {
+      // Un refresh (ou une coupure pendant la génération, 10-30 s) ne doit
+      // plus coûter la conversation ni les trips générés — le quota, lui,
+      // est déjà consommé côté serveur. Les états transitoires (status,
+      // quickReplies) ne sont pas persistés : retour à idle au chargement.
+      name: 'triptic-chat',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({
+        messages: s.messages,
+        result: s.result,
+        tuning: s.tuning,
+        overrides: s.overrides,
+        dates: s.dates,
+      }),
+    },
+  ),
+);

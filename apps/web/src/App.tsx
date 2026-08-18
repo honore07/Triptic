@@ -12,6 +12,7 @@ import { Contribute } from './pages/Contribute';
 import { Explore } from './pages/Explore';
 import { Home } from './pages/Home';
 import { LegalAttributions } from './pages/LegalAttributions';
+import { LegalPage } from './pages/LegalPage';
 import { LegalTdm } from './pages/LegalTdm';
 import { MyTrips } from './pages/MyTrips';
 import { Plan } from './pages/Plan';
@@ -152,6 +153,9 @@ export function App() {
         <Route path="/login" element={<AuthPage />} />
         <Route path="/legal/attributions" element={<LegalAttributions />} />
         <Route path="/legal/tdm" element={<LegalTdm />} />
+        <Route path="/legal/mentions" element={<LegalPage section="mentions" />} />
+        <Route path="/legal/privacy" element={<LegalPage section="privacy" />} />
+        <Route path="/legal/terms" element={<LegalPage section="terms" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
@@ -166,6 +170,24 @@ export function App() {
           className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
         >
           {t('legal.tdm_nav')}
+        </Link>
+        <Link
+          to="/legal/mentions"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.mentions_nav')}
+        </Link>
+        <Link
+          to="/legal/privacy"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.privacy_nav')}
+        </Link>
+        <Link
+          to="/legal/terms"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.terms_nav')}
         </Link>
       </footer>
       <PaywallModal />
