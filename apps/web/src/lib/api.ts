@@ -213,7 +213,7 @@ export async function editTripStream(
       lang,
     }),
   });
-  if (!res.ok) throw new Error(`edit-trip failed: ${res.status}`);
+  if (!res.ok) throw await apiError(res, 'edit-trip');
   await readSse(res, onEvent as (event: { event: string; data: unknown }) => void);
 }
 

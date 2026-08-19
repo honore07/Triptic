@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, Send } from 'lucide-react';
 import type { Lang, PlanId, TripProposal } from '@triptic/shared';
-import { editTripStream, type RecomputePayload } from '../lib/api';
+import { ApiError, editTripStream, type RecomputePayload } from '../lib/api';
 
 /**
  * Édition conversationnelle (roadmap 3.2) : « change le J3 matin en trail
@@ -21,7 +22,7 @@ interface Props {
 export function TripEditChat({ trip, lang, plan, onBeforeApply, onApply }: Props) {
   const { t } = useTranslation();
   const [instruction, setInstruction] = useState('');
-  const [status, setStatus] = useState<'idle' | 'busy' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'busy' | 'error' | 'auth_required'>('idle');
   const [step, setStep] = useState<string | null>(null);
   const [question, setQuestion] = useState<string | null>(null);
 
@@ -50,8 +51,9 @@ export function TripEditChat({ trip, lang, plan, onBeforeApply, onApply }: Props
         }
       });
       setStatus((s) => (s === 'error' ? 'error' : 'idle'));
-    } catch {
-      setStatus('error');
+    } catch (err) {
+      // 401 = compte requis (l'édition IA consomme du LLM) → proposer la connexion
+      setStatus(err instanceof ApiError && err.status === 401 ? 'auth_required' : 'error');
     }
     setStep(null);
   };
@@ -71,6 +73,14 @@ export function TripEditChat({ trip, lang, plan, onBeforeApply, onApply }: Props
       {status === 'error' && (
         <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
           {t('edit_chat.error')}
+        </p>
+      )}
+      {status === 'auth_required' && (
+        <p role="alert" className="rounded-xl bg-terrain px-4 py-3 text-sm text-ridge">
+          {t('auth.required_generation')}{' '}
+          <Link to="/login" className="font-semibold text-copper-deep underline">
+            {t('auth.login_nav')}
+          </Link>
         </p>
       )}
       <form
