@@ -138,6 +138,9 @@ export function createApp({
   // (le plan localStorage ne fait foi qu'en mode démo sans auth).
   app.get('/api/me', async (req, res) => {
     const { plan, email, authenticated } = req.user;
+    // Provisionne le compte dès la première session (et plus seulement au
+    // premier trip) : la table users devient la source du sync CRM (Brevo).
+    if (authenticated) await users?.ensure(req.user);
     // Quota indisponible (BDD down) ≠ identité indisponible : remaining null
     let remaining: number | null = null;
     try {

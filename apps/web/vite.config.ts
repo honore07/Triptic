@@ -13,6 +13,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
+        // Un nouveau SW prend le contrôle IMMÉDIATEMENT (sinon les visiteurs
+        // gardent l'ancien bundle une visite de plus — source du bug
+        // « inscription qui ne tient pas » signalé au lancement : l'app en
+        // cache datait d'avant l'auth).
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: '/index.html',
         runtimeCaching: [

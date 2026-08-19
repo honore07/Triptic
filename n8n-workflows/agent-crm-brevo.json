@@ -1,0 +1,62 @@
+{
+  "id": "crmbrevo00000001",
+  "name": "TRIPTIC — CRM Brevo (nouvelles inscriptions)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "triptic-signup",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "c2000000-0000-4000-8000-000000000001",
+      "name": "Webhook inscription",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "webhookId": "triptic-signup"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Événement envoyé par server/src/repo/users.ts à la PREMIÈRE connexion\n// d'un compte (insert réel dans users, jamais les reconnexions).\nconst body = $input.first().json.body ?? $input.first().json;\nif (!body.email) { return []; }\nreturn [{ json: {\n  email: String(body.email).toLowerCase(),\n  user_id: body.user_id ?? null,\n  plan: body.plan ?? 'free',\n  signed_up_at: body.signed_up_at ?? new Date().toISOString(),\n} }];"
+      },
+      "id": "c2000000-0000-4000-8000-000000000002",
+      "name": "Formater le contact",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $json.email, updateEnabled: true, attributes: { TRIPTIC_PLAN: $json.plan, TRIPTIC_USER_ID: $json.user_id, TRIPTIC_SIGNUP: $json.signed_up_at } }) }}",
+        "options": {}
+      },
+      "id": "c2000000-0000-4000-8000-000000000003",
+      "name": "Upsert contact Brevo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Brevo API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook inscription": {
+      "main": [[{ "node": "Formater le contact", "type": "main", "index": 0 }]]
+    },
+    "Formater le contact": {
+      "main": [[{ "node": "Upsert contact Brevo", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": true
+}
