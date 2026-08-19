@@ -573,3 +573,35 @@ describe('questions personnalisées — quick_replies', () => {
     expect(prompt).toContain('cols, crêtes, itinéraires de randonnée longue distance');
   });
 });
+
+describe('createFallbackProvider', () => {
+  it('bascule sur le fallback quand le principal échoue (ex. 402 solde épuisé)', async () => {
+    const { createFallbackProvider } = await import('../providers.js');
+    const primary = {
+      name: 'deepseek',
+      complete: async () => { throw new Error('402 Insufficient Balance'); },
+      correct: async () => { throw new Error('402 Insufficient Balance'); },
+    };
+    const fallback = {
+      name: 'anthropic',
+      complete: async () => 'ok-complete',
+      correct: async () => 'ok-correct',
+    };
+    const provider = createFallbackProvider(primary, fallback);
+    const opts = { system: 's', messages: [{ role: 'user' as const, content: 'x' }] };
+    expect(await provider.complete(opts)).toBe('ok-complete');
+    expect(await provider.correct(opts)).toBe('ok-correct');
+    expect(provider.name).toBe('deepseek→anthropic');
+  });
+
+  it("n'appelle pas le fallback quand le principal répond", async () => {
+    const { createFallbackProvider } = await import('../providers.js');
+    let fallbackCalled = false;
+    const provider = createFallbackProvider(
+      { name: 'p', complete: async () => 'primary', correct: async () => 'primary' },
+      { name: 'f', complete: async () => { fallbackCalled = true; return 'f'; }, correct: async () => 'f' },
+    );
+    expect(await provider.complete({ system: 's', messages: [] })).toBe('primary');
+    expect(fallbackCalled).toBe(false);
+  });
+});

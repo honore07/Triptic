@@ -113,18 +113,47 @@ export function createAnthropicProvider(
 }
 
 /**
+ * Fallback RUNTIME (règle TRIPTIC : « fallback Claude si Deepseek échoue »).
+ * Chaque appel tente le provider principal ; sur échec non transitoire
+ * (solde épuisé 402, clé révoquée 401, 5xx…), l'appel repart sur le
+ * fallback. Les retries réseau transitoires restent gérés en amont par
+ * withNetworkRetry dans chaque provider.
+ */
+export function createFallbackProvider(primary: LlmProvider, fallback: LlmProvider): LlmProvider {
+  const wrap =
+    (method: 'complete' | 'correct') =>
+    async (opts: CompleteOptions): Promise<string> => {
+      try {
+        return await primary[method](opts);
+      } catch {
+        return fallback[method](opts);
+      }
+    };
+  return {
+    name: `${primary.name}→${fallback.name}`,
+    complete: wrap('complete'),
+    correct: wrap('correct'),
+  };
+}
+
+/**
  * Sélectionne le provider selon les clés disponibles :
- * Deepseek (principal) → Anthropic (fallback). Erreur claire si aucune clé.
+ * Deepseek (principal) avec fallback runtime Anthropic si les deux clés
+ * existent ; sinon celui dont la clé est configurée. Erreur claire sinon.
  */
 export function createProviderFromEnv(env: NodeJS.ProcessEnv = process.env): LlmProvider {
   const deepseekKey = env['DEEPSEEK_API_KEY'];
-  if (deepseekKey && !deepseekKey.startsWith('sk-xxx')) {
-    return createDeepseekProvider(deepseekKey);
-  }
   const anthropicKey = env['ANTHROPIC_API_KEY'];
-  if (anthropicKey && !anthropicKey.startsWith('sk-ant-xxx')) {
-    return createAnthropicProvider(anthropicKey);
+  const hasDeepseek = Boolean(deepseekKey && !deepseekKey.startsWith('sk-xxx'));
+  const hasAnthropic = Boolean(anthropicKey && !anthropicKey.startsWith('sk-ant-xxx'));
+  if (hasDeepseek && hasAnthropic) {
+    return createFallbackProvider(
+      createDeepseekProvider(deepseekKey as string),
+      createAnthropicProvider(anthropicKey as string),
+    );
   }
+  if (hasDeepseek) return createDeepseekProvider(deepseekKey as string);
+  if (hasAnthropic) return createAnthropicProvider(anthropicKey as string);
   throw new Error(
     'No AI provider configured: set DEEPSEEK_API_KEY or ANTHROPIC_API_KEY in .env',
   );
