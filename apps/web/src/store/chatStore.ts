@@ -168,10 +168,12 @@ export const useChatStore = create<ChatState>()(
       // quickReplies) ne sont pas persistés : retour à idle au chargement.
       name: 'triptic-chat',
       storage: createJSONStorage(() => localStorage),
+      // tuning est volontairement NON persisté : restauré avec des messages
+      // mais sans result (refresh en pleine génération), il masquait le
+      // TripTuner et laissait la page sans aucun bouton d'action.
       partialize: (s) => ({
         messages: s.messages,
         result: s.result,
-        tuning: s.tuning,
         overrides: s.overrides,
         dates: s.dates,
       }),
