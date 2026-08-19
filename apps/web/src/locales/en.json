@@ -136,7 +136,8 @@
     "plan_explorateur": "Explorer Pro",
     "cta": "Choose Adventurer",
     "later": "Later",
-    "explorateur_extra": "Everything in Adventurer + worldwide offline + Garmin/Wahoo sync"
+    "explorateur_extra": "Everything in Adventurer + worldwide offline + Garmin/Wahoo sync",
+    "feature_weather": "Weather along the whole route + alerts"
   },
   "lang": {
     "label": "Language"
@@ -326,17 +327,59 @@
     "tdm_intro": "TRIPTIC enriches its places database by automatically extracting geographic facts from public outdoor web content. This notice summarises what we collect, on what legal basis, and how to opt out.",
     "french_prevails": "This notice is legally binding in French only — the French version prevails.",
     "tdm_what_title": "What we collect",
-    "tdm_what_body": "Uniquement des faits sur des lieux : nom, type, coordonnées et tags courts. Jamais le texte des articles, jamais les photos, jamais d'informations sur les auteurs ou d'autres personnes. Toute donnée personnelle détectée est rejetée avant enregistrement, et chaque fait est recoupé avec des sources ouvertes (OpenStreetMap, DATAtourisme, Wikidata).",
+    "tdm_what_body": "Only facts about places: name, type, coordinates and short tags. Never article text, never photos, never information about authors or other people. Any personal data detected is rejected before storage, and every fact is cross-checked against open sources (OpenStreetMap, DATAtourisme, Wikidata).",
     "tdm_why_title": "Why",
-    "tdm_why_body": "Améliorer la pertinence des itinéraires outdoor proposés aux utilisateurs de TRIPTIC, en ancrant les suggestions sur des lieux réels et vérifiés. Aucune finalité de profilage de personnes.",
+    "tdm_why_body": "To improve the relevance of the outdoor itineraries offered to TRIPTIC users, by grounding suggestions on real, verified places. No purpose involves profiling people.",
     "tdm_legal_title": "Legal basis",
-    "tdm_legal_body": "Volet propriété intellectuelle : exception de fouille de textes et de données (article 4 de la directive (UE) 2019/790 ; article L.122-5-3 du Code de la propriété intellectuelle), avec opt-out systématiquement respecté. Volet données personnelles : intérêt légitime, assorti de garanties strictes (minimisation, filtres de rejet, journal d'audit) ; hébergement dans l'Union européenne, aucun transfert hors UE.",
+    "tdm_legal_body": "Intellectual property: the text and data mining exception (Article 4 of Directive (EU) 2019/790; Article L.122-5-3 of the French Intellectual Property Code), with opt-outs systematically honoured. Personal data: legitimate interest, with strict safeguards (minimisation, rejection filters, audit log); hosting within the European Union, no transfers outside the EU.",
     "tdm_optout_title": "Opt-out: site refusals are honoured",
-    "tdm_optout_body": "Avant tout accès, nous vérifions et respectons robots.txt (RFC 9309), ai.txt, les balises meta noai / notdm, le protocole TDMRep et les mentions d'opposition exprimées en langage naturel. Le statut d'opt-out est re-vérifié à chaque accès et historisé dans notre registre de sources (tdm_sources). Notre robot s'identifie par le user-agent « TRIPTIC-TDM », avec une URL d'information et un contact.",
+    "tdm_optout_body": "Before any access, we check and honour robots.txt (RFC 9309), ai.txt, the noai / notdm meta tags, the TDMRep protocol and opt-out statements expressed in natural language. The opt-out status is re-checked on every access and recorded in our source register (tdm_sources). Our crawler identifies itself with the user agent “TRIPTIC-TDM”, with an information URL and a contact address.",
     "tdm_rights_title": "Objection & erasure",
-    "tdm_rights_body": "Éditeur d'un site ou personne concernée : vous pouvez demander l'exclusion d'un site ou l'effacement des faits issus d'une source. L'effacement s'exécute par suppression des fiches concernées et ajout du site à notre liste d'exclusion permanente.",
+    "tdm_rights_body": "Website publishers and data subjects: you can request the exclusion of a site or the erasure of facts derived from a source. Erasure is carried out by deleting the records concerned and adding the site to our permanent exclusion list.",
     "tdm_contact_label": "Contact:",
-    "src_commons": "Geolocated photos of trip places (coordinate search), shown in the map carousel with author and licence."
+    "src_commons": "Geolocated photos of trip places (coordinate search), shown in the map carousel with author and licence.",
+    "mentions_nav": "Legal notice",
+    "privacy_nav": "Privacy",
+    "terms_nav": "Terms",
+    "mentions": {
+      "title": "Legal notice",
+      "editor_title": "Site publisher",
+      "editor_body": "TRIPTIC is published by Jules Million, a private individual acting in a non-professional capacity. The service is available at triptic.hakoe-alsace.com.",
+      "hosting_title": "Hosting",
+      "hosting_body": "The site is hosted by Hostinger International Ltd, 61 Lordou Vironos Street, 6023 Larnaca, Cyprus. The server is located in the European Union. DNS is provided by Cloudflare.",
+      "contact_title": "Contact",
+      "contact_body": "For any question about the site, its content or your personal data, you can write to jules.million07@gmail.com."
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "This page explains what data TRIPTIC collects, why, and what your rights are. In short: we collect only what is strictly necessary to run the service, we sell no data, and we use no advertising cookies.",
+      "data_title": "Data we collect",
+      "data_body": "When you create an account, we collect your email address and a password (stored in hashed form, never in plain text). Authentication is handled by Supabase, hosted in the AWS eu-central-1 region (Frankfurt, Germany).\n\nThe itineraries you create (trips, stages, preferences) are stored on our server located in the European Union. Your browser also keeps a few technical items locally (chosen language, session).",
+      "purpose_title": "Purposes and legal bases",
+      "purpose_body": "Your data is used solely to provide the service: creating your account, saving your itineraries and running the application. The legal basis is the performance of the service you requested, together with our legitimate interest in keeping the site secure and working properly.\n\nWe do no commercial prospecting, no advertising profiling, and we pass no data to third parties for advertising purposes.",
+      "processors_title": "Service providers and recipients",
+      "processors_body": "To operate, TRIPTIC relies on a few service providers: Supabase (authentication), Mapbox (map display — your browser sends it tile requests that include your IP address), Unsplash, Pexels and Wikimedia Commons (photos), Deepseek and Anthropic (AI itinerary generation) and Open-Meteo (weather).\n\nThe messages you send in the chat are transmitted to Deepseek or Anthropic to generate your itineraries, without any personal identifier: neither your email, nor your name, nor your IP address is shared with them.",
+      "rights_title": "Your rights",
+      "rights_body": "Under the GDPR, you can at any time access your data, have it corrected or deleted, and object to or request the restriction of its processing. Simply write to jules.million07@gmail.com; we reply within one month at most.\n\nIf you believe your rights are not being respected, you can lodge a complaint with the French data protection authority, the CNIL (cnil.fr).",
+      "cookies_title": "Cookies",
+      "cookies_body": "TRIPTIC uses no advertising cookies and no third-party trackers. Only your browser's local storage (localStorage) is used, for strictly technical needs: remembering your language and keeping your session active.\n\nSince this storage is essential to the operation of the service, no cookie consent banner is required — which is why you do not see one.",
+      "retention_title": "Data retention",
+      "retention_body": "Your account data and itineraries are kept for as long as your account is active. If you delete your account or request its deletion by email, all of your data is erased.\n\nItineraries you choose to make public remain visible until you unpublish or delete them. The server's technical logs are kept for a short period, for security and debugging purposes only."
+    },
+    "terms": {
+      "title": "Terms of use",
+      "intro": "Welcome to TRIPTIC. By using the service, you accept these terms. TRIPTIC is currently offered free of charge: no payment is collected.",
+      "service_title": "The service",
+      "service_body": "TRIPTIC is a web application for planning outdoor adventures (road trips, treks, bikepacking). It generates itinerary suggestions using artificial intelligence, which you can then edit, save and share.\n\nThe service is provided as is, with no guarantee of continuous availability. Paid plans may be offered in the future; they will then be covered by specific terms.",
+      "account_title": "User account",
+      "account_body": "Creating an account is required to save your itineraries. You agree to provide a valid email address and to keep your password confidential.\n\nYou can delete your account at any time; your data will then be erased in accordance with the privacy policy.",
+      "content_title": "Your content",
+      "content_body": "You remain the owner of the itineraries you create. Sharing an itinerary publicly is your voluntary choice: anyone with the link will then be able to view it.\n\nYou agree not to publish content that is unlawful, misleading or infringes the rights of others. We may remove any content that breaches these terms.",
+      "liability_title": "Liability",
+      "liability_body": "The itineraries suggested by TRIPTIC are provided for guidance only. They may contain errors or inaccuracies, in particular because they are partly generated by artificial intelligence.\n\nBefore setting off, always check local conditions, the weather, the state of trails and roads, and the applicable regulations (protected areas, wild camping, traffic rules). Outdoor activities involve risks: you undertake them at your own responsibility, and the publisher cannot be held liable for accidents or incidents occurring during your trips.",
+      "changes_title": "Changes to these terms",
+      "changes_body": "These terms may change, in particular when new features or paid plans are introduced. In the event of a significant change, you will be informed through the application.\n\nContinuing to use the service after a change constitutes acceptance of the new terms."
+    }
   },
   "carousel": {
     "label": "Photos of {{place}}",
@@ -348,5 +391,23 @@
     "empty": "No photo available for this place.",
     "photo_alt": "{{place}} — photo {{n}}",
     "video_alt": "{{place}} — video {{n}}"
+  },
+  "auth": {
+    "login_title": "Log in",
+    "signup_title": "Create an account",
+    "email": "Email",
+    "password": "Password",
+    "password_hint": "At least 6 characters",
+    "submit_login": "Log in",
+    "submit_signup": "Create my account",
+    "switch_to_signup": "No account yet? Sign up",
+    "switch_to_login": "Already have an account? Log in",
+    "error_invalid": "Incorrect email or password.",
+    "error_signup": "Sign-up failed — check the email and try again.",
+    "logout": "Log out",
+    "login_nav": "Account",
+    "unavailable": "Sign-in is unavailable right now.",
+    "required_generation": "Create a free account to generate your trips.",
+    "launch_offer_banner": "Launch offer: every feature is open for free."
   }
 }

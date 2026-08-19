@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Clock, Route } from 'lucide-react';
 import type { Trip } from '@triptic/shared';
 import { listTrips } from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { useUserStore } from '../store/userStore';
 
 type FetchState =
@@ -25,9 +26,16 @@ const STATUS_STYLES: Record<Trip['status'], string> = {
 export function MyTrips() {
   const { t, i18n } = useTranslation();
   const plan = useUserStore((s) => s.plan);
+  const email = useUserStore((s) => s.email);
   const [state, setState] = useState<FetchState>({ status: 'loading' });
+  // Auth configurée + déconnecté : proposer la connexion plutôt qu'un 401
+  const needsLogin = Boolean(supabase) && !email;
 
   const load = useCallback(() => {
+    if (Boolean(supabase) && !useUserStore.getState().email) {
+      setState({ status: 'ready', trips: [] });
+      return;
+    }
     setState({ status: 'loading' });
     listTrips(plan)
       .then((trips) =>
@@ -38,7 +46,7 @@ export function MyTrips() {
         }),
       )
       .catch(() => setState({ status: 'error' }));
-  }, [plan]);
+  }, [plan, email]);
 
   useEffect(load, [load]);
 
@@ -54,7 +62,16 @@ export function MyTrips() {
         <p className="text-sm text-ridge">{t('my_trips.hint')}</p>
       </header>
 
-      {state.status === 'loading' && (
+      {needsLogin && (
+        <p className="rounded-xl bg-terrain px-4 py-3 text-sm text-ridge">
+          {t('auth.required_generation')}{' '}
+          <Link to="/login" className="font-semibold text-copper-deep underline">
+            {t('auth.login_nav')}
+          </Link>
+        </p>
+      )}
+
+      {!needsLogin && state.status === 'loading' && (
         <div role="status" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <span className="sr-only">{t('my_trips.loading')}</span>
           {[0, 1, 2].map((i) => (

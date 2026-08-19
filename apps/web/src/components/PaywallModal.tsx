@@ -50,11 +50,13 @@ export function PaywallModal() {
 
   if (!paywallOpen) return null;
 
+  // feature_offline volontairement absent : les cartes offline ne sont pas
+  // encore implémentées — on ne vend pas ce qui n'existe pas.
   const features = [
     t('paywall.feature_trips'),
     t('paywall.feature_unlimited'),
     t('paywall.feature_gpx'),
-    t('paywall.feature_offline'),
+    t('paywall.feature_weather'),
   ];
 
   return (

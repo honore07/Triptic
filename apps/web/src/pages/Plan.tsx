@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
@@ -105,7 +105,16 @@ export function Plan() {
         )}
         {status === 'error' && (
           <p role="alert" className="fade-up rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
-            {error === 'quota_exceeded' ? t('chat.error_quota') : t('chat.error_generation')}
+            {error === 'quota_exceeded'
+              ? t('chat.error_quota')
+              : error === 'auth_required'
+                ? t('auth.required_generation')
+                : t('chat.error_generation')}
+            {error === 'auth_required' && (
+              <Link to="/login" className="ml-2 font-semibold underline">
+                {t('auth.login_nav')}
+              </Link>
+            )}
             {error === 'quota_exceeded' && (
               <button
                 type="button"

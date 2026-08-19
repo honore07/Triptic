@@ -11,6 +11,7 @@ import type {
   TripTuning,
 } from '@triptic/shared';
 import type { ExplorePlace } from './explore';
+import { useUserStore } from '../store/userStore';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -47,6 +48,26 @@ async function apiError(res: Response, context: string): Promise<ApiError> {
   return new ApiError(res.status, code, context);
 }
 
+/** GET /api/me — identité, plan effectif (offre de lancement incluse), quota. */
+export interface MePayload {
+  authenticated: boolean;
+  email: string | null;
+  plan: PlanId;
+  launch_offer: boolean;
+  remaining: number | null;
+}
+
+export async function fetchMe(): Promise<MePayload | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/me`, {
+      headers: planHeaders(useUserStore.getState().plan),
+    });
+    return res.ok ? res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface TripsPayload {
   generation: TripGeneration;
   locked_proposals: number;
@@ -63,9 +84,14 @@ export type GenerateEvent =
   | { event: 'done'; data: Record<string, never> };
 
 function planHeaders(plan: PlanId): HeadersInit {
-  // Sans auth Supabase, le plan passe par x-plan — honoré seulement si le
-  // serveur tourne en mode démo/dev (avec auth, le plan est dérivé du JWT)
-  return plan === 'free' ? {} : { 'x-plan': plan };
+  // Session Supabase → Authorization: Bearer (le serveur dérive l'identité
+  // du JWT). Le header x-plan reste pour le mode démo/dev sans auth —
+  // ignoré par le serveur en production.
+  const token = useUserStore.getState().accessToken;
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(plan === 'free' ? {} : { 'x-plan': plan }),
+  };
 }
 
 /**
@@ -95,7 +121,7 @@ export async function generateTripsStream(
     }),
   });
   if (!res.ok || !res.body) {
-    throw new Error(`generate-trips failed: ${res.status}`);
+    throw await apiError(res, 'generate-trips');
   }
   await readSse(res, onEvent as (event: { event: string; data: unknown }) => void);
 }

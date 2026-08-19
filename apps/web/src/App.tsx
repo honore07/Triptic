@@ -1,6 +1,10 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Backpack, Compass, MapPinPlus } from 'lucide-react';
+import { Backpack, Compass, LogOut, MapPinPlus, PartyPopper, UserRound } from 'lucide-react';
+import { fetchMe } from './lib/api';
+import { supabase } from './lib/supabase';
+import { useUserStore } from './store/userStore';
 import { LangSwitcher } from './components/LangSwitcher';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
@@ -8,12 +12,81 @@ import { Contribute } from './pages/Contribute';
 import { Explore } from './pages/Explore';
 import { Home } from './pages/Home';
 import { LegalAttributions } from './pages/LegalAttributions';
+import { LegalPage } from './pages/LegalPage';
 import { LegalTdm } from './pages/LegalTdm';
 import { MyTrips } from './pages/MyTrips';
 import { Plan } from './pages/Plan';
 import { SavedTrip } from './pages/SavedTrip';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
+import { AuthPage } from './pages/Auth';
+
+/**
+ * Aligne plan/quota/offre de lancement sur le serveur à chaque changement de
+ * session (le localStorage ne fait foi qu'en mode démo sans auth).
+ */
+function useServerPlan() {
+  const accessToken = useUserStore((s) => s.accessToken);
+  useEffect(() => {
+    if (!supabase) return;
+    void fetchMe().then((me) => {
+      const store = useUserStore.getState();
+      if (!me) return;
+      store.setLaunchOffer(me.launch_offer);
+      if (me.authenticated) {
+        store.setPlan(me.plan);
+        if (me.remaining !== null) store.setRemaining(me.remaining);
+      } else {
+        store.setPlan('free');
+      }
+    });
+  }, [accessToken]);
+}
+
+/** Bandeau « offre de lancement » — tout ouvert tant que le serveur l'applique. */
+function LaunchOfferBanner() {
+  const { t } = useTranslation();
+  const launchOffer = useUserStore((s) => s.launchOffer);
+  if (!launchOffer) return null;
+  return (
+    <p className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-1.5 text-xs font-semibold text-copper-deep">
+      <PartyPopper size={14} aria-hidden="true" />
+      {t('auth.launch_offer_banner')}
+    </p>
+  );
+}
+
+/** Lien Compte (déconnecté) ou bouton Déconnexion (connecté). */
+function AccountNav() {
+  const { t } = useTranslation();
+  const email = useUserStore((s) => s.email);
+  if (!supabase) return null;
+  const client = supabase;
+  if (email) {
+    return (
+      <button
+        type="button"
+        onClick={() => void client.auth.signOut()}
+        title={email}
+        className="flex min-h-11 items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+      >
+        <LogOut size={15} aria-hidden="true" />
+        <span className="hidden sm:inline">{t('auth.logout')}</span>
+        <span className="sr-only sm:hidden">{t('auth.logout')}</span>
+      </button>
+    );
+  }
+  return (
+    <Link
+      to="/login"
+      className="flex min-h-11 items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+    >
+      <UserRound size={15} aria-hidden="true" />
+      <span className="hidden sm:inline">{t('auth.login_nav')}</span>
+      <span className="sr-only sm:hidden">{t('auth.login_nav')}</span>
+    </Link>
+  );
+}
 
 /** Page 404 (route catch-all) — message + retour accueil, jamais de page blanche. */
 function NotFound() {
@@ -30,9 +103,11 @@ function NotFound() {
 
 export function App() {
   const { t } = useTranslation();
+  useServerPlan();
   return (
     <BrowserRouter>
       <OnlineIndicator />
+      <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="font-display text-lg font-bold text-trail">
           TRIP<span className="text-summit">TIC</span>
@@ -62,6 +137,7 @@ export function App() {
             <span className="hidden sm:inline">{t('places.nav')}</span>
             <span className="sr-only sm:hidden">{t('places.nav')}</span>
           </Link>
+          <AccountNav />
           <LangSwitcher />
         </nav>
       </header>
@@ -74,8 +150,12 @@ export function App() {
         <Route path="/trips/:id" element={<SavedTrip />} />
         <Route path="/contribute" element={<Contribute />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/login" element={<AuthPage />} />
         <Route path="/legal/attributions" element={<LegalAttributions />} />
         <Route path="/legal/tdm" element={<LegalTdm />} />
+        <Route path="/legal/mentions" element={<LegalPage section="mentions" />} />
+        <Route path="/legal/privacy" element={<LegalPage section="privacy" />} />
+        <Route path="/legal/terms" element={<LegalPage section="terms" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
@@ -90,6 +170,24 @@ export function App() {
           className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
         >
           {t('legal.tdm_nav')}
+        </Link>
+        <Link
+          to="/legal/mentions"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.mentions_nav')}
+        </Link>
+        <Link
+          to="/legal/privacy"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.privacy_nav')}
+        </Link>
+        <Link
+          to="/legal/terms"
+          className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
+        >
+          {t('legal.terms_nav')}
         </Link>
       </footer>
       <PaywallModal />

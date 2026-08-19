@@ -136,7 +136,8 @@
     "plan_explorateur": "Explorateur",
     "cta": "Choisir Aventurier",
     "later": "Plus tard",
-    "explorateur_extra": "Tout Aventurier + offline monde entier + sync Garmin/Wahoo"
+    "explorateur_extra": "Tout Aventurier + offline monde entier + sync Garmin/Wahoo",
+    "feature_weather": "Météo sur tout le tracé + alertes"
   },
   "lang": {
     "label": "Langue"
@@ -336,7 +337,49 @@
     "tdm_rights_title": "Opposition & effacement",
     "tdm_rights_body": "Éditeur d'un site ou personne concernée : vous pouvez demander l'exclusion d'un site ou l'effacement des faits issus d'une source. L'effacement s'exécute par suppression des fiches concernées et ajout du site à notre liste d'exclusion permanente.",
     "tdm_contact_label": "Contact :",
-    "src_commons": "Photos géolocalisées des lieux du trip (recherche par coordonnées), affichées dans le carrousel de la carte avec auteur et licence."
+    "src_commons": "Photos géolocalisées des lieux du trip (recherche par coordonnées), affichées dans le carrousel de la carte avec auteur et licence.",
+    "mentions_nav": "Mentions légales",
+    "privacy_nav": "Confidentialité",
+    "terms_nav": "CGU",
+    "mentions": {
+      "title": "Mentions légales",
+      "editor_title": "Éditeur du site",
+      "editor_body": "TRIPTIC est édité par Jules Million, personne physique agissant à titre non professionnel. Le service est accessible à l'adresse triptic.hakoe-alsace.com.",
+      "hosting_title": "Hébergement",
+      "hosting_body": "Le site est hébergé par Hostinger International Ltd, 61 Lordou Vironos Street, 6023 Larnaca, Chypre. Le serveur est situé dans l'Union européenne. Le service DNS est assuré par Cloudflare.",
+      "contact_title": "Contact",
+      "contact_body": "Pour toute question concernant le site, son contenu ou vos données personnelles, vous pouvez écrire à jules.million07@gmail.com."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "intro": "Cette page explique quelles données TRIPTIC collecte, pourquoi, et quels sont vos droits. En résumé : nous collectons le strict nécessaire pour faire fonctionner le service, nous ne vendons aucune donnée et nous n'utilisons aucun cookie publicitaire.",
+      "data_title": "Données collectées",
+      "data_body": "Lorsque vous créez un compte, nous collectons votre adresse email et un mot de passe (stocké sous forme hachée, jamais en clair). L'authentification est gérée par Supabase, hébergé dans la région AWS eu-central-1 (Francfort, Allemagne).\n\nLes itinéraires que vous créez (trips, étapes, préférences) sont stockés sur notre serveur situé dans l'Union européenne. Votre navigateur conserve aussi localement quelques informations techniques (langue choisie, session).",
+      "purpose_title": "Finalités et bases légales",
+      "purpose_body": "Vos données servent uniquement à fournir le service : créer votre compte, sauvegarder vos itinéraires et faire fonctionner l'application. La base légale est l'exécution du service que vous avez demandé, complétée par notre intérêt légitime à assurer la sécurité et le bon fonctionnement du site.\n\nNous ne faisons aucune prospection commerciale, aucun profilage publicitaire, et nous ne transmettons aucune donnée à des tiers à des fins publicitaires.",
+      "processors_title": "Prestataires et destinataires",
+      "processors_body": "Pour fonctionner, TRIPTIC fait appel à quelques prestataires : Supabase (authentification), Mapbox (affichage des cartes — votre navigateur lui envoie des requêtes de tuiles qui comportent votre adresse IP), Unsplash, Pexels et Wikimedia Commons (photos), Deepseek et Anthropic (génération des itinéraires par IA) et Open-Meteo (météo).\n\nLes messages que vous envoyez dans le chat sont transmis à Deepseek ou Anthropic pour générer vos itinéraires, sans aucun identifiant personnel : ni votre email, ni votre nom, ni votre adresse IP ne leur sont communiqués.",
+      "rights_title": "Vos droits",
+      "rights_body": "Conformément au RGPD, vous pouvez à tout moment accéder à vos données, les faire rectifier ou les faire supprimer, ainsi que vous opposer à un traitement ou en demander la limitation. Il suffit d'écrire à jules.million07@gmail.com ; nous répondons dans un délai d'un mois maximum.\n\nSi vous estimez que vos droits ne sont pas respectés, vous pouvez déposer une réclamation auprès de la CNIL (cnil.fr).",
+      "cookies_title": "Cookies",
+      "cookies_body": "TRIPTIC n'utilise aucun cookie publicitaire ni traceur tiers. Seul le stockage local de votre navigateur (localStorage) est utilisé, pour des besoins strictement techniques : mémoriser votre langue et maintenir votre session.\n\nCe stockage étant indispensable au fonctionnement du service, aucun bandeau de consentement aux cookies n'est requis — et c'est pour cela que vous n'en voyez pas.",
+      "retention_title": "Durée de conservation",
+      "retention_body": "Vos données de compte et vos itinéraires sont conservés tant que votre compte est actif. Si vous supprimez votre compte ou en demandez la suppression par email, l'ensemble de vos données est effacé.\n\nLes itinéraires que vous choisissez de rendre publics restent visibles tant que vous ne les dépubliez pas ou ne les supprimez pas. Les journaux techniques du serveur sont conservés pour une courte durée, à des fins de sécurité et de débogage uniquement."
+    },
+    "terms": {
+      "title": "Conditions générales d'utilisation",
+      "intro": "Bienvenue sur TRIPTIC. En utilisant le service, vous acceptez les présentes conditions. TRIPTIC est actuellement proposé gratuitement : aucun paiement n'est encaissé.",
+      "service_title": "Le service",
+      "service_body": "TRIPTIC est une application web de planification d'aventures outdoor (road trips, treks, bikepacking). Elle génère des propositions d'itinéraires à l'aide d'une intelligence artificielle, que vous pouvez ensuite modifier, sauvegarder et partager.\n\nLe service est fourni en l'état, sans garantie de disponibilité permanente. Des offres payantes pourront être proposées à l'avenir ; elles feront alors l'objet de conditions spécifiques.",
+      "account_title": "Compte utilisateur",
+      "account_body": "La création d'un compte est nécessaire pour sauvegarder vos itinéraires. Vous vous engagez à fournir une adresse email valide et à garder votre mot de passe confidentiel.\n\nVous pouvez supprimer votre compte à tout moment ; vos données seront alors effacées conformément à la politique de confidentialité.",
+      "content_title": "Vos contenus",
+      "content_body": "Vous restez propriétaire des itinéraires que vous créez. Le partage public d'un itinéraire est un choix volontaire de votre part : toute personne disposant du lien pourra alors le consulter.\n\nVous vous engagez à ne pas publier de contenu illicite, trompeur ou portant atteinte aux droits de tiers. Nous pouvons retirer tout contenu contraire à ces conditions.",
+      "liability_title": "Responsabilité",
+      "liability_body": "Les itinéraires proposés par TRIPTIC sont fournis à titre purement indicatif. Ils peuvent contenir des erreurs ou des imprécisions, notamment parce qu'ils sont en partie générés par une intelligence artificielle.\n\nAvant de partir, vérifiez systématiquement les conditions locales, la météo, l'état des sentiers et des routes ainsi que la réglementation en vigueur (zones protégées, bivouac, circulation). Les activités de plein air comportent des risques : vous les pratiquez sous votre seule responsabilité, et l'éditeur ne saurait être tenu responsable des accidents ou incidents survenus lors de vos sorties.",
+      "changes_title": "Modification des conditions",
+      "changes_body": "Ces conditions peuvent évoluer, notamment lors de l'introduction de nouvelles fonctionnalités ou d'offres payantes. En cas de modification importante, vous en serez informé via l'application.\n\nLa poursuite de l'utilisation du service après modification vaut acceptation des nouvelles conditions."
+    }
   },
   "carousel": {
     "label": "Photos de {{place}}",
@@ -348,5 +391,23 @@
     "empty": "Aucune photo disponible pour ce lieu.",
     "photo_alt": "{{place}} — photo {{n}}",
     "video_alt": "{{place}} — vidéo {{n}}"
+  },
+  "auth": {
+    "login_title": "Connexion",
+    "signup_title": "Créer un compte",
+    "email": "Email",
+    "password": "Mot de passe",
+    "password_hint": "6 caractères minimum",
+    "submit_login": "Se connecter",
+    "submit_signup": "Créer mon compte",
+    "switch_to_signup": "Pas encore de compte ? Inscris-toi",
+    "switch_to_login": "Déjà un compte ? Connecte-toi",
+    "error_invalid": "Email ou mot de passe incorrect.",
+    "error_signup": "Inscription impossible — vérifie l'email et réessaie.",
+    "logout": "Se déconnecter",
+    "login_nav": "Compte",
+    "unavailable": "La connexion n'est pas disponible pour le moment.",
+    "required_generation": "Crée un compte gratuit pour générer tes trips.",
+    "launch_offer_banner": "Offre de lancement : toutes les fonctionnalités sont ouvertes gratuitement."
   }
 }

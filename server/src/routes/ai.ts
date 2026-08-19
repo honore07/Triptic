@@ -15,7 +15,8 @@ import { recomputeTrip } from '../services/recompute.js';
 import { applyTripEstimates } from '../services/budget.js';
 import { findDayPhotos, findTripPhoto } from '../services/photos.js';
 import { enrichTripSegments } from '../services/segments.js';
-import type { QuotaService } from '../services/quota.js';
+import { env } from '../env.js';
+import type { Quota } from '../services/quota.js';
 import type { RoutingService } from '../services/routing.js';
 import type { PgPlaceRepo } from '../repo/places.js';
 import type { EnrichmentService } from '../services/enrichment.js';
@@ -85,12 +86,23 @@ function sseWrite(res: Response, event: string, data: unknown): void {
  */
 export function createAiRouter(
   provider: LlmProvider,
-  quota: QuotaService,
+  quota: Quota,
   placeRepo?: PgPlaceRepo,
   enrichment?: EnrichmentService,
   routing?: RoutingService,
 ): Router {
   const router = Router();
+
+  // Avec Supabase configuré : la génération exige un compte (quota par
+  // utilisateur + coût LLM). Renvoyé AVANT le passage en SSE → le front
+  // reçoit un 401 JSON classique.
+  router.use((req, res, next) => {
+    if (env.authRequired && !req.user.authenticated) {
+      res.status(401).json({ error: 'auth_required' });
+      return;
+    }
+    next();
+  });
 
   router.post('/generate-trips', async (req, res) => {
     const parsed = generateBodySchema.safeParse(req.body);
@@ -114,7 +126,7 @@ export function createAiRouter(
     res.flushHeaders();
 
     try {
-      if (quota.remaining(userId, plan) <= 0) {
+      if ((await quota.remaining(userId, plan)) <= 0) {
         sseWrite(res, 'error', { error: 'quota_exceeded', plan });
         sseWrite(res, 'done', {});
         res.end();
@@ -145,7 +157,7 @@ export function createAiRouter(
           ...(result.quick_replies ? { quick_replies: result.quick_replies } : {}),
         });
       } else {
-        quota.consume(userId, plan);
+        await quota.consume(userId, plan);
         const visible = result.generation.trips.slice(0, limits.trip_proposals);
         // Date de départ posée sur chaque proposition (météo, saison, export)
         const tripStartDate = start_date ?? result.generation.request.start_date;
@@ -190,7 +202,7 @@ export function createAiRouter(
           locked_proposals: result.generation.trips.length - visible.length,
           validated: result.validated,
           grounded: result.grounding.applied,
-          remaining: quota.remaining(userId, plan),
+          remaining: await quota.remaining(userId, plan),
         });
         logger.info(
           {
