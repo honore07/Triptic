@@ -47,7 +47,8 @@ export function AuthPage() {
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-10">
-      <h1 className="font-display text-2xl font-bold text-trail">
+      <div className="glass-gold fade-up rounded-trip p-6">
+      <h1 className="font-display text-3xl font-bold text-trail">
         {mode === 'login' ? t('auth.login_title') : t('auth.signup_title')}
       </h1>
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
@@ -83,7 +84,7 @@ export function AuthPage() {
         <button
           type="submit"
           disabled={busy}
-          className="min-h-11 rounded-badge bg-gold px-4 py-2 font-semibold text-trail transition hover:bg-gold-deep disabled:opacity-60"
+          className="min-h-12 rounded-2xl bg-gold px-4 py-2 font-display text-base font-bold text-trail shadow-[0_8px_26px_rgba(200,146,42,.35)] transition hover:bg-gold-deep hover:text-snow disabled:opacity-60"
         >
           {mode === 'login' ? t('auth.submit_login') : t('auth.submit_signup')}
         </button>
@@ -98,6 +99,7 @@ export function AuthPage() {
       >
         {mode === 'login' ? t('auth.switch_to_signup') : t('auth.switch_to_login')}
       </button>
+      </div>
     </main>
   );
 }

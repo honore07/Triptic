@@ -109,10 +109,18 @@ export function App() {
       <OnlineIndicator />
       <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-        <Link to="/" className="font-display text-lg font-bold text-trail">
-          TRIP<span className="text-summit">TIC</span>
+        <Link
+          to="/"
+          className="flex flex-col gap-0.5 font-display text-2xl font-bold italic leading-none text-trail [text-shadow:2px_2px_6px_rgba(200,146,42,.3)]"
+        >
+          <span>
+            Trip<span className="text-copper-deep">tic</span>
+          </span>
+          <span className="label-mono hidden not-italic text-fog sm:block">
+            {t('app.tagline')}
+          </span>
         </Link>
-        <nav className="flex items-center gap-4">
+        <nav className="nav-dock flex items-center gap-4">
           <Link
             to="/trips"
             className="flex items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
@@ -138,8 +146,8 @@ export function App() {
             <span className="sr-only sm:hidden">{t('places.nav')}</span>
           </Link>
           <AccountNav />
-          <LangSwitcher />
         </nav>
+        <LangSwitcher />
       </header>
       <Routes>
         <Route path="/" element={<Home />} />

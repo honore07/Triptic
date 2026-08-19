@@ -15,7 +15,7 @@ export function DifficultyBadge({ level }: { level: Difficulty }) {
   const { t } = useTranslation();
   return (
     <span
-      className={`inline-block rounded-badge px-2 py-0.5 text-xs font-semibold ${STYLES[level]}`}
+      className={`label-mono inline-block rounded-badge px-2 py-1 ${STYLES[level]}`}
     >
       {t(`difficulty.${level}`)}
     </span>

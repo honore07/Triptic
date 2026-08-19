@@ -153,7 +153,7 @@ export function TripPage() {
           type="button"
           onClick={onSave}
           disabled={isSaved}
-          className="flex min-h-11 items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-pine disabled:text-snow"
+          className="flex min-h-11 items-center gap-2 rounded-2xl bg-gold px-4 py-2.5 font-display text-base font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-pine disabled:text-snow"
         >
           <Bookmark size={16} aria-hidden="true" />
           {isSaved ? t('trips.saved') : t('trips.save')}

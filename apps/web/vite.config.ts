@@ -41,9 +41,9 @@ export default defineConfig({
         short_name: 'TRIPTIC',
         description:
           "Planification d'aventures multi-modales (road trip, trek, bikepacking) propulsée par IA.",
-        // Charte v2 : trail (Shadow Grey) pour la barre, cloud pour le splash
-        theme_color: '#1E1E24',
-        background_color: '#F6FAFD',
+        // Charte v3 Acrylique : brun profond pour la barre, crème pour le splash
+        theme_color: '#2C1810',
+        background_color: '#EDE5D8',
         display: 'standalone',
         start_url: '/',
         icons: [

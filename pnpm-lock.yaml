@@ -10,6 +10,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@fontsource/cormorant-garamond':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/dm-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1510,6 +1513,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/cormorant-garamond@5.3.0':
+    resolution: {integrity: sha512-weuGsCirGVWBWqpt6YUp0yLThTe4G8YO45noq8wxeJCRvEpq5lFrxNMFSTxcyOyV5k5otzJ8guDzYegdYlcLMQ==}
 
   '@fontsource/dm-sans@5.3.0':
     resolution: {integrity: sha512-lYJtMXXO28q1z+yz+z8XKd0s4hXaa9QdkETzkyD760sidCv5heI86weYA0sx0Nc4pAMAQTUuyf4gO44cYKKS9g==}
@@ -5254,6 +5260,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.1':
     optional: true
+
+  '@fontsource/cormorant-garamond@5.3.0': {}
 
   '@fontsource/dm-sans@5.3.0': {}
 

@@ -1,47 +1,56 @@
 @import 'tailwindcss';
 
 /*
- * Palette TRIPTIC v2 (juillet 2026) — Shadow Grey / Rosy Copper /
- * Sunflower Gold / Pale Sky. Ambiance chill & aventure.
- * summit = Rosy Copper (accent principal), gold = CTA (texte trail dessus),
- * trail = Shadow Grey (textes + fonds sombres), terrain/sky = surfaces claires.
+ * Palette TRIPTIC v3 « Acrylique » (août 2026) — peinture vivante.
+ * Crème chaud / brun profond / ocre doré / bordeaux, serif Cormorant Garamond
+ * pour l'affichage, étiquettes mono uppercase. Source : projet Claude Design
+ * « Triptic Acrylique » (accent #C8922A, accent2 #9B2D42, succès #2B7A4B,
+ * radius 22). Les NOMS de tokens v2 sont conservés (summit/trail/gold…) pour
+ * ne toucher aucun composant inutilement — seules les VALEURS changent.
+ * Contrastes vérifiés ≥ 4.5:1 (le blanc-sur-ocre du mock échouait à 2.7:1 →
+ * texte trail sur les CTA gold, 6.1:1).
  */
 @theme {
-  --color-summit: #c86341; /* Rosy Copper — accent aventure */
-  --color-copper-deep: #a64e30; /* copper lisible sur fond clair (texte, hover) */
-  --color-gold: #fac05e; /* Sunflower Gold — CTA (toujours avec texte trail) */
-  --color-gold-deep: #e8a83d;
-  --color-trail: #1e1e24; /* Shadow Grey — textes, fond sombre */
-  --color-ridge: #4a4a55; /* textes secondaires */
-  --color-sky: #cde6f5; /* Pale Sky — surfaces accent */
-  --color-terrain: #eaf4fb; /* surface claire dérivée de Pale Sky */
-  --color-cloud: #f6fafd; /* fond de page */
-  --color-pine: #1a8a4a; /* succès (fonds, icônes) */
-  --color-pine-deep: #147038; /* texte succès lisible sur fond clair (≥4.5:1) */
-  --color-amber: #c97a00; /* warning (fonds, icônes) */
-  --color-amber-deep: #8a5400; /* texte warning lisible sur fond clair (≥4.5:1) */
-  --color-storm: #c03030; /* erreur (fonds, icônes) */
-  --color-storm-deep: #a32626; /* texte erreur lisible sur fond clair (≥4.5:1) */
-  /* Fonds opaques des badges (tint 15 % précalculée sur snow) — opaques pour
-   * garantir le contraste même posés sur photo (TripCard). */
-  --color-pine-tint: #ddede4; /* pine-deep dessus : 5.08:1 */
-  --color-amber-tint: #f7ebd9; /* amber-deep dessus : 5.33:1 */
-  --color-storm-tint: #f6e0e0; /* storm-deep dessus : 5.82:1 */
-  --color-snow: #ffffff;
-  --color-mist: #b9d8ea; /* bordures */
-  --color-fog: #676d79; /* placeholders (≥4.5:1 sur snow ET cloud) */
+  --color-summit: #c8922a; /* ocre doré — accent principal (peinture) */
+  --color-copper-deep: #9b2d42; /* bordeaux — accent secondaire, liens, hover */
+  --color-gold: #c8922a; /* CTA (toujours avec texte trail : 6.1:1) */
+  --color-gold-deep: #a87718; /* hover CTA */
+  --color-trail: #2c1810; /* brun profond — textes, fonds sombres */
+  --color-ridge: #63503f; /* textes secondaires (6.1:1 sur cloud) */
+  --color-sky: #c7dcea; /* bleu ciel peint — surfaces accent */
+  --color-terrain: #f5ede0; /* surface écran (crème clair) */
+  --color-cloud: #ede5d8; /* fond de page (crème) */
+  --color-pine: #2b7a4b; /* succès */
+  --color-pine-deep: #1f5e39; /* texte succès (≥4.5:1) */
+  --color-amber: #c97a00; /* warning */
+  --color-amber-deep: #7a4a10; /* texte warning (≥4.5:1) */
+  --color-storm: #b03040; /* erreur (bordeaux chaud) */
+  --color-storm-deep: #93283a; /* texte erreur (≥4.5:1) */
+  /* Fonds opaques des badges (tints chauds précalculées sur snow) — opaques
+   * pour garantir le contraste même posés sur photo (TripCard). */
+  --color-pine-tint: #e0ebe2; /* pine-deep dessus : 6.3:1 */
+  --color-amber-tint: #f6e8d6; /* amber-deep dessus : 6.2:1 */
+  --color-storm-tint: #f5dfe0; /* storm-deep dessus : 6.3:1 */
+  --color-snow: #fffcf7; /* blanc cassé chaud (cartes) */
+  --color-mist: #dccfbc; /* bordures */
+  --color-fog: #6e5a45; /* placeholders (≥4.5:1 sur snow ET cloud) */
 
-  --font-display: 'DM Sans', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --radius-trip: 16px;
-  --radius-badge: 6px;
+  --radius-trip: 22px;
+  --radius-badge: 8px;
 }
 
 body {
   font-family: var(--font-body);
   background-color: var(--color-cloud);
+  /* Taches de peinture ambiantes du fond de page (design Acrylique) */
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(200, 146, 42, 0.1), transparent 35%),
+    radial-gradient(circle at 85% 75%, rgba(155, 45, 66, 0.07), transparent 35%);
+  background-attachment: fixed;
   color: var(--color-trail);
 }
 
@@ -57,6 +66,73 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Matières Acrylique ---------- */
+
+/* Carte « verre + papier » : blur, blanc cassé translucide, texture toile */
+.glass {
+  background-color: rgba(255, 252, 247, 0.84);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(180, 140, 80, 0.02) 0px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(90deg, rgba(140, 100, 60, 0.015) 0px, transparent 1px, transparent 4px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(44, 24, 16, 0.1);
+}
+
+/* Variante bordée d'ocre (cartes mises en avant) */
+.glass-gold {
+  background-color: rgba(255, 252, 247, 0.88);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(180, 140, 80, 0.02) 0px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(90deg, rgba(140, 100, 60, 0.015) 0px, transparent 1px, transparent 4px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 2px solid rgba(200, 146, 42, 0.2);
+  box-shadow:
+    0 8px 30px rgba(44, 24, 16, 0.06),
+    inset 0 0 50px rgba(200, 146, 42, 0.05);
+}
+
+/* Étiquette technique mono uppercase (labels, badges, méta) */
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Ciel peint du hero (gradient psky du design — remplace la photo) */
+.painted-sky {
+  background: linear-gradient(180deg, #5b9bc9 0%, #8bb8d6 35%, #d4c8b8 65%, #f5ede0 100%);
+}
+
+/* Dock de navigation mobile (design Acrylique) — barre de verre en bas.
+ * Sur desktop (≥640px) la nav reste dans l'en-tête. */
+@media (max-width: 639px) {
+  .nav-dock {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 40;
+    height: 60px;
+    border-radius: 24px;
+    background: rgba(255, 252, 247, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(44, 24, 16, 0.1);
+    box-shadow: 0 8px 30px rgba(44, 24, 16, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 6px;
+  }
+  body {
+    padding-bottom: 84px; /* la place du dock */
   }
 }
 
@@ -112,38 +188,55 @@ body {
   animation-delay: 0.3s;
 }
 
-/* Halos flottants du hero (copper + gold sur fond trail) */
+/* Taches de peinture dérivantes du hero (formes organiques, blur) */
 @keyframes drift {
   0%,
   100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) rotate(0deg) scale(1);
   }
   33% {
-    transform: translate(28px, -22px) scale(1.08);
+    transform: translate(25px, -18px) rotate(3deg) scale(1.05);
   }
   66% {
-    transform: translate(-20px, 16px) scale(0.95);
+    transform: translate(-15px, 10px) rotate(-2deg) scale(0.97);
   }
 }
 
 .hero-blob {
-  animation: drift 14s ease-in-out infinite;
-  filter: blur(70px);
+  animation: drift 18s ease-in-out infinite;
+  filter: blur(30px);
   will-change: transform;
+  border-radius: 60% 40% 55% 45%;
 }
 .hero-blob-slow {
-  animation-duration: 19s;
-  animation-delay: -7s;
+  animation-duration: 25s;
+  animation-delay: -8s;
+  border-radius: 45% 55% 40% 60%;
 }
 
-/* Lueur douce des CTA gold */
+/* Brume qui traverse le hero */
+@keyframes mist {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.hero-mist {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: mist 14s linear infinite;
+}
+
+/* Lueur douce des CTA ocre */
 @keyframes glow {
   0%,
   100% {
-    box-shadow: 0 4px 18px rgba(250, 192, 94, 0.35);
+    box-shadow: 0 8px 22px rgba(200, 146, 42, 0.3);
   }
   50% {
-    box-shadow: 0 6px 26px rgba(250, 192, 94, 0.55);
+    box-shadow: 0 10px 30px rgba(200, 146, 42, 0.45);
   }
 }
 
@@ -164,12 +257,12 @@ body {
 .tuner-range::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-sky), var(--color-gold), var(--color-summit));
+  background: linear-gradient(90deg, var(--color-sky), var(--color-gold), var(--color-copper-deep));
 }
 .tuner-range::-moz-range-track {
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-sky), var(--color-gold), var(--color-summit));
+  background: linear-gradient(90deg, var(--color-sky), var(--color-gold), var(--color-copper-deep));
 }
 .tuner-range::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -180,7 +273,7 @@ body {
   border-radius: 999px;
   border: 3px solid var(--color-snow);
   background: var(--color-trail);
-  box-shadow: 0 2px 8px rgba(30, 30, 36, 0.35);
+  box-shadow: 0 2px 8px rgba(44, 24, 16, 0.35);
   transition: transform 150ms ease-out;
 }
 .tuner-range::-moz-range-thumb {
@@ -189,7 +282,7 @@ body {
   border-radius: 999px;
   border: 3px solid var(--color-snow);
   background: var(--color-trail);
-  box-shadow: 0 2px 8px rgba(30, 30, 36, 0.35);
+  box-shadow: 0 2px 8px rgba(44, 24, 16, 0.35);
   transition: transform 150ms ease-out;
 }
 .tuner-range:active::-webkit-slider-thumb,

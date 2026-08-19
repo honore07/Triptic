@@ -101,7 +101,7 @@ export function PaywallModal() {
           <button
             type="button"
             onClick={() => setPlan('aventurier')}
-            className="glow-cta min-h-11 w-full rounded-xl bg-gold px-4 py-3 text-sm font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep"
+            className="glow-cta min-h-11 w-full rounded-2xl bg-gold px-4 py-3 font-display text-base font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep hover:text-snow"
           >
             {t('paywall.cta')} — {t('paywall.price_aventurier')}
           </button>
