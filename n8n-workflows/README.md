@@ -8,6 +8,7 @@ Source de vérité versionnée des workflows de l'instance n8n du VPS
 | `agent-enrichment-webhook.json` | Trace chaque zone auto-enrichie par le serveur (`services/enrichment.ts` → `N8N_ENRICH_WEBHOOK_URL`) | Webhook POST `/webhook/triptic-enrich` | Email Resend + Telegram à chaque événement |
 | `agent-weekly-places-report.json` | Rapport hebdo de santé de la base de lieux (`GET /api/places/stats`) | CRON lundi 09:00 | Email Resend (rapport complet) + résumé Telegram |
 | `agent-compliance-report.json` | Rapport hebdo de conformité TDM (Agent 5) | CRON lundi 09:30 | Email Resend (toujours) + alerte Telegram **seulement si anomalie** (fiches en quarantaine > 0 ou opt-out > 0) |
+| `agent-crm-brevo.json` | Pousse chaque **nouvelle inscription** dans le CRM Brevo (contact upsert + attributs TRIPTIC_PLAN/USER_ID/SIGNUP) | Webhook POST `/webhook/triptic-signup` (émis par `server/src/repo/users.ts` via `N8N_CRM_WEBHOOK_URL`) | — |
 
 L'agent correcteur d'itinéraires tourne **dans** le moteur (`packages/ai-engine`,
 règle qualité #5) — pas de doublon n8n. L'agent CRM lifecycle attend la clé
@@ -31,7 +32,14 @@ nœuds référencent des credentials n8n **par nom**. À créer dans l'UI n8n
      demandés — le domaine est chez Cloudflare). Sans domaine vérifié,
      Resend refuse l'envoi.
 
-2. **« Telegram TRIPTIC Bot »** — type **Telegram API** :
+2. **« Brevo API »** — type **Header Auth** :
+   - Name : `api-key`
+   - Value : la clé API Brevo (app.brevo.com → Settings → SMTP & API →
+     API Keys — créer une clé dédiée « n8n-triptic », révocable séparément).
+   - Côté serveur : ajouter `N8N_CRM_WEBHOOK_URL=http://localhost:5678/webhook/triptic-signup`
+     au `.env` pour activer l'émission de l'événement d'inscription.
+
+3. **« Telegram TRIPTIC Bot »** — type **Telegram API** :
    - Access Token : le token du bot (voir « Créer le bot Telegram » ci-dessous)
 
 Après import des workflows (voir plus bas), **ouvrir chaque nœud
