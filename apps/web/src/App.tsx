@@ -38,6 +38,14 @@ function useServerPlan() {
         if (me.remaining !== null) store.setRemaining(me.remaining);
       } else {
         store.setPlan('free');
+        // Le client croit avoir une session mais le serveur dit non (jeton
+        // invalide même après rafraîchissement) : purger l'état pour que
+        // l'en-tête arrête d'afficher « connecté » à tort — l'utilisateur
+        // voit alors le bouton Compte et peut se reconnecter.
+        if (store.accessToken) {
+          store.setSession(null);
+          void supabase?.auth.signOut().catch(() => undefined);
+        }
       }
     });
   }, [accessToken]);
