@@ -11,6 +11,7 @@ import type {
   TripTuning,
 } from '@triptic/shared';
 import type { ExplorePlace } from './explore';
+import { supabase } from './supabase';
 import { useUserStore } from '../store/userStore';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
@@ -60,7 +61,7 @@ export interface MePayload {
 export async function fetchMe(): Promise<MePayload | null> {
   try {
     const res = await fetch(`${API_URL}/api/me`, {
-      headers: planHeaders(useUserStore.getState().plan),
+      headers: await authHeaders(useUserStore.getState().plan),
     });
     return res.ok ? res.json() : null;
   } catch {
@@ -83,11 +84,28 @@ export type GenerateEvent =
   | { event: 'error'; data: { error: string } }
   | { event: 'done'; data: Record<string, never> };
 
-function planHeaders(plan: PlanId): HeadersInit {
-  // Session Supabase → Authorization: Bearer (le serveur dérive l'identité
-  // du JWT). Le header x-plan reste pour le mode démo/dev sans auth —
-  // ignoré par le serveur en production.
-  const token = useUserStore.getState().accessToken;
+/**
+ * En-têtes d'auth. Le jeton est demandé FRAIS à supabase-js au moment de la
+ * requête : getSession() rafraîchit un jeton expiré — indispensable sur
+ * mobile, où l'app revient de veille avec un jeton périmé et où le store
+ * peut mentir (bug constaté en prod : requête partie sans Authorization
+ * alors que l'UI affichait « connecté »). Repli sur le dernier jeton connu
+ * du store si getSession traîne (> 2,5 s) ou échoue. Le header x-plan reste
+ * pour le mode démo/dev sans auth — ignoré par le serveur en production.
+ */
+async function authHeaders(plan: PlanId): Promise<HeadersInit> {
+  let token = useUserStore.getState().accessToken;
+  if (supabase) {
+    try {
+      const fresh = await Promise.race([
+        supabase.auth.getSession().then(({ data }) => data.session?.access_token ?? null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+      ]);
+      if (fresh) token = fresh;
+    } catch {
+      // getSession en échec → on tente avec le jeton du store
+    }
+  }
   return {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(plan === 'free' ? {} : { 'x-plan': plan }),
@@ -109,7 +127,7 @@ export async function generateTripsStream(
 ): Promise<void> {
   const res = await fetch(`${API_URL}/api/ai/generate-trips`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders(plan)) },
     body: JSON.stringify({
       messages,
       lang,
@@ -150,7 +168,7 @@ export async function recomputeTrip(
   if (!proposal.days || proposal.days.length === 0) return null;
   const res = await fetch(`${API_URL}/api/trips/recompute`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders(plan)) },
     body: JSON.stringify({
       mode: proposal.mode,
       duration_days: proposal.duration_days,
@@ -203,7 +221,7 @@ export async function editTripStream(
 ): Promise<void> {
   const res = await fetch(`${API_URL}/api/ai/edit-trip`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders(plan)) },
     body: JSON.stringify({
       title: proposal.title,
       mode: proposal.mode,
@@ -226,7 +244,7 @@ export async function saveTrip(
   const { waypoints, title, mode, days, ...metadata } = proposal;
   const res = await fetch(`${API_URL}/api/trips`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders(plan)) },
     body: JSON.stringify({
       title,
       mode,
@@ -244,14 +262,14 @@ export async function saveTrip(
 
 /** GET /api/trips — les trips de l'utilisateur (brouillons inclus). */
 export async function listTrips(plan: PlanId): Promise<Trip[]> {
-  const res = await fetch(`${API_URL}/api/trips`, { headers: planHeaders(plan) });
+  const res = await fetch(`${API_URL}/api/trips`, { headers: await authHeaders(plan) });
   if (!res.ok) throw new Error(`listTrips failed: ${res.status}`);
   return res.json();
 }
 
 /** GET /api/trips/:id — null si introuvable ou inaccessible (404). */
 export async function fetchTrip(tripId: string, plan: PlanId): Promise<Trip | null> {
-  const res = await fetch(`${API_URL}/api/trips/${tripId}`, { headers: planHeaders(plan) });
+  const res = await fetch(`${API_URL}/api/trips/${tripId}`, { headers: await authHeaders(plan) });
   return res.ok ? res.json() : null;
 }
 
@@ -325,7 +343,7 @@ export async function parseExploreFilters(
 ): Promise<{ kinds: PlaceKind[]; keywords: string[] }> {
   const res = await fetch(`${API_URL}/api/ai/parse-filters`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders(plan)) },
     body: JSON.stringify({ text, lang }),
   });
   // Un échec remonte (au lieu de renvoyer une liste vide) : « aucun filtre
@@ -361,7 +379,7 @@ export async function fetchTripWeather(
 ): Promise<{ days: WeatherDayPayload[]; horizon_days: number } | null> {
   const res = await fetch(`${API_URL}/api/trips/weather`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders(plan)) },
     body: JSON.stringify({ start_date: startDate, days }),
   });
   return res.ok ? res.json() : null;
@@ -381,7 +399,7 @@ export async function updateTrip(
   const { waypoints, title, mode, days, ...metadata } = proposal;
   const res = await fetch(`${API_URL}/api/trips/${tripId}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...planHeaders(plan) },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders(plan)) },
     body: JSON.stringify({ title, mode, metadata, waypoints, days: days ?? null, ...patch }),
   });
   return res.ok ? res.json() : null;
@@ -420,7 +438,7 @@ export function gpxUrl(tripId: string): string {
 }
 
 export async function downloadGpx(tripId: string, title: string, plan: PlanId): Promise<boolean> {
-  const res = await fetch(gpxUrl(tripId), { headers: planHeaders(plan) });
+  const res = await fetch(gpxUrl(tripId), { headers: await authHeaders(plan) });
   if (!res.ok) return false;
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
