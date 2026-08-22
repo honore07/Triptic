@@ -46,6 +46,17 @@ export function Home() {
           <div className="hero-mist absolute inset-0" />
         </div>
 
+        {/* Planche d'identité VIRE — le V gravé, posé comme une plaque imprimée */}
+        <img
+          src="/vire/vire_marque-v.jpg"
+          alt=""
+          aria-hidden="true"
+          width={176}
+          height={176}
+          loading="lazy"
+          className="glass-gold absolute right-6 top-6 z-10 hidden h-44 w-44 rotate-2 object-cover p-1 md:block"
+        />
+
         <div className="relative z-10 flex flex-col gap-4">
           <h1
             className="fade-up font-display text-5xl font-bold leading-[1.02] tracking-tight text-trail [text-shadow:0_1px_3px_rgba(255,255,255,.5)] sm:text-6xl"

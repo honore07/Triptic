@@ -186,6 +186,7 @@
     "kind_trail": "Hiking loop"
   },
   "request": {
+    "mode": "Mode",
     "title": "Detected settings",
     "hint": "One tap to fix — your 3 trips will follow.",
     "tap_to_change": "tap to change",

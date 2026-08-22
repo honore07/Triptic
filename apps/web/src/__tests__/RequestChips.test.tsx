@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { TripRequest } from '@triptic/shared';
 import { RequestChips } from '../components/RequestChips';
+import { useUserStore } from '../store/userStore';
 import { setLang } from '../lib/i18n';
 
 const REQUEST: TripRequest = {
@@ -70,5 +71,31 @@ describe('RequestChips (onboarding hybride 1.1)', () => {
     render(<RequestChips request={REQUEST} busy={false} onRegenerate={() => {}} />);
     expect(screen.getByText('Detected settings')).toBeInTheDocument();
     setLang('fr');
+  });
+
+  describe('puce mode (van life en premier plan)', () => {
+    it('affiche le mode en premiere puce, verrouille en gratuit -> paywall sans patch', () => {
+      setLang('fr');
+      useUserStore.setState({ plan: 'free', paywallOpen: false });
+      const onRegenerate = vi.fn();
+      render(<RequestChips request={REQUEST} busy={false} onRegenerate={onRegenerate} />);
+      const chip = screen.getByRole('button', { name: /Mode : Van life/ });
+      fireEvent.click(chip);
+      expect(useUserStore.getState().paywallOpen).toBe(true);
+      expect(screen.queryByRole('button', { name: /Régénérer/ })).toBeNull();
+      useUserStore.setState({ paywallOpen: false });
+    });
+
+    it('plan payant : un tap passe van -> trek et Régénérer envoie modes [trek]', () => {
+      setLang('fr');
+      useUserStore.setState({ plan: 'aventurier', paywallOpen: false });
+      const onRegenerate = vi.fn();
+      render(<RequestChips request={REQUEST} busy={false} onRegenerate={onRegenerate} />);
+      fireEvent.click(screen.getByRole('button', { name: /Mode : Van life/ }));
+      expect(screen.getByRole('button', { name: /Mode : Trek/ })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Régénérer/ }));
+      expect(onRegenerate).toHaveBeenCalledWith({ modes: ['trek'] });
+      useUserStore.setState({ plan: 'free' });
+    });
   });
 });

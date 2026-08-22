@@ -186,6 +186,7 @@
     "kind_trail": "Rundwanderung"
   },
   "request": {
+    "mode": "Modus",
     "title": "Erkannte Einstellungen",
     "hint": "Ein Tipp zum Korrigieren — deine 3 Trips folgen.",
     "tap_to_change": "zum Ändern tippen",

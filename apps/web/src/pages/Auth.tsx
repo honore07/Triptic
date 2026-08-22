@@ -48,9 +48,21 @@ export function AuthPage() {
   return (
     <main className="mx-auto w-full max-w-md px-4 py-10">
       <div className="glass-gold fade-up rounded-trip p-6">
-      <h1 className="font-display text-3xl font-bold text-trail">
-        {mode === 'login' ? t('auth.login_title') : t('auth.signup_title')}
-      </h1>
+      <div className="flex items-center gap-4">
+        {/* Gravure VIRE — alpiniste qui salue (bienvenue dans la cordée) */}
+        <img
+          src="/vire/vire_char-salut.jpg"
+          alt=""
+          aria-hidden="true"
+          width={72}
+          height={72}
+          loading="lazy"
+          className="h-18 w-18 shrink-0 rounded-full border border-mist object-cover"
+        />
+        <h1 className="font-display text-3xl font-bold text-trail">
+          {mode === 'login' ? t('auth.login_title') : t('auth.signup_title')}
+        </h1>
+      </div>
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm font-semibold text-ridge">
           {t('auth.email')}

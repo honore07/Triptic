@@ -186,6 +186,7 @@
     "kind_trail": "Boucle rando"
   },
   "request": {
+    "mode": "Mode",
     "title": "Paramètres détectés",
     "hint": "Un tap pour corriger — tes 3 trips suivront.",
     "tap_to_change": "toucher pour changer",
