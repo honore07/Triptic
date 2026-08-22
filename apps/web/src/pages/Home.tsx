@@ -5,8 +5,9 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 
 /**
  * Home — "progressivement complexe" : une seule question visible au départ.
- * Hero « Acrylique » : ciel peint, taches de peinture dérivantes, brume,
- * titre serif Cormorant, suggestions numérotées façon carnet.
+ * Hero « VIRE » (maquette Accueil) : bandeau photo de crête gravé d'un filet
+ * encre, planche du V posée dessus, titre serif Cormorant, CTA plaque,
+ * suggestions numérotées façon carnet.
  */
 export function Home() {
   const { t } = useTranslation();
@@ -23,30 +24,16 @@ export function Home() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pb-12 pt-2">
-      <section className="fade-up painted-sky relative overflow-hidden rounded-trip border border-mist px-5 py-10 sm:px-10 sm:py-14">
-        {/* Taches de peinture dérivantes */}
-        <div
-          className="hero-blob absolute -left-16 -top-20 h-64 w-64 bg-summit/30"
+      <section className="fade-up relative overflow-hidden rounded-trip border border-mist bg-snow">
+        {/* Bandeau photo de crête (maquette Accueil) — filet encre en dessous */}
+        <img
+          src="/vire/vire_crete-sauvage.jpg"
+          alt=""
           aria-hidden="true"
+          className="h-40 w-full border-b border-mist object-cover sm:h-52"
         />
-        <div
-          className="hero-blob hero-blob-slow absolute -bottom-24 -right-10 h-72 w-72 bg-copper-deep/20"
-          aria-hidden="true"
-        />
-        <div
-          className="hero-blob absolute right-1/4 top-1/3 h-40 w-40 bg-pine/15"
-          aria-hidden="true"
-          style={{ animationDelay: '-11s' }}
-        />
-        {/* Brume traversante */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-1/3 h-24 overflow-hidden"
-          aria-hidden="true"
-        >
-          <div className="hero-mist absolute inset-0" />
-        </div>
 
-        {/* Planche d'identité VIRE — le V gravé, posé comme une plaque imprimée */}
+        {/* Planche d'identité VIRE — le V gravé, posé à cheval sur le bandeau */}
         <img
           src="/vire/vire_marque-v.jpg"
           alt=""
@@ -54,10 +41,10 @@ export function Home() {
           width={176}
           height={176}
           loading="lazy"
-          className="glass-gold absolute right-6 top-6 z-10 hidden h-44 w-44 rotate-2 object-cover p-1 md:block"
+          className="glass-gold absolute right-6 top-6 z-10 hidden h-40 w-40 rotate-2 object-cover p-1 md:block"
         />
 
-        <div className="relative z-10 flex flex-col gap-4">
+        <div className="relative z-10 flex flex-col gap-4 px-5 py-8 sm:px-10 sm:py-10">
           <h1
             className="fade-up font-display text-5xl font-bold leading-[1.02] tracking-tight text-trail [text-shadow:0_1px_3px_rgba(255,255,255,.5)] sm:text-6xl"
             style={{ animationDelay: '80ms' }}
@@ -102,7 +89,7 @@ export function Home() {
             <button
               type="submit"
               disabled={!query.trim()}
-              className="glow-cta flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gold px-6 py-3 font-display text-lg font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep hover:text-snow disabled:translate-y-0 disabled:animate-none disabled:cursor-not-allowed disabled:bg-trail/10 disabled:text-trail/40"
+              className="cta-plate flex min-h-13 items-center justify-center gap-2 px-6 py-4 disabled:translate-y-0 disabled:animate-none disabled:cursor-not-allowed disabled:bg-trail/10 disabled:text-trail/40"
             >
               <Sparkles size={18} aria-hidden="true" />
               {t('home.cta')}

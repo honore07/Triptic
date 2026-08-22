@@ -115,7 +115,7 @@ export function MyTrips() {
           <p className="max-w-md text-sm text-ridge">{t('my_trips.empty_hint')}</p>
           <Link
             to="/plan"
-            className="glow-cta mt-2 rounded-xl bg-gold px-5 py-3 text-sm font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep"
+            className="cta-plate mt-2 flex min-h-12 items-center px-5 py-3"
           >
             {t('my_trips.empty_cta')}
           </Link>

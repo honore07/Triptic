@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import { ChatBubble, TypingBubble } from '../components/ChatBubble';
 import { QuickReplies } from '../components/QuickReplies';
 import { RequestChips } from '../components/RequestChips';
@@ -83,6 +84,7 @@ export function Plan() {
   };
 
   const onChoose = (trip: TripProposal) => {
+    track('trip_chosen', { mode: trip.mode, difficulty: trip.difficulty });
     selectTrip(trip);
     navigate('/trip');
   };
@@ -158,7 +160,7 @@ export function Plan() {
             type="submit"
             disabled={busy || !input.trim()}
             aria-label={t('chat.send')}
-            className="flex min-h-12 min-w-12 items-center justify-center rounded-xl bg-gold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-mist disabled:text-fog"
+            className="flex min-h-12 min-w-12 items-center justify-center rounded-full border border-mist bg-summit text-cloud transition-colors duration-200 hover:bg-copper-deep disabled:bg-terrain disabled:text-fog"
           >
             <Send size={18} aria-hidden="true" />
           </button>

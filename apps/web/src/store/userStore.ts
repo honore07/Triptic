@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
 import type { PlanId } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import { supabase } from '../lib/supabase';
 
 interface UserState {
@@ -36,7 +37,10 @@ export const useUserStore = create<UserState>((set) => ({
     set({ plan, paywallOpen: false });
   },
   setRemaining: (remaining) => set({ remaining }),
-  openPaywall: () => set({ paywallOpen: true }),
+  openPaywall: () => {
+    track('paywall_opened');
+    set({ paywallOpen: true });
+  },
   closePaywall: () => set({ paywallOpen: false }),
   setSession: (session) =>
     set({

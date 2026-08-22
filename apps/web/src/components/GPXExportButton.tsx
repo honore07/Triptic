@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
 import { PLANS } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import { downloadGpx } from '../lib/api';
 import { useUserStore } from '../store/userStore';
 
@@ -23,6 +24,7 @@ export function GPXExportButton({ tripId, title }: Props) {
     }
     setState('downloading');
     const ok = await downloadGpx(tripId, title, plan);
+    if (ok) track('gpx_exported');
     if (!ok) openPaywall();
     setState('idle');
   };
