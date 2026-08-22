@@ -98,7 +98,7 @@ export function AuthPage() {
         <button
           type="submit"
           disabled={busy}
-          className="min-h-12 rounded-2xl bg-gold px-4 py-2 font-display text-base font-bold text-trail shadow-[0_8px_26px_rgba(200,146,42,.35)] transition hover:bg-gold-deep hover:text-snow disabled:opacity-60"
+          className="cta-plate flex min-h-12 items-center justify-center px-4 py-2"
         >
           {mode === 'login' ? t('auth.submit_login') : t('auth.submit_signup')}
         </button>

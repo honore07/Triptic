@@ -129,7 +129,7 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
                     return nextMode;
                   });
                 }}
-                className={`flex min-h-11 items-center gap-1.5 border px-3.5 text-sm font-semibold transition-colors ${
+                className={`flex min-h-11 items-center gap-1.5 border px-3.5 font-mono text-[11px] font-medium uppercase tracking-[0.16em] transition-colors ${
                   active
                     ? 'border-summit bg-summit text-snow'
                     : locked
@@ -294,7 +294,7 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
         type="button"
         disabled={disabled || datesInvalid}
         onClick={() => onConfirm(tuning, dates, places)}
-        className="glow-cta mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3 font-display font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:opacity-60"
+        className="cta-plate mt-6 flex min-h-12 w-full items-center justify-center gap-2 px-6 py-3 disabled:translate-y-0 disabled:opacity-60"
       >
         <Sparkles size={18} aria-hidden="true" />
         {t('tuner.cta')}

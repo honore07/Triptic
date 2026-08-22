@@ -55,7 +55,7 @@ export function RequestChips({ request, busy, onRegenerate }: Props) {
   };
 
   const chipClass = (changed: boolean) =>
-    `flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+    `flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.14em] transition-colors ${
       changed
         ? 'border-summit bg-summit/10 text-copper-deep'
         : 'border-mist bg-snow text-trail hover:border-summit'
@@ -194,7 +194,7 @@ export function RequestChips({ request, busy, onRegenerate }: Props) {
             onRegenerate(patch);
             setPatch({});
           }}
-          className="glow-cta mt-3 flex min-h-11 items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:opacity-60"
+          className="cta-plate mt-3 flex min-h-11 items-center gap-2 px-5 py-2.5 disabled:translate-y-0 disabled:opacity-60"
         >
           <RefreshCw size={15} aria-hidden="true" />
           {t('request.regenerate')}
