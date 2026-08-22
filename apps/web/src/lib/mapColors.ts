@@ -1,15 +1,15 @@
 /**
- * Couleurs de la charte v3 « Acrylique » pour les couches carte (Mapbox GL
- * `paint`, marqueurs, SVG RoutePreview).
+ * Couleurs de la charte v4 « VIRE — Alpine Heritage » pour les couches carte
+ * (Mapbox GL `paint`, marqueurs, SVG RoutePreview).
  *
  * Dupliqué depuis styles.css — l'API Mapbox n'accepte pas les CSS vars.
  * Toute évolution de la palette doit être répercutée ici ET dans styles.css.
  */
 export const MAP_COLORS = {
-  summit: '#C8922A', // ocre doré — tracés route / marqueurs par défaut
-  trail: '#2C1810', // brun profond — marqueurs camp
-  gold: '#E4B04A', // ocre clair — tracé sur fond sombre (TripCard, photos)
-  sky: '#C7DCEA', // bleu ciel peint — surfaces accent
-  pine: '#2B7A4B', // succès — segments pied/vélo, départ, trailhead
-  storm: '#9B2D42', // bordeaux — marqueur d'arrivée
+  summit: '#3A4A3F', // pin alpin — tracés route / marqueurs par défaut
+  trail: '#111111', // encre carbone — marqueurs camp, tracés vélo
+  gold: '#C9A24B', // laiton — tracé sur fond sombre (TripCard, photos)
+  sky: '#DDD8CD', // papier ombré — surfaces accent
+  pine: '#2E6B44', // succès — segments pied, départ, trailhead
+  storm: '#8C2F26', // rouge fanion — marqueur d'arrivée
 } as const;
