@@ -43,11 +43,11 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'TRIPTIC — Plan, Explore, Repeat.',
-        short_name: 'TRIPTIC',
+        name: 'VIRE — Plan, Explore, Repeat.',
+        short_name: 'VIRE',
         description:
           "Planification d'aventures multi-modales (road trip, trek, bikepacking) propulsée par IA.",
-        // Charte v3 Acrylique : brun profond pour la barre, crème pour le splash
+        // Charte v4 VIRE : encre carbone pour la barre, papier vieilli pour le splash
         theme_color: '#111111',
         background_color: '#F4F1EA',
         display: 'standalone',

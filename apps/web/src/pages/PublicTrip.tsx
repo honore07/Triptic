@@ -32,7 +32,7 @@ export function PublicTrip() {
       <main className="mx-auto max-w-3xl px-4 py-12 text-center">
         <p className="text-ridge">{t('trips.not_found')}</p>
         <Link to="/" className="mt-4 inline-block font-semibold text-copper-deep underline">
-          TRIPTIC
+          VIRE
         </Link>
       </main>
     );
@@ -44,7 +44,7 @@ export function PublicTrip() {
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6">
       <header className="flex flex-col gap-2">
         <p className="font-mono text-xs uppercase tracking-widest text-ridge">
-          TRIPTIC — {t('app.tagline')}
+          VIRE — {t('app.tagline')}
         </p>
         <div className="flex items-center gap-2">
           <span className="rounded-badge bg-summit/10 px-2 py-0.5 text-xs font-semibold text-copper-deep">

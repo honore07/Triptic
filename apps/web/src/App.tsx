@@ -148,7 +148,7 @@ export function App() {
           </svg>
           <span className="flex flex-col gap-0.5 leading-none">
             <span className="font-display text-xl font-bold uppercase tracking-[0.18em]">
-              Triptic
+              VIRE
             </span>
             <span className="label-mono hidden text-fog sm:block">{t('app.tagline')}</span>
           </span>
