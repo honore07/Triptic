@@ -33,6 +33,9 @@
     "quick_replies": "Suggested replies"
   },
   "tuner": {
+    "mode_label": "Adventure mode",
+    "mode_hint": "Van life first — or leave empty and the AI will infer it from your request.",
+    "mode_locked": "Adventurer and Explorer plans only",
     "title": "Let's fine-tune your adventure",
     "hint": "Set the sliders — your 3 trips will be tailor-made.",
     "cta": "Generate my 3 tailored trips",

@@ -33,6 +33,9 @@
     "quick_replies": "Antwortvorschläge"
   },
   "tuner": {
+    "mode_label": "Abenteuer-Modus",
+    "mode_hint": "Vanlife zuerst — oder leer lassen, die KI leitet ihn aus deiner Anfrage ab.",
+    "mode_locked": "Nur mit Abenteurer- oder Profi-Plan",
     "title": "Verfeinern wir dein Abenteuer",
     "hint": "Stelle die Regler ein — deine 3 Trips werden maßgeschneidert.",
     "cta": "Meine 3 maßgeschneiderten Trips generieren",

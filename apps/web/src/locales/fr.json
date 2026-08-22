@@ -33,6 +33,9 @@
     "quick_replies": "Suggestions de réponse"
   },
   "tuner": {
+    "mode_label": "Mode d'aventure",
+    "mode_hint": "Van life en tête — ou laisse vide, l'IA déduira depuis ta demande.",
+    "mode_locked": "Réservé aux plans Aventurier et Explorateur",
     "title": "Affinons ton aventure",
     "hint": "Règle les curseurs — tes 3 trips seront taillés sur mesure.",
     "cta": "Générer mes 3 trips sur-mesure",

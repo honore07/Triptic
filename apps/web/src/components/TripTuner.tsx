@@ -1,12 +1,32 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CalendarDays, Compass, Landmark, MapPin, Mountain, Sparkles, Wind } from 'lucide-react';
-import { seasonForDate, tripDurationDays } from '@triptic/shared';
-import type { TripRequest, TripTuning, TuningValue } from '@triptic/shared';
+import {
+  Bike,
+  CalendarDays,
+  Caravan,
+  Compass,
+  Footprints,
+  Landmark,
+  Lock,
+  MapPin,
+  Mountain,
+  Sparkles,
+  Wind,
+} from 'lucide-react';
+import { PLANS, seasonForDate, tripDurationDays } from '@triptic/shared';
+import type { TripMode, TripRequest, TripTuning, TuningValue } from '@triptic/shared';
 import type { TripDates } from '../store/chatStore';
+import { useUserStore } from '../store/userStore';
 
-/** Points de départ/arrivée saisis explicitement (boucle = arrivée == départ). */
-export type TripPlaces = Pick<Partial<TripRequest>, 'departure' | 'destination'>;
+/** Corrections confirmées à la main (boucle = arrivée == départ ; mode choisi). */
+export type TripPlaces = Pick<Partial<TripRequest>, 'departure' | 'destination' | 'modes'>;
+
+/** Van life en premier plan, puis trek, puis bikepacking (objectif produit). */
+const MODES: Array<{ key: TripMode; Icon: typeof Caravan }> = [
+  { key: 'roadtrip', Icon: Caravan },
+  { key: 'trek', Icon: Footprints },
+  { key: 'bikepacking', Icon: Bike },
+];
 
 const AXES = [
   { key: 'physical', Icon: Mountain },
@@ -29,12 +49,17 @@ interface Props {
  */
 export function TripTuner({ onConfirm, disabled = false }: Props) {
   const { t } = useTranslation();
+  const { plan, openPaywall } = useUserStore();
   const [tuning, setTuning] = useState<TripTuning>(DEFAULT_TUNING);
+  // null = pas de choix explicite → l'IA déduit le mode depuis la conversation
+  const [mode, setMode] = useState<TripMode | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [departure, setDeparture] = useState('');
   const [destination, setDestination] = useState('');
   const [roundTrip, setRoundTrip] = useState(true);
+
+  const allowedModes = PLANS[plan].limits.modes;
 
   const setAxis = (key: keyof TripTuning, value: number) => {
     setTuning((prev) => ({ ...prev, [key]: value as TuningValue }));
@@ -56,6 +81,7 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
     if (roundTrip) places.destination = from;
   }
   if (!roundTrip && to) places.destination = to;
+  if (mode) places.modes = [mode];
 
   return (
     <section
@@ -75,6 +101,47 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
       </div>
 
       <fieldset className="mt-5 rounded-xl border border-mist bg-cloud p-3">
+        <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
+          <Caravan size={15} className="text-summit" aria-hidden="true" />
+          {t('tuner.mode_label')}
+        </legend>
+        <p className="mb-2 text-xs text-fog">{t('tuner.mode_hint')}</p>
+        <div className="flex flex-wrap gap-2">
+          {MODES.map(({ key, Icon }) => {
+            const active = mode === key;
+            const locked = !allowedModes.includes(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                disabled={disabled}
+                aria-pressed={active}
+                title={locked ? t('tuner.mode_locked') : undefined}
+                onClick={() => {
+                  if (locked) {
+                    openPaywall();
+                    return;
+                  }
+                  setMode((prev) => (prev === key ? null : key));
+                }}
+                className={`flex min-h-11 items-center gap-1.5 border px-3.5 text-sm font-semibold transition-colors ${
+                  active
+                    ? 'border-summit bg-summit text-snow'
+                    : locked
+                      ? 'border-mist bg-snow text-fog'
+                      : 'border-mist bg-snow text-trail hover:border-summit'
+                }`}
+              >
+                <Icon size={15} aria-hidden="true" />
+                {t(`mode.${key}`)}
+                {locked && <Lock size={12} aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset className="mt-4 rounded-xl border border-mist bg-cloud p-3">
         <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
           <MapPin size={15} className="text-summit" aria-hidden="true" />
           {t('tuner.places_label')}
