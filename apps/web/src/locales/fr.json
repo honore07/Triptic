@@ -10,7 +10,7 @@
   "home": {
     "headline": "Pars explorer l'Europe.",
     "question": "Où veux-tu aller ?",
-    "placeholder": "Ex. : 4 jours de trek sauvage dans les Vosges depuis Colmar…",
+    "placeholder": "Ex. : 1 semaine en van dans les Vosges, spots sauvages…",
     "cta": "Générer mes 3 trips",
     "examples_title": "Besoin d'inspiration ?",
     "example_1": "Road trip van 5 jours dans le Jura, ambiance sauvage",
@@ -33,6 +33,9 @@
     "quick_replies": "Suggestions de réponse"
   },
   "tuner": {
+    "mode_label": "Mode d'aventure",
+    "mode_hint": "Van life en tête — ou laisse vide, l'IA déduira depuis ta demande.",
+    "mode_locked": "Réservé aux plans Aventurier et Explorateur",
     "title": "Affinons ton aventure",
     "hint": "Règle les curseurs — tes 3 trips seront taillés sur mesure.",
     "cta": "Générer mes 3 trips sur-mesure",
@@ -106,7 +109,7 @@
     "hard": "Difficile"
   },
   "mode": {
-    "roadtrip": "Road trip",
+    "roadtrip": "Van life",
     "trek": "Trek",
     "bikepacking": "Bikepacking"
   },
@@ -183,6 +186,7 @@
     "kind_trail": "Boucle rando"
   },
   "request": {
+    "mode": "Mode",
     "title": "Paramètres détectés",
     "hint": "Un tap pour corriger — tes 3 trips suivront.",
     "tap_to_change": "toucher pour changer",

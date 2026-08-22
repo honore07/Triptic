@@ -101,6 +101,16 @@ export function MyTrips() {
 
       {state.status === 'ready' && state.trips.length === 0 && (
         <div className="flex flex-col items-center gap-3 rounded-trip border border-mist bg-snow px-6 py-12 text-center">
+          {/* Gravure VIRE — personnage qui cherche sa route, carte dépliée */}
+          <img
+            src="/vire/vire_char-carte.jpg"
+            alt=""
+            aria-hidden="true"
+            width={112}
+            height={112}
+            loading="lazy"
+            className="h-28 w-28 rounded-full border border-mist object-cover"
+          />
           <p className="font-display text-lg font-bold text-trail">{t('my_trips.empty_title')}</p>
           <p className="max-w-md text-sm text-ridge">{t('my_trips.empty_hint')}</p>
           <Link

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Minus, Plus, RefreshCw, SlidersHorizontal } from 'lucide-react';
-import type { Budget, Difficulty, GroupType, TripRequest, Vehicle } from '@triptic/shared';
+import { Lock, Minus, Plus, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { PLANS } from '@triptic/shared';
+import type { Budget, Difficulty, GroupType, TripMode, TripRequest, Vehicle } from '@triptic/shared';
+import { useUserStore } from '../store/userStore';
 
 /**
  * Onboarding hybride (roadmap 1.1) — les paramètres détectés par l'IA
@@ -10,6 +12,8 @@ import type { Budget, Difficulty, GroupType, TripRequest, Vehicle } from '@tript
  * « Régénérer » n'apparaît que si quelque chose a changé.
  */
 
+/** Van life en premier plan, puis trek, puis bikepacking (objectif produit). */
+const MODES: TripMode[] = ['roadtrip', 'trek', 'bikepacking'];
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
 const GROUPS: GroupType[] = ['solo', 'couple', 'family', 'group'];
 const VEHICLES: Vehicle[] = ['van', 'car', 'moto', 'none'];
@@ -28,10 +32,23 @@ interface Props {
 
 export function RequestChips({ request, busy, onRegenerate }: Props) {
   const { t } = useTranslation();
+  const { plan, openPaywall } = useUserStore();
   const [patch, setPatch] = useState<Partial<TripRequest>>({});
 
   const merged: TripRequest = { ...request, ...patch };
   const dirty = Object.keys(patch).length > 0;
+
+  const allowedModes = MODES.filter((m) => PLANS[plan].limits.modes.includes(m));
+  const currentMode: TripMode = merged.modes?.[0] ?? 'roadtrip';
+  const modeLocked = allowedModes.length <= 1;
+  const cycleMode = () => {
+    if (modeLocked) {
+      openPaywall();
+      return;
+    }
+    const from = allowedModes.includes(currentMode) ? currentMode : allowedModes[0]!;
+    setField('modes', [next(allowedModes, from)]);
+  };
 
   const setField = <K extends keyof TripRequest>(key: K, value: TripRequest[K]) => {
     setPatch((prev) => ({ ...prev, [key]: value }));
@@ -58,6 +75,20 @@ export function RequestChips({ request, busy, onRegenerate }: Props) {
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
+        {/* Mode d'aventure — van life en tête ; verrouillé en gratuit → paywall */}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={cycleMode}
+          aria-label={`${t('request.mode')} : ${t(`mode.${currentMode}`)} — ${
+            modeLocked ? t('tuner.mode_locked') : t('request.tap_to_change')
+          }`}
+          className={chipClass(patch.modes !== undefined)}
+        >
+          {t(`mode.${currentMode}`)}
+          {modeLocked && <Lock size={12} aria-hidden="true" />}
+        </button>
+
         {/* Durée : stepper ± */}
         <div
           className={chipClass(patch.duration_days !== undefined)}

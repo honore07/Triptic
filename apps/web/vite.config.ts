@@ -48,8 +48,8 @@ export default defineConfig({
         description:
           "Planification d'aventures multi-modales (road trip, trek, bikepacking) propulsée par IA.",
         // Charte v3 Acrylique : brun profond pour la barre, crème pour le splash
-        theme_color: '#2C1810',
-        background_color: '#EDE5D8',
+        theme_color: '#111111',
+        background_color: '#F4F1EA',
         display: 'standalone',
         start_url: '/',
         icons: [
