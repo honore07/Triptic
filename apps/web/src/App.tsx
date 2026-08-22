@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Backpack, Compass, LogOut, MapPinPlus, PartyPopper, UserRound } from 'lucide-react';
+import { trackPageview } from './lib/analytics';
 import { fetchMe } from './lib/api';
 import { supabase } from './lib/supabase';
 import { useUserStore } from './store/userStore';
@@ -109,11 +110,21 @@ function NotFound() {
   );
 }
 
+/** Pageview SPA à chaque navigation — chemin seul (jamais query ni hash). */
+function Pageviews() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    trackPageview(pathname);
+  }, [pathname]);
+  return null;
+}
+
 export function App() {
   const { t } = useTranslation();
   useServerPlan();
   return (
     <BrowserRouter>
+      <Pageviews />
       <OnlineIndicator />
       <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">

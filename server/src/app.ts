@@ -91,6 +91,9 @@ export function createApp({
           // par connect-src et non img-src.
           connectSrc: [
             "'self'",
+            // Mesure d'audience anonyme sans cookie — PostHog UE uniquement
+            // (lib/analytics.ts côté web ; RGPD règle 9 CLAUDE.md)
+            'https://eu.i.posthog.com',
             'https://api.mapbox.com',
             'https://events.mapbox.com',
             'https://*.tiles.mapbox.com',

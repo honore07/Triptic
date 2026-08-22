@@ -1,3 +1,4 @@
+import { track } from '../lib/analytics';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +37,7 @@ export function AuthPage() {
           setError(mode === 'login' ? t('auth.error_invalid') : t('auth.error_signup'));
           return;
         }
+        track('auth_signed_in', { mode });
         navigate('/');
       } catch {
         setError(t('auth.error_signup'));

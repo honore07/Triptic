@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import { ChatBubble, TypingBubble } from '../components/ChatBubble';
 import { QuickReplies } from '../components/QuickReplies';
 import { RequestChips } from '../components/RequestChips';
@@ -83,6 +84,7 @@ export function Plan() {
   };
 
   const onChoose = (trip: TripProposal) => {
+    track('trip_chosen', { mode: trip.mode, difficulty: trip.difficulty });
     selectTrip(trip);
     navigate('/trip');
   };

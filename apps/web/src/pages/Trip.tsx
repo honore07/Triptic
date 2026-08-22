@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Bookmark, Leaf, Pencil, Share2, Undo2, Wallet } from 'lucide-react';
 import type { Lang, TripDay } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import { saveTrip, updateTrip } from '../lib/api';
 import { DayCards } from '../components/DayCards';
 import { DayEditor } from '../components/DayEditor';
@@ -72,6 +73,7 @@ export function TripPage() {
         // L'auto-save a échoué (ou n'a pas encore abouti) : POST direct
         setSaved(await saveTrip(selected, plan, false));
       }
+      track('trip_saved', { mode: selected.mode });
     } catch {
       setActionError(true);
     }
@@ -92,6 +94,7 @@ export function TripPage() {
         setSaved(trip);
       }
       if (!trip.slug) return;
+      track('trip_shared', { mode: selected.mode });
       const url = `${window.location.origin}/trip/${trip.slug}`;
       if (navigator.clipboard?.writeText) {
         try {

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { PLANS, seasonForDate, tripDurationDays } from '@triptic/shared';
 import type { TripMode, TripRequest, TripTuning, TuningValue } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import type { TripDates } from '../store/chatStore';
 import { useUserStore } from '../store/userStore';
 
@@ -122,7 +123,11 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
                     openPaywall();
                     return;
                   }
-                  setMode((prev) => (prev === key ? null : key));
+                  setMode((prev) => {
+                    const nextMode = prev === key ? null : key;
+                    if (nextMode) track('mode_selected', { mode: nextMode });
+                    return nextMode;
+                  });
                 }}
                 className={`flex min-h-11 items-center gap-1.5 border px-3.5 text-sm font-semibold transition-colors ${
                   active
