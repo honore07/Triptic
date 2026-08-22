@@ -87,7 +87,7 @@ describe('MyTrips', () => {
     expect(screen.getByText('Tour du Hohneck')).toBeInTheDocument();
     expect(screen.getByText('Brouillon')).toBeInTheDocument();
     expect(screen.getByText('Sauvegardé')).toBeInTheDocument();
-    expect(screen.getAllByText('Road trip')).toHaveLength(2);
+    expect(screen.getAllByText('Van life')).toHaveLength(2);
     expect(screen.getAllByText('3 jours')).toHaveLength(2);
     expect(screen.getAllByText('240 km')).toHaveLength(2);
 

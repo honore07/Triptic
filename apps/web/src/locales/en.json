@@ -10,7 +10,7 @@
   "home": {
     "headline": "Go explore Europe.",
     "question": "Where do you want to go?",
-    "placeholder": "E.g.: 4 days of wild trekking in the Vosges from Colmar…",
+    "placeholder": "E.g.: 1 week in a van in the Vosges, wild overnight spots…",
     "cta": "Generate my 3 trips",
     "examples_title": "Need inspiration?",
     "example_1": "5-day van road trip in the Jura, wild vibes",
@@ -106,7 +106,7 @@
     "hard": "Hard"
   },
   "mode": {
-    "roadtrip": "Road trip",
+    "roadtrip": "Van life",
     "trek": "Trek",
     "bikepacking": "Bikepacking"
   },

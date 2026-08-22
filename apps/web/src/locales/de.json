@@ -10,7 +10,7 @@
   "home": {
     "headline": "Entdecke Europa.",
     "question": "Wohin willst du?",
-    "placeholder": "Z. B.: 4 Tage wildes Trekking in den Vogesen ab Colmar…",
+    "placeholder": "Z. B.: 1 Woche im Van in den Vogesen, wilde Stellplätze…",
     "cta": "Meine 3 Trips generieren",
     "examples_title": "Brauchst du Inspiration?",
     "example_1": "5-tägiger Van-Roadtrip im Jura, wilde Stimmung",
@@ -106,7 +106,7 @@
     "hard": "Schwer"
   },
   "mode": {
-    "roadtrip": "Roadtrip",
+    "roadtrip": "Vanlife",
     "trek": "Trekking",
     "bikepacking": "Bikepacking"
   },
