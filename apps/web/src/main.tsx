@@ -19,7 +19,12 @@ import '@fontsource/jetbrains-mono/latin-600.css';
 import './lib/i18n';
 import './styles.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { initAnalytics } from './lib/analytics';
 import { App } from './App';
+
+// Mesure d'audience anonyme sans cookie (PostHog UE) — no-op sans clé,
+// respecte Do Not Track et l'opt-out localStorage (voir lib/analytics.ts).
+initAnalytics();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

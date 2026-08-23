@@ -243,6 +243,60 @@ body {
   animation: mist 14s linear infinite;
 }
 
+/* CTA « plaque » — recette exacte de la maquette VIRE App : fond accent,
+ * texte papier, mono uppercase très espacé, filet encre, ombre portée dure
+ * qui s'écrase au survol puis à l'appui (la plaque se pose sur la page). */
+.cta-plate {
+  border: 1px solid var(--color-mist);
+  background: var(--color-summit);
+  color: var(--color-cloud);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow: 5px 5px 0 var(--color-mist);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+.cta-plate:hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 var(--color-mist);
+  background: var(--color-copper-deep);
+}
+.cta-plate:active:not(:disabled) {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 var(--color-mist);
+}
+.cta-plate:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Variante fantôme (actions secondaires) : filet encre, fond papier. */
+.cta-plate-ghost {
+  border: 1px solid var(--color-mist);
+  background: transparent;
+  color: var(--color-trail);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1;
+  transition: background-color 140ms ease;
+}
+.cta-plate-ghost:hover:not(:disabled) {
+  background: var(--color-sky);
+}
+.cta-plate-ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* CTA — ombre portée dure façon plaque imprimée (remplace la lueur ocre ;
  * VIRE n'a ni glow ni flou). Le nom .glow-cta est conservé. */
 .glow-cta {

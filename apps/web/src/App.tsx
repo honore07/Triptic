@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Backpack, Compass, LogOut, MapPinPlus, PartyPopper, UserRound } from 'lucide-react';
+import { trackPageview } from './lib/analytics';
 import { fetchMe } from './lib/api';
 import { supabase } from './lib/supabase';
 import { useUserStore } from './store/userStore';
@@ -109,23 +110,47 @@ function NotFound() {
   );
 }
 
+/** Pageview SPA à chaque navigation — chemin seul (jamais query ni hash). */
+function Pageviews() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    trackPageview(pathname);
+  }, [pathname]);
+  return null;
+}
+
 export function App() {
   const { t } = useTranslation();
   useServerPlan();
   return (
     <BrowserRouter>
+      <Pageviews />
       <OnlineIndicator />
       <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-        <Link
-          to="/"
-          className="flex flex-col gap-0.5 font-display text-2xl font-bold italic leading-none text-trail [text-shadow:2px_2px_6px_rgba(200,146,42,.3)]"
-        >
-          <span>
-            Trip<span className="text-copper-deep">tic</span>
-          </span>
-          <span className="label-mono hidden not-italic text-fog sm:block">
-            {t('app.tagline')}
+        <Link to="/" className="flex items-center gap-2.5 text-trail">
+          {/* Rose des vents de la maquette VIRE — aiguille à l'accent */}
+          <svg
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+            className="shrink-0"
+          >
+            <circle cx="12" cy="12" r="9.4" stroke="currentColor" strokeWidth="1.3" />
+            <path d="M12 4.6 L14 12 L12 19.4 L10 12 Z" className="fill-summit" />
+            <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+            <line x1="12" y1="1.4" x2="12" y2="2.9" stroke="currentColor" strokeWidth="1" />
+            <line x1="12" y1="21.1" x2="12" y2="22.6" stroke="currentColor" strokeWidth="1" />
+            <line x1="1.4" y1="12" x2="2.9" y2="12" stroke="currentColor" strokeWidth="1" />
+            <line x1="21.1" y1="12" x2="22.6" y2="12" stroke="currentColor" strokeWidth="1" />
+          </svg>
+          <span className="flex flex-col gap-0.5 leading-none">
+            <span className="font-display text-xl font-bold uppercase tracking-[0.18em]">
+              VIRE
+            </span>
+            <span className="label-mono hidden text-fog sm:block">{t('app.tagline')}</span>
           </span>
         </Link>
         <nav className="nav-dock flex items-center gap-4">

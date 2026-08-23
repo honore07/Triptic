@@ -269,7 +269,7 @@ export function Explore() {
           type="button"
           disabled={busy}
           onClick={() => void runSearch()}
-          className="glow-cta absolute bottom-3 left-1/2 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-gold px-5 font-display text-sm font-bold text-trail shadow-lg transition-all duration-200 hover:bg-gold-deep disabled:opacity-60"
+          className="cta-plate absolute bottom-3 left-1/2 flex min-h-11 -translate-x-1/2 items-center gap-2 px-5 hover:bg-gold-deep disabled:opacity-60"
         >
           <Search size={16} aria-hidden="true" />
           {status === 'searching' ? t('explore.searching') : t('explore.search_area')}

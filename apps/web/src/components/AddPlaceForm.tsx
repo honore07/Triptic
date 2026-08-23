@@ -210,7 +210,7 @@ export function AddPlaceForm() {
         <button
           type="submit"
           disabled={status === 'sending'}
-          className="glow-cta flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3 font-display font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:opacity-60"
+          className="cta-plate flex min-h-12 w-full items-center justify-center gap-2 px-6 py-3 disabled:translate-y-0 disabled:opacity-60"
         >
           <Send size={18} aria-hidden="true" />
           {status === 'sending' ? t('places.sending') : t('places.submit')}

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { tripDurationDays } from '@triptic/shared';
 import type { ChatMessage, Lang, PlanId, TripRequest, TripTuning } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import { ApiError, generateTripsStream, type TripsPayload } from '../lib/api';
 
 /** Dates du trip choisies dans l'onboarding (ISO yyyy-mm-dd). */
@@ -63,6 +64,8 @@ export const useChatStore = create<ChatState>()(
     (set, get) => {
   async function run(messages: ChatMessage[], lang: Lang, plan: PlanId): Promise<void> {
     set({ messages, status: 'generating', error: null, result: null, quickReplies: [] });
+    // Funnel d'activation — enums/compteurs uniquement, jamais le texte saisi
+    track('trip_generation_started', { plan, turns: messages.length });
     try {
       await generateTripsStream(
         messages,
@@ -79,12 +82,20 @@ export const useChatStore = create<ChatState>()(
                 quickReplies: event.data.quick_replies ?? [],
                 status: 'idle',
               });
+              track('trip_generation_question', { plan });
               break;
             case 'trips':
               set({ result: event.data, status: 'idle' });
+              track('trip_generation_result', {
+                plan,
+                trips: event.data.generation.trips.length,
+                locked: event.data.locked_proposals,
+                validated: event.data.validated,
+              });
               break;
             case 'error':
               set({ status: 'error', error: event.data.error });
+              track('trip_generation_error', { plan, code: event.data.error });
               break;
           }
         },
@@ -98,7 +109,9 @@ export const useChatStore = create<ChatState>()(
     } catch (err) {
       // 401 = compte requis (Supabase configuré) → l'UI propose la connexion
       const authRequired = err instanceof ApiError && err.status === 401;
-      set({ status: 'error', error: authRequired ? 'auth_required' : 'generation_failed' });
+      const code = authRequired ? 'auth_required' : 'generation_failed';
+      set({ status: 'error', error: code });
+      track('trip_generation_error', { plan, code });
     }
   }
 

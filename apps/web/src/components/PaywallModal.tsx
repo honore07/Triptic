@@ -1,3 +1,4 @@
+import { track } from '../lib/analytics';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, X } from 'lucide-react';
@@ -100,14 +101,14 @@ export function PaywallModal() {
         <div className="mt-5 flex flex-col gap-2">
           <button
             type="button"
-            onClick={() => setPlan('aventurier')}
-            className="glow-cta min-h-11 w-full rounded-2xl bg-gold px-4 py-3 font-display text-base font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep hover:text-snow"
+            onClick={() => { track('plan_upgraded', { plan: 'aventurier' }); setPlan('aventurier'); }}
+            className="cta-plate min-h-12 w-full px-4 py-4"
           >
             {t('paywall.cta')} — {t('paywall.price_aventurier')}
           </button>
           <button
             type="button"
-            onClick={() => setPlan('explorateur')}
+            onClick={() => { track('plan_upgraded', { plan: 'explorateur' }); setPlan('explorateur'); }}
             className="min-h-11 w-full rounded-xl border border-mist px-4 py-3 text-sm font-semibold text-trail transition-colors hover:border-summit"
             title={t('paywall.explorateur_extra')}
           >

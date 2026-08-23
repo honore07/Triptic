@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Bookmark, Leaf, Pencil, Share2, Undo2, Wallet } from 'lucide-react';
 import type { Lang, TripDay } from '@triptic/shared';
+import { track } from '../lib/analytics';
 import { saveTrip, updateTrip } from '../lib/api';
 import { DayCards } from '../components/DayCards';
 import { DayEditor } from '../components/DayEditor';
@@ -72,6 +73,7 @@ export function TripPage() {
         // L'auto-save a échoué (ou n'a pas encore abouti) : POST direct
         setSaved(await saveTrip(selected, plan, false));
       }
+      track('trip_saved', { mode: selected.mode });
     } catch {
       setActionError(true);
     }
@@ -92,6 +94,7 @@ export function TripPage() {
         setSaved(trip);
       }
       if (!trip.slug) return;
+      track('trip_shared', { mode: selected.mode });
       const url = `${window.location.origin}/trip/${trip.slug}`;
       if (navigator.clipboard?.writeText) {
         try {
@@ -153,7 +156,7 @@ export function TripPage() {
           type="button"
           onClick={onSave}
           disabled={isSaved}
-          className="flex min-h-11 items-center gap-2 rounded-2xl bg-gold px-4 py-2.5 font-display text-base font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-pine disabled:text-snow"
+          className="cta-plate flex min-h-11 items-center gap-2 px-4 py-2.5 disabled:translate-y-0 disabled:bg-pine disabled:text-snow"
         >
           <Bookmark size={16} aria-hidden="true" />
           {isSaved ? t('trips.saved') : t('trips.save')}
@@ -162,7 +165,7 @@ export function TripPage() {
         <button
           type="button"
           onClick={onShare}
-          className="flex min-h-11 items-center gap-2 rounded-xl border border-mist px-4 py-2.5 text-sm font-semibold text-trail transition-colors hover:border-summit"
+          className="cta-plate-ghost flex min-h-11 items-center gap-2 px-4 py-2.5"
         >
           <Share2 size={16} aria-hidden="true" />
           {copied ? t('trips.copied') : t('trips.share')}
@@ -262,7 +265,7 @@ export function TripPage() {
               <button
                 type="button"
                 onClick={undo}
-                className="flex min-h-11 items-center gap-2 rounded-xl border border-mist px-4 py-2.5 text-sm font-semibold text-trail transition-colors hover:border-summit"
+                className="cta-plate-ghost flex min-h-11 items-center gap-2 px-4 py-2.5"
               >
                 <Undo2 size={15} aria-hidden="true" />
                 {t('editor.undo')}
