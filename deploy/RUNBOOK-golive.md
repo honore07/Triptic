@@ -18,8 +18,18 @@
 ## 1. Sauvegarde BDD (obligatoire avant migration)
 
 ```bash
-ssh root@82.25.118.185 "pg_dump -U triptic_user -h localhost triptic_db | gzip > /root/backup-triptic-$(date +%Y%m%d-%H%M).sql.gz && ls -lh /root/backup-triptic-*.gz | tail -1"
+ssh root@82.25.118.185 "sudo -u postgres pg_dump triptic_db | gzip > /root/backup-triptic-$(date +%Y%m%d-%H%M).sql.gz && ls -lh /root/backup-triptic-*.gz | tail -1"
 ```
+
+> ⚠️ **Auth peer via `postgres`, pas `-U triptic_user`.** Le rôle `triptic_user`
+> exige un mot de passe (SCRAM sur TCP) : lancée par SSH sans TTY, la commande
+> `pg_dump -U triptic_user -h localhost` **se bloque en attendant la saisie** et
+> produit un fichier `.gz` vide (20 o) portant le nom d'une vraie sauvegarde —
+> pire que pas de sauvegarde. `sudo -u postgres` utilise l'auth peer (socket
+> Unix, sans mot de passe) — cohérent avec les migrations ci-dessous. La
+> redirection `> …` s'exécute côté root (qui a les droits sur `/root`), pas côté
+> `postgres` : ne jamais utiliser `pg_dump -f /root/…` (postgres ne peut pas
+> écrire dans `/root`).
 
 ## 2. Variables d'environnement (/opt/triptic/.env)
 
@@ -40,7 +50,7 @@ Vérifier : `NODE_ENV=production` dans l'env PM2 (`pm2 env <id> | grep NODE_ENV`
 
 ```bash
 cd /opt/triptic && git pull origin main && pnpm install --frozen-lockfile && pnpm build
-psql -U triptic_user -h localhost -d triptic_db -f server/src/db/migrations/0008_generation_quotas.sql
+sudo -u postgres psql -d triptic_db -f server/src/db/migrations/0008_generation_quotas.sql
 pm2 reload triptic-api --update-env
 ```
 
@@ -62,7 +72,7 @@ partager le lien public, exporter le GPX, installer la PWA.
 ```bash
 cd /opt/triptic && git reset --hard <sha-précédent> && pnpm install --frozen-lockfile && pnpm build && pm2 reload triptic-api --update-env
 # La migration 0008 est additive (CREATE TABLE IF NOT EXISTS) : aucun rollback BDD requis.
-# Restauration complète si nécessaire : gunzip -c /root/backup-triptic-<date>.sql.gz | psql -U triptic_user -h localhost triptic_db
+# Restauration complète si nécessaire : gunzip -c /root/backup-triptic-<date>.sql.gz | sudo -u postgres psql triptic_db
 ```
 
 ## 6. Après le lancement (suivi)
