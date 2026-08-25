@@ -98,7 +98,7 @@ export function DayCards({ days, selectedDay, onSelectDay }: Props) {
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
-                  className="h-12 w-12 shrink-0 rounded-full border border-mist object-cover"
+                  className="h-16 w-16 shrink-0 rounded-full border border-mist object-cover"
                 />
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="label-mono text-fog">

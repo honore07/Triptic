@@ -132,8 +132,9 @@ export function App() {
       <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-2.5 text-trail">
-          {/* La marque VIRE — compas retourné, en réduction pour cette taille */}
-          <LogoVire size={30} />
+          {/* La marque VIRE — la gravure elle-même, à une taille qui lui
+           * laisse le détail : sous ~32 px son trait fin vire au gris. */}
+          <LogoVire size={42} />
           <span className="flex flex-col gap-0.5 leading-none">
             <span className="font-display text-xl font-bold uppercase tracking-[0.18em]">
               VIRE

@@ -85,7 +85,7 @@ export function Etape({ day, startDate }: EtapeProps) {
           alt=""
           aria-hidden="true"
           loading="lazy"
-          className="h-14 w-14 shrink-0 rounded-full border border-mist object-cover"
+          className="h-17 w-17 shrink-0 rounded-full border border-mist object-cover"
         />
         <div className="flex min-w-0 flex-col gap-0.5">
           <p className="label-mono text-fog">
