@@ -4,6 +4,7 @@ import { MapPin } from 'lucide-react';
 import { seasonForDate, tripDurationDays } from '@triptic/shared';
 import type { GroupType, TripRequest, TripTuning, TuningValue } from '@triptic/shared';
 import type { TripDates } from '../store/chatStore';
+import { Bascule } from './Bascule';
 import { profileConstraints } from '../store/profileStore';
 
 /** Corrections confirmées à la main, transmises telles quelles au moteur. */
@@ -76,38 +77,6 @@ function Reglage({
         <span className="label-mono text-fog">{low}</span>
         <span className="label-mono text-fog">{high}</span>
       </div>
-    </div>
-  );
-}
-
-/** Interrupteur de contrainte — plaque pleine à l'accent quand il est actif. */
-function Bascule({
-  label,
-  on,
-  disabled,
-  onToggle,
-}: {
-  label: string;
-  on: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-mist py-3">
-      <span className="font-display text-lg text-trail">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={on}
-        aria-label={label}
-        disabled={disabled}
-        onClick={onToggle}
-        className={`flex h-7 w-12 shrink-0 items-center rounded-full border border-mist p-0.5 transition-colors ${
-          on ? 'justify-end bg-summit' : 'justify-start bg-snow'
-        }`}
-      >
-        <span className="h-5 w-5 rounded-full border border-mist bg-snow" />
-      </button>
     </div>
   );
 }

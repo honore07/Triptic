@@ -588,5 +588,16 @@
     "c_unpaved": "Unbefestigte Pisten meiden",
     "c_official": "Offizielle Plätze bevorzugen",
     "c_service": "Mindestens alle {{days}} Tage ein Servicepunkt"
+  },
+  "photo": {
+    "account": "Profilbild",
+    "vehicle": "Fahrzeugbild",
+    "add": "Bild hinzufügen",
+    "change": "Bild ändern",
+    "remove": "Entfernen",
+    "working": "Wird vorbereitet…",
+    "error_not_an_image": "Diese Datei ist kein Bild.",
+    "error_too_large": "Bild zu groß — wähle eine Datei unter 12 MB.",
+    "error_unreadable": "Dieses Bild konnte nicht gelesen werden."
   }
 }

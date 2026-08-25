@@ -588,5 +588,16 @@
     "c_unpaved": "Avoid unpaved tracks",
     "c_official": "Prefer official areas",
     "c_service": "A service point at least every {{days}} days"
+  },
+  "photo": {
+    "account": "Profile photo",
+    "vehicle": "Vehicle photo",
+    "add": "Add a photo",
+    "change": "Change photo",
+    "remove": "Remove",
+    "working": "Preparing…",
+    "error_not_an_image": "That file is not an image.",
+    "error_too_large": "Image too heavy — pick a file under 12 MB.",
+    "error_unreadable": "That image could not be read."
   }
 }

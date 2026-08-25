@@ -25,6 +25,8 @@ export interface Preferences {
  */
 export interface Vehicle {
   name: string;
+  /** Photo du véhicule (data URL carrée) — null = gravure par défaut. */
+  photo: string | null;
   /** Hauteur hors-tout en mètres — décide des ponts bas praticables. */
   height_m: number;
   length_m: number;
@@ -51,6 +53,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
 
 export const DEFAULT_VEHICLE: Vehicle = {
   name: '',
+  photo: null,
   height_m: 2.55,
   length_m: 5.4,
   weight_t: 3.2,
@@ -66,9 +69,15 @@ export const DEFAULT_VEHICLE: Vehicle = {
 interface ProfileState {
   units: Units;
   preferences: Preferences;
+  /**
+   * Photo de profil du compte (data URL carrée). Elle reste dans le
+   * navigateur : il n'y a pas de stockage d'images côté serveur.
+   */
+  avatar: string | null;
   /** null tant qu'aucun véhicule n'a été enregistré. */
   vehicle: Vehicle | null;
   setUnits: (units: Units) => void;
+  setAvatar: (avatar: string | null) => void;
   setPreference: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void;
   saveVehicle: (vehicle: Vehicle) => void;
   clearVehicle: () => void;
@@ -79,8 +88,10 @@ export const useProfileStore = create<ProfileState>()(
     (set, get) => ({
       units: 'metric',
       preferences: DEFAULT_PREFERENCES,
+      avatar: null,
       vehicle: null,
       setUnits: (units) => set({ units }),
+      setAvatar: (avatar) => set({ avatar }),
       setPreference: (key, value) =>
         set({ preferences: { ...get().preferences, [key]: value } }),
       saveVehicle: (vehicle) => set({ vehicle }),

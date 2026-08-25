@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Bascule } from '../components/Bascule';
+import { PhotoPicker } from '../components/PhotoPicker';
 import {
   DEFAULT_VEHICLE,
   useProfileStore,
@@ -71,15 +73,14 @@ export function Vehicule() {
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
-        <div className="fade-up flex items-center gap-4">
-          <img
-            src="/vire/vire_char-sac.jpg"
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            className="h-16 w-16 shrink-0 rounded-full border border-mist object-cover"
+        <div className="fade-up flex flex-col gap-3">
+          <PhotoPicker
+            value={draft.photo}
+            fallback="/vire/vire_char-sac.jpg"
+            label={t('photo.vehicle')}
+            onChange={(photo) => set('photo', photo)}
           />
-          <label className="flex min-w-0 flex-1 flex-col gap-1">
+          <label className="flex min-w-0 flex-col gap-1">
             <span className="label-mono text-fog">{t('vehicule.name')}</span>
             <input
               type="text"
@@ -122,7 +123,7 @@ export function Vehicule() {
           <div className="flex flex-col gap-0.5 p-2.5">
             <dt className="label-mono text-fog">{t('vehicule.service_every')}</dt>
             <dd className="font-display text-2xl font-semibold leading-none text-trail">
-              {draft.service_every_days} {t('home.days', { count: draft.service_every_days })}
+              {t('home.days', { count: draft.service_every_days })}
             </dd>
           </div>
         </dl>
@@ -132,29 +133,13 @@ export function Vehicule() {
         <fieldset className="flex flex-col">
           <legend className="label-mono mb-1 text-fog">{t('vehicule.constraints')}</legend>
           {FLAGS.map((key) => (
-            <div
+            <Bascule
               key={key}
-              className="flex items-center justify-between gap-4 border-b border-mist py-3"
-            >
-              <span className="flex min-w-0 flex-col gap-0.5">
-                <span className="font-display text-lg leading-tight text-trail">
-                  {t(`vehicule.flag_${key}`)}
-                </span>
-                <span className="text-sm text-ridge">{t(`vehicule.flag_${key}_hint`)}</span>
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={draft[key]}
-                aria-label={t(`vehicule.flag_${key}`)}
-                onClick={() => set(key, !draft[key])}
-                className={`flex h-7 w-12 shrink-0 items-center rounded-full border border-mist p-0.5 transition-colors ${
-                  draft[key] ? 'justify-end bg-summit' : 'justify-start bg-snow'
-                }`}
-              >
-                <span className="h-5 w-5 rounded-full border border-mist bg-snow" />
-              </button>
-            </div>
+              label={t(`vehicule.flag_${key}`)}
+              hint={t(`vehicule.flag_${key}_hint`)}
+              on={draft[key]}
+              onToggle={() => set(key, !draft[key])}
+            />
           ))}
           <label className="flex items-center justify-between gap-4 py-3">
             <span className="font-display text-lg text-trail">

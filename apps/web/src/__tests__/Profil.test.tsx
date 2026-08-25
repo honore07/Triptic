@@ -89,6 +89,7 @@ describe('Contraintes issues du profil', () => {
       preferences: { ...DEFAULT_PREFERENCES, legal_bivouac: false },
       vehicle: {
         name: 'Le Gris',
+        photo: null,
         height_m: 2.8,
         length_m: 5.4,
         weight_t: 3.2,

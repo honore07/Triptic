@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Caravan } from 'lucide-react';
+import { Bascule } from '../components/Bascule';
+import { PhotoPicker } from '../components/PhotoPicker';
 import { supabase } from '../lib/supabase';
 import { useProfileStore, type Preferences, type Units } from '../store/profileStore';
 import { useUserStore } from '../store/userStore';
@@ -14,40 +16,6 @@ const PREFS: readonly (keyof Preferences)[] = [
   'offline_maps',
 ];
 
-/** Interrupteur de préférence — plaque pleine à l'accent quand il est actif. */
-function Bascule({
-  label,
-  hint,
-  on,
-  onToggle,
-}: {
-  label: string;
-  hint: string;
-  on: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-mist py-3">
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="font-display text-lg leading-tight text-trail">{label}</span>
-        <span className="text-sm text-ridge">{hint}</span>
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={on}
-        aria-label={label}
-        onClick={onToggle}
-        className={`flex h-7 w-12 shrink-0 items-center rounded-full border border-mist p-0.5 transition-colors ${
-          on ? 'justify-end bg-summit' : 'justify-start bg-snow'
-        }`}
-      >
-        <span className="h-5 w-5 rounded-full border border-mist bg-snow" />
-      </button>
-    </div>
-  );
-}
-
 /**
  * Profil — planche PL.14 « PROFIL ».
  * Unités d'affichage, préférences durables et région couverte. Les
@@ -57,7 +25,8 @@ function Bascule({
 export function Profil() {
   const { t } = useTranslation();
   const email = useUserStore((s) => s.email);
-  const { units, preferences, vehicle, setUnits, setPreference } = useProfileStore();
+  const { units, preferences, avatar, vehicle, setUnits, setAvatar, setPreference } =
+    useProfileStore();
   // Copie locale : sans elle, TypeScript ne peut pas garantir que le client
   // est encore non-null au moment du clic.
   const client = supabase;
@@ -68,21 +37,19 @@ export function Profil() {
         <p className="label-mono text-fog">{t('profil.plate')}</p>
       </div>
 
-      {/* Identité — la gravure du sac tient lieu de portrait */}
-      <div className="fade-up flex items-center gap-4">
-        <img
-          src="/vire/vire_pic-sac.jpg"
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          className="h-16 w-16 shrink-0 rounded-full border border-mist object-cover"
+      {/* Identité — la gravure du sac tient lieu de portrait tant qu'aucune
+       * photo n'a été choisie. */}
+      <div className="fade-up flex flex-col gap-3">
+        <h1 className="truncate font-display text-3xl font-semibold leading-tight text-trail">
+          {email ?? t('profil.anonymous')}
+        </h1>
+        <p className="label-mono -mt-2 text-copper-deep">{t('profil.subtitle')}</p>
+        <PhotoPicker
+          value={avatar}
+          fallback="/vire/vire_pic-sac.jpg"
+          label={t('photo.account')}
+          onChange={setAvatar}
         />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h1 className="truncate font-display text-3xl font-semibold leading-tight text-trail">
-            {email ?? t('profil.anonymous')}
-          </h1>
-          <p className="label-mono text-copper-deep">{t('profil.subtitle')}</p>
-        </div>
       </div>
 
       {/* Unités */}

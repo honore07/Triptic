@@ -588,5 +588,16 @@
     "c_unpaved": "Éviter les pistes non revêtues",
     "c_official": "Privilégier les aires officielles",
     "c_service": "Un point de service au moins tous les {{days}} jours"
+  },
+  "photo": {
+    "account": "Photo de profil",
+    "vehicle": "Photo du véhicule",
+    "add": "Ajouter une photo",
+    "change": "Changer la photo",
+    "remove": "Retirer",
+    "working": "Préparation…",
+    "error_not_an_image": "Ce fichier n’est pas une image.",
+    "error_too_large": "Image trop lourde — choisis un fichier de moins de 12 Mo.",
+    "error_unreadable": "Impossible de lire cette image."
   }
 }
