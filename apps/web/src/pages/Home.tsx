@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useChatStore } from '../store/chatStore';
 
 /**
  * Home — "progressivement complexe" : une seule question visible au départ.
@@ -17,6 +18,10 @@ export function Home() {
   const start = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    // Nouvelle demande depuis l'accueil : on repart d'une conversation vierge.
+    // Sans ça, l'ancienne génération persistée (localStorage) masque la
+    // nouvelle demande et Plan réaffiche les 3 trips précédents.
+    useChatStore.getState().reset();
     navigate('/plan', { state: { initialQuery: trimmed } });
   };
 
