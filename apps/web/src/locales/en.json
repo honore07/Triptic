@@ -478,5 +478,13 @@
     "couple": "As a pair",
     "family": "As a family",
     "group": "As a group"
+  },
+  "releve": {
+    "plate": "Survey in progress",
+    "title": "We are tracing your three lines.",
+    "progress_label": "Surveyed",
+    "axis": "Segments analysed",
+    "running": "running",
+    "note": "Three close lines, never identical. The call is yours."
   }
 }

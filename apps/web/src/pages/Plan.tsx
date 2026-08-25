@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
 import { track } from '../lib/analytics';
-import { ChatBubble, TypingBubble } from '../components/ChatBubble';
+import { ChatBubble } from '../components/ChatBubble';
 import { Fenetre } from '../components/Fenetre';
+import { Releve, type ReleveStep } from '../components/Releve';
 import { QuickReplies } from '../components/QuickReplies';
 import { RequestChips } from '../components/RequestChips';
 import { TripCompare } from '../components/TripCompare';
@@ -105,7 +106,9 @@ export function Plan() {
         {messages.map((message, i) => (
           <ChatBubble key={i} message={message} />
         ))}
-        {busy && <TypingBubble label={t(`chat.status_${status}`, t('chat.thinking'))} />}
+        {/* Pendant la génération, la planche de relevé (PL.06) remplace la
+         * bulle d'attente : elle dit ce que VIRE fait vraiment. */}
+        {busy && <Releve status={status as ReleveStep} />}
         {!busy && !result && quickReplies.length > 0 && (
           <QuickReplies
             replies={quickReplies}

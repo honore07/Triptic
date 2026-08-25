@@ -478,5 +478,13 @@
     "couple": "À deux",
     "family": "En famille",
     "group": "En groupe"
+  },
+  "releve": {
+    "plate": "Relevé en cours",
+    "title": "On trace tes trois voies.",
+    "progress_label": "Relevé",
+    "axis": "Segments analysés",
+    "running": "en cours",
+    "note": "Trois voies proches, jamais identiques. C'est à toi de trancher."
   }
 }

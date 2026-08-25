@@ -478,5 +478,13 @@
     "couple": "Zu zweit",
     "family": "Als Familie",
     "group": "Als Gruppe"
+  },
+  "releve": {
+    "plate": "Aufnahme läuft",
+    "title": "Wir ziehen deine drei Linien.",
+    "progress_label": "Aufgenommen",
+    "axis": "Analysierte Abschnitte",
+    "running": "läuft",
+    "note": "Drei ähnliche Linien, nie identisch. Die Wahl liegt bei dir."
   }
 }
