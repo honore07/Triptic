@@ -8,7 +8,7 @@
 - `--color-bg`: #F4F1EA (Warm aged paper / parchment)
 - `--color-text`: #111111 (Deep carbon ink black)
 - `--color-surface`: #EFECE6 (Subtle muted container fill)
-- `--color-accent`: #3A4A3F (Muted alpine pine / forest slate)
+- `--color-accent`: #A94E2B (Expedition rust / oxidised terracotta — CTAs, toggles, active states)
 - `--color-border`: #222222 (Fine crisp structural line)
 
 ## 3. Typography

@@ -5,11 +5,15 @@ import { ArrowLeft, Bookmark, Leaf, Pencil, Share2, Undo2, Wallet } from 'lucide
 import type { Lang, TripDay } from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { saveTrip, updateTrip } from '../lib/api';
+import { formatDistance, formatElevation } from '../lib/units';
+import { useProfileStore } from '../store/profileStore';
 import { DayCards } from '../components/DayCards';
 import { DayEditor } from '../components/DayEditor';
 import { DifficultyBadge } from '../components/DifficultyBadge';
+import { Etape } from '../components/Etape';
 import { GPXExportButton } from '../components/GPXExportButton';
 import { MapView } from '../components/MapView';
+import { Nuitee } from '../components/Nuitee';
 import { TripEditChat } from '../components/TripEditChat';
 import { WeatherStrip } from '../components/WeatherStrip';
 import { useTripStore } from '../store/tripStore';
@@ -30,6 +34,7 @@ export function TripPage() {
     undo,
   } = useTripStore();
   const { plan } = useUserStore();
+  const units = useProfileStore((s) => s.units);
   const [copied, setCopied] = useState(false);
   const [actionError, setActionError] = useState(false);
   /** URL publique affichée en fallback quand le presse-papiers est indisponible. */
@@ -120,6 +125,9 @@ export function TripPage() {
     min === max ? `${min} €` : `${min}–${max} €`;
 
   const sortedWaypoints = [...selected.waypoints].sort((a, b) => a.day - b.day);
+  // La nuitée ne se propose que sur une journée ouverte : sans choix, pas de
+  // liste d'emplacements en vrac sous l'itinéraire.
+  const nightDay = selectedDay === null ? null : (selected.days?.find((d) => d.day === selectedDay) ?? null);
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6">
@@ -128,20 +136,57 @@ export function TripPage() {
         {t('trips.back')}
       </Link>
 
-      <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span className="rounded-badge bg-summit/10 px-2 py-0.5 text-xs font-semibold text-copper-deep">
-            {t(`mode.${selected.mode}`)}
-          </span>
-          <DifficultyBadge level={selected.difficulty} />
+      <header className="flex flex-col gap-3">
+        <div className="flex items-center justify-between border-b border-mist pb-2">
+          <p className="label-mono flex items-center gap-2 text-fog">
+            {/* Carte et règle — l'outil de celui qui relève un itinéraire */}
+            <img
+              src="/vire/vire_nav-carte.webp"
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="h-8 w-8 shrink-0 rounded-full border border-mist object-cover"
+            />
+            {t('itineraire.plate')}
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="label-mono text-copper-deep">{t(`mode.${selected.mode}`)}</span>
+            <DifficultyBadge level={selected.difficulty} />
+          </div>
         </div>
-        <h1 className="font-display text-3xl font-bold text-trail">{selected.title}</h1>
-        <p className="text-sm text-ridge">{selected.summary}</p>
-        <p className="font-mono text-xs text-ridge">
-          {t('trips.days_count', { count: selected.duration_days })} · {Math.round(selected.distance_km)} km ·{' '}
-          {t('trips.elevation')} {Math.round(selected.elevation_gain_m)} m ·{' '}
-          {Math.round(selected.daily_distance_km)} km {t('trips.per_day')}
-        </p>
+        <h1 className="font-display text-3xl font-semibold leading-tight text-trail">
+          {selected.title}
+        </h1>
+        <p className="font-display text-base italic leading-snug text-ridge">{selected.summary}</p>
+
+        {/* Relevé de l'itinéraire — étiquettes mono, valeurs en serif */}
+        <dl className="grid grid-cols-2 border border-mist sm:grid-cols-4">
+          {[
+            {
+              label: t('trips.days'),
+              value: t('trips.days_count', { count: selected.duration_days }),
+            },
+            { label: t('trips.distance'), value: formatDistance(selected.distance_km, units) },
+            {
+              label: t('trips.elevation'),
+              value: formatElevation(selected.elevation_gain_m, units),
+            },
+            {
+              label: t('trips.per_day'),
+              value: formatDistance(selected.daily_distance_km, units),
+            },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="flex flex-col gap-0.5 border-mist p-2.5 [&:not(:last-child)]:border-r"
+            >
+              <dt className="label-mono text-fog">{label}</dt>
+              <dd className="font-display text-xl font-semibold leading-none text-trail">
+                {value}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </header>
 
       <MapView
@@ -287,6 +332,22 @@ export function TripPage() {
             <DayEditor days={selected.days} busy={recomputing} onChange={onDaysChange} />
           ) : (
             <DayCards days={selected.days} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+          )}
+
+          {/* Fiche d'étape (PL.11) puis nuitée (PL.10) — pour la journée ouverte */}
+          {!editing && nightDay && <Etape day={nightDay} startDate={selected.start_date} />}
+
+          {!editing && nightDay && (
+            <Nuitee
+              day={nightDay}
+              onAdd={(activity) =>
+                onDaysChange(
+                  selected.days!.map((d) =>
+                    d.day === nightDay.day ? { ...d, activities: [...d.activities, activity] } : d,
+                  ),
+                )
+              }
+            />
           )}
 
           <TripEditChat

@@ -81,7 +81,7 @@ export function RequestChips({ request, busy, onRegenerate }: Props) {
           disabled={busy}
           onClick={cycleMode}
           aria-label={`${t('request.mode')} : ${t(`mode.${currentMode}`)} — ${
-            modeLocked ? t('tuner.mode_locked') : t('request.tap_to_change')
+            modeLocked ? t('home.mode_locked') : t('request.tap_to_change')
           }`}
           className={chipClass(patch.modes !== undefined)}
         >

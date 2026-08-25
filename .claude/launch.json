@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "vire-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@triptic/web", "dev"],
+      "port": 5173
+    },
+    {
       "name": "triptic-server",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@triptic/server", "start"],

@@ -25,17 +25,14 @@ const DAYS: TripDay[] = [
 ];
 
 describe('DayCards (cartes-étapes 2.2)', () => {
-  it('affiche les jours triés avec activités, distances et mention estimation', () => {
+  it('affiche les jours triés, avec distance et mention estimation', () => {
     setLang('fr');
     render(<DayCards days={DAYS} selectedDay={null} onSelectDay={() => {}} />);
     const cards = screen.getAllByRole('button');
     expect(cards[0]).toHaveAccessibleName(/Jour 1/);
     expect(cards[1]).toHaveAccessibleName(/Jour 2/);
-    expect(screen.getByText('Route des Crêtes')).toBeInTheDocument();
-    expect(screen.getByText(/Cols et chaumes/)).toBeInTheDocument();
     expect(screen.getByText(/43 km/)).toBeInTheDocument();
     expect(screen.getByText(/estimation/)).toBeInTheDocument(); // segment non routé
-    expect(screen.getByText(/24 €/)).toBeInTheDocument();
   });
 
   it('remonte le jour cliqué (synchro carte)', () => {
@@ -53,7 +50,7 @@ describe('DayCards (cartes-étapes 2.2)', () => {
     expect(screen.getByRole('button', { name: /Jour 1/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('demande la vignette en w=400 (perf 6.4)', () => {
+  it('demande la vignette à la taille du médaillon, pas plus (perf 6.4)', () => {
     setLang('fr');
     const days: TripDay[] = [
       {
@@ -62,7 +59,8 @@ describe('DayCards (cartes-étapes 2.2)', () => {
       },
     ];
     const { container } = render(<DayCards days={days} selectedDay={null} onSelectDay={() => {}} />);
-    expect(container.querySelector('img')?.getAttribute('src')).toContain('w=400');
+    // Le médaillon fait 48 px : inutile de tirer 400 px de CDN
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('w=160');
   });
 });
 

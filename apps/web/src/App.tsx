@@ -7,6 +7,7 @@ import { fetchMe } from './lib/api';
 import { supabase } from './lib/supabase';
 import { useUserStore } from './store/userStore';
 import { LangSwitcher } from './components/LangSwitcher';
+import { LogoVire } from './components/LogoVire';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
 import { Contribute } from './pages/Contribute';
@@ -18,8 +19,10 @@ import { LegalTdm } from './pages/LegalTdm';
 import { MyTrips } from './pages/MyTrips';
 import { Plan } from './pages/Plan';
 import { SavedTrip } from './pages/SavedTrip';
+import { Profil } from './pages/Profil';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
+import { Vehicule } from './pages/Vehicule';
 import { AuthPage } from './pages/Auth';
 
 /**
@@ -129,23 +132,9 @@ export function App() {
       <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-2.5 text-trail">
-          {/* Rose des vents de la maquette VIRE — aiguille à l'accent */}
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-            className="shrink-0"
-          >
-            <circle cx="12" cy="12" r="9.4" stroke="currentColor" strokeWidth="1.3" />
-            <path d="M12 4.6 L14 12 L12 19.4 L10 12 Z" className="fill-summit" />
-            <circle cx="12" cy="12" r="1.2" fill="currentColor" />
-            <line x1="12" y1="1.4" x2="12" y2="2.9" stroke="currentColor" strokeWidth="1" />
-            <line x1="12" y1="21.1" x2="12" y2="22.6" stroke="currentColor" strokeWidth="1" />
-            <line x1="1.4" y1="12" x2="2.9" y2="12" stroke="currentColor" strokeWidth="1" />
-            <line x1="21.1" y1="12" x2="22.6" y2="12" stroke="currentColor" strokeWidth="1" />
-          </svg>
+          {/* La marque VIRE — la gravure elle-même, à une taille qui lui
+           * laisse le détail : sous ~32 px son trait fin vire au gris. */}
+          <LogoVire size={42} />
           <span className="flex flex-col gap-0.5 leading-none">
             <span className="font-display text-xl font-bold uppercase tracking-[0.18em]">
               VIRE
@@ -178,6 +167,14 @@ export function App() {
             <span className="hidden sm:inline">{t('places.nav')}</span>
             <span className="sr-only sm:hidden">{t('places.nav')}</span>
           </Link>
+          <Link
+            to="/profil"
+            className="flex items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+          >
+            <UserRound size={15} aria-hidden="true" />
+            <span className="hidden sm:inline">{t('profil.nav')}</span>
+            <span className="sr-only sm:hidden">{t('profil.nav')}</span>
+          </Link>
           <AccountNav />
         </nav>
         <LangSwitcher />
@@ -191,6 +188,8 @@ export function App() {
         <Route path="/trips/:id" element={<SavedTrip />} />
         <Route path="/contribute" element={<Contribute />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/profil" element={<Profil />} />
+        <Route path="/vehicule" element={<Vehicule />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/legal/attributions" element={<LegalAttributions />} />
         <Route path="/legal/tdm" element={<LegalTdm />} />
@@ -199,7 +198,12 @@ export function App() {
         <Route path="/legal/terms" element={<LegalPage section="terms" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
+      {/* Bande papier sous le pied de page : l'accueil pose une photo plein
+       * écran derrière tout, et ces liens sont en encre sombre. Sans fond
+       * opaque ils deviendraient illisibles sur le bas assombri. Ailleurs,
+       * la bande se confond avec le papier de la page. */}
+      <footer className="mt-auto border-t border-mist/30 bg-cloud/92">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
         <Link
           to="/legal/attributions"
           className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
@@ -230,6 +234,7 @@ export function App() {
         >
           {t('legal.terms_nav')}
         </Link>
+        </div>
       </footer>
       <PaywallModal />
     </BrowserRouter>

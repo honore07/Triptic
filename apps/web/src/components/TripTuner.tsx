@@ -1,302 +1,295 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Bike,
-  CalendarDays,
-  Caravan,
-  Compass,
-  Footprints,
-  Landmark,
-  Lock,
-  MapPin,
-  Mountain,
-  Sparkles,
-  Wind,
-} from 'lucide-react';
-import { PLANS, seasonForDate, tripDurationDays } from '@triptic/shared';
-import type { TripMode, TripRequest, TripTuning, TuningValue } from '@triptic/shared';
-import { track } from '../lib/analytics';
+import { MapPin } from 'lucide-react';
+import { seasonForDate, tripDurationDays } from '@triptic/shared';
+import type { GroupType, TripRequest, TripTuning, TuningValue } from '@triptic/shared';
 import type { TripDates } from '../store/chatStore';
-import { useUserStore } from '../store/userStore';
+import { Bascule } from './Bascule';
+import { profileConstraints } from '../store/profileStore';
 
-/** Corrections confirmées à la main (boucle = arrivée == départ ; mode choisi). */
-export type TripPlaces = Pick<Partial<TripRequest>, 'departure' | 'destination' | 'modes'>;
+/** Corrections confirmées à la main, transmises telles quelles au moteur. */
+export type TripPlaces = Pick<
+  Partial<TripRequest>,
+  'departure' | 'destination' | 'modes' | 'group_type' | 'constraints'
+>;
 
-/** Van life en premier plan, puis trek, puis bikepacking (objectif produit). */
-const MODES: Array<{ key: TripMode; Icon: typeof Caravan }> = [
-  { key: 'roadtrip', Icon: Caravan },
-  { key: 'trek', Icon: Footprints },
-  { key: 'bikepacking', Icon: Bike },
-];
+/** Les 4 axes qui différencient les 3 trips (injectés dans le prompt système). */
+const AXES = ['physical', 'pace', 'culture', 'discovery'] as const;
 
-const AXES = [
-  { key: 'physical', Icon: Mountain },
-  { key: 'pace', Icon: Wind },
-  { key: 'culture', Icon: Landmark },
-  { key: 'discovery', Icon: Compass },
-] as const;
+/** Le curseur « nous serons » mappe 1:1 l'énumération du moteur. */
+const GROUPS: readonly GroupType[] = ['solo', 'couple', 'family', 'group'];
+
+/** Contraintes à cocher — la valeur envoyée est la phrase traduite. */
+const CONSTRAINTS = ['train', 'exposed', 'dog'] as const;
 
 const DEFAULT_TUNING: TripTuning = { physical: 3, pace: 3, culture: 3, discovery: 3 };
 
 interface Props {
-  onConfirm: (tuning: TripTuning, dates: TripDates | null, places: TripPlaces) => void;
+  /** Fenêtre posée en PL.04 — alimente le relevé de bas de planche. */
+  dates?: TripDates | null;
+  /** Les dates ne transitent plus ici : la fenêtre (PL.04) les a déjà posées. */
+  onConfirm: (tuning: TripTuning, places: TripPlaces) => void;
   disabled?: boolean;
 }
 
+/** Rangée de curseur — libellé, valeur courante à l'accent, bornes en mono. */
+function Reglage({
+  id,
+  label,
+  value,
+  valueLabel,
+  low,
+  high,
+  max,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  valueLabel: string;
+  low: string;
+  high: string;
+  max: number;
+  disabled: boolean;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={id} className="label-mono text-ridge">
+          {label}
+        </label>
+        <span className="label-mono text-copper-deep">{valueLabel}</span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={1}
+        max={max}
+        step={1}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="tuner-range"
+      />
+      <div className="flex justify-between">
+        <span className="label-mono text-fog">{low}</span>
+        <span className="label-mono text-fog">{high}</span>
+      </div>
+    </div>
+  );
+}
+
 /**
- * TripTuner — 4 curseurs 1-5 posés juste après la demande initiale pour
- * tailler les 3 trips sur mesure (niveau sportif, rythme, activités,
- * incontournables ↔ hors des sentiers).
+ * TripTuner — planche PL.05 « PRÉCISIONS ».
+ * Les derniers réglages avant de tracer : la cordée, le sac, les 4 axes qui
+ * différencient les 3 trips, les contraintes à cocher et le champ libre.
+ * Le relevé de bas de planche rappelle la fenêtre posée en PL.04.
  */
-export function TripTuner({ onConfirm, disabled = false }: Props) {
+export function TripTuner({ dates = null, onConfirm, disabled = false }: Props) {
   const { t } = useTranslation();
-  const { plan, openPaywall } = useUserStore();
   const [tuning, setTuning] = useState<TripTuning>(DEFAULT_TUNING);
-  // null = pas de choix explicite → l'IA déduit le mode depuis la conversation
-  const [mode, setMode] = useState<TripMode | null>(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [group, setGroup] = useState(2); // 1-4 → GROUPS
+  const [pack, setPack] = useState(3); // 1-5, 3 = standard
+  const [flags, setFlags] = useState<Record<string, boolean>>({});
+  const [note, setNote] = useState('');
   const [departure, setDeparture] = useState('');
   const [destination, setDestination] = useState('');
   const [roundTrip, setRoundTrip] = useState(true);
-
-  const allowedModes = PLANS[plan].limits.modes;
 
   const setAxis = (key: keyof TripTuning, value: number) => {
     setTuning((prev) => ({ ...prev, [key]: value as TuningValue }));
   };
 
-  const today = new Date().toISOString().slice(0, 10);
-  const duration = startDate && endDate ? tripDurationDays(startDate, endDate) : null;
-  const season = startDate ? seasonForDate(startDate) : null;
-  const datesInvalid = Boolean(startDate && endDate && duration === null);
-  const dates: TripDates | null =
-    startDate && endDate && duration !== null ? { start: startDate, end: endDate } : null;
+  const season = dates ? seasonForDate(dates.start) : null;
+  const duration = dates ? tripDurationDays(dates.start, dates.end) : null;
 
-  // Champs vides = on laisse l'IA déduire depuis la conversation (pas d'override)
-  const places: TripPlaces = {};
-  const from = departure.trim();
-  const to = destination.trim();
-  if (from) {
-    places.departure = from;
-    if (roundTrip) places.destination = from;
-  }
-  if (!roundTrip && to) places.destination = to;
-  if (mode) places.modes = [mode];
+  const submit = () => {
+    const places: TripPlaces = {};
+    // Champs vides = on laisse l'IA déduire depuis la conversation
+    const from = departure.trim();
+    const to = destination.trim();
+    if (from) {
+      places.departure = from;
+      if (roundTrip) places.destination = from;
+    }
+    if (!roundTrip && to) places.destination = to;
+
+    places.group_type = GROUPS[group - 1] as GroupType;
+
+    // Les contraintes sont du texte libre côté moteur : on lui envoie les
+    // phrases dans la langue de l'utilisateur, jamais des codes internes.
+    const constraints = CONSTRAINTS.filter((key) => flags[key]).map((key) =>
+      t(`tuner.constraint_${key}`),
+    );
+    if (pack !== 3) constraints.push(t(`tuner.pack_${pack}`));
+    const free = note.trim();
+    if (free) constraints.push(free);
+    // Préférences durables et véhicule enregistré (PL.13/PL.14) — même canal
+    constraints.push(...profileConstraints().map(({ key, params }) => t(key, params ?? {})));
+    if (constraints.length > 0) places.constraints = constraints;
+
+    onConfirm(tuning, places);
+  };
 
   return (
     <section
       aria-labelledby="tuner-title"
-      className="fade-up rounded-trip border border-mist bg-snow p-5 shadow-lg sm:p-6"
+      className="fade-up flex flex-col gap-6 border border-mist bg-snow p-5"
     >
-      <div className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold/20">
-          <Sparkles size={18} className="text-copper-deep" aria-hidden="true" />
-        </span>
-        <div>
-          <h2 id="tuner-title" className="font-display text-lg font-bold text-trail">
-            {t('tuner.title')}
-          </h2>
-          <p className="text-xs text-ridge">{t('tuner.hint')}</p>
-        </div>
+      <div className="flex flex-col gap-2">
+        <p className="label-mono text-fog">{t('tuner.plate')}</p>
+        <h2
+          id="tuner-title"
+          className="font-display text-3xl font-semibold leading-tight text-trail"
+        >
+          {t('tuner.title')}
+        </h2>
       </div>
 
-      <fieldset className="mt-5 rounded-xl border border-mist bg-cloud p-3">
-        <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
-          <Caravan size={15} className="text-summit" aria-hidden="true" />
-          {t('tuner.mode_label')}
-        </legend>
-        <p className="mb-2 text-xs text-fog">{t('tuner.mode_hint')}</p>
-        <div className="flex flex-wrap gap-2">
-          {MODES.map(({ key, Icon }) => {
-            const active = mode === key;
-            const locked = !allowedModes.includes(key);
-            return (
-              <button
-                key={key}
-                type="button"
-                disabled={disabled}
-                aria-pressed={active}
-                title={locked ? t('tuner.mode_locked') : undefined}
-                onClick={() => {
-                  if (locked) {
-                    openPaywall();
-                    return;
-                  }
-                  setMode((prev) => {
-                    const nextMode = prev === key ? null : key;
-                    if (nextMode) track('mode_selected', { mode: nextMode });
-                    return nextMode;
-                  });
-                }}
-                className={`flex min-h-11 items-center gap-1.5 border px-3.5 font-mono text-[11px] font-medium uppercase tracking-[0.16em] transition-colors ${
-                  active
-                    ? 'border-summit bg-summit text-snow'
-                    : locked
-                      ? 'border-mist bg-snow text-fog'
-                      : 'border-mist bg-snow text-trail hover:border-summit'
-                }`}
-              >
-                <Icon size={15} aria-hidden="true" />
-                {t(`mode.${key}`)}
-                {locked && <Lock size={12} aria-hidden="true" />}
-              </button>
-            );
-          })}
-        </div>
+      <div className="flex flex-col gap-5">
+        <Reglage
+          id="tuner-group"
+          label={t('tuner.group_label')}
+          value={group}
+          valueLabel={t(`group.${GROUPS[group - 1]}`)}
+          low={t('group.solo')}
+          high={t('group.group')}
+          max={GROUPS.length}
+          disabled={disabled}
+          onChange={setGroup}
+        />
+        <Reglage
+          id="tuner-pack"
+          label={t('tuner.pack_label')}
+          value={pack}
+          valueLabel={t(`tuner.pack_${pack}`)}
+          low={t('tuner.pack_1')}
+          high={t('tuner.pack_5')}
+          max={5}
+          disabled={disabled}
+          onChange={setPack}
+        />
+        {AXES.map((key) => (
+          <Reglage
+            key={key}
+            id={`tuner-${key}`}
+            label={t(`tuner.${key}_label`)}
+            value={tuning[key]}
+            valueLabel={`${tuning[key]}/5`}
+            low={t(`tuner.${key}_low`)}
+            high={t(`tuner.${key}_high`)}
+            max={5}
+            disabled={disabled}
+            onChange={(v) => setAxis(key, v)}
+          />
+        ))}
+      </div>
+
+      <fieldset className="flex flex-col">
+        <legend className="label-mono mb-1 text-fog">{t('tuner.constraints_label')}</legend>
+        {CONSTRAINTS.map((key) => (
+          <Bascule
+            key={key}
+            label={t(`tuner.constraint_${key}`)}
+            on={Boolean(flags[key])}
+            disabled={disabled}
+            onToggle={() => setFlags((prev) => ({ ...prev, [key]: !prev[key] }))}
+          />
+        ))}
       </fieldset>
 
-      <fieldset className="mt-4 rounded-xl border border-mist bg-cloud p-3">
-        <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
-          <MapPin size={15} className="text-summit" aria-hidden="true" />
+      {/* Départ / arrivée — facultatif, mais c'est ce qui rend les temps de
+       * trajet justes (domicile, gare, agence de location). */}
+      <fieldset className="flex flex-col gap-3">
+        <legend className="label-mono mb-1 flex items-center gap-1.5 text-fog">
+          <MapPin size={13} aria-hidden="true" />
           {t('tuner.places_label')}
         </legend>
-        <p className="mb-2 text-xs text-fog">{t('tuner.places_hint')}</p>
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs font-semibold text-ridge">
-            {t('tuner.place_from')}
-            <input
-              type="text"
-              value={departure}
-              disabled={disabled}
-              placeholder={t('tuner.place_from_placeholder')}
-              onChange={(e) => setDeparture(e.target.value)}
-              className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 text-sm font-normal text-trail placeholder:text-fog"
-            />
-          </label>
-          {!roundTrip && (
-            <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs font-semibold text-ridge">
-              {t('tuner.place_to')}
-              <input
-                type="text"
-                value={destination}
-                disabled={disabled}
-                placeholder={t('tuner.place_to_placeholder')}
-                onChange={(e) => setDestination(e.target.value)}
-                className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 text-sm font-normal text-trail placeholder:text-fog"
-              />
-            </label>
-          )}
-        </div>
-        <label className="mt-2 flex min-h-11 items-center gap-2 text-sm font-semibold text-trail">
+        <label className="flex flex-col gap-1">
+          <span className="label-mono text-ridge">{t('tuner.place_from')}</span>
+          <input
+            type="text"
+            value={departure}
+            disabled={disabled}
+            placeholder={t('tuner.place_from_placeholder')}
+            onChange={(e) => setDeparture(e.target.value)}
+            className="min-h-11 border border-mist bg-cloud px-3 text-sm text-trail placeholder:text-fog"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-ridge">
           <input
             type="checkbox"
             checked={roundTrip}
             disabled={disabled}
             onChange={(e) => setRoundTrip(e.target.checked)}
-            className="h-5 w-5 shrink-0 rounded border-mist accent-summit"
+            className="h-4 w-4 accent-[var(--color-summit)]"
           />
           {t('tuner.round_trip')}
         </label>
-      </fieldset>
-
-      <fieldset className="mt-4 rounded-xl border border-mist bg-cloud p-3">
-        <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
-          <CalendarDays size={15} className="text-summit" aria-hidden="true" />
-          {t('tuner.dates_label')}
-        </legend>
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
-            {t('tuner.date_start')}
+        {!roundTrip && (
+          <label className="flex flex-col gap-1">
+            <span className="label-mono text-ridge">{t('tuner.place_to')}</span>
             <input
-              type="date"
-              value={startDate}
-              min={today}
+              type="text"
+              value={destination}
               disabled={disabled}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                if (endDate && e.target.value > endDate) setEndDate(e.target.value);
-              }}
-              className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
+              placeholder={t('tuner.place_to_placeholder')}
+              onChange={(e) => setDestination(e.target.value)}
+              className="min-h-11 border border-mist bg-cloud px-3 text-sm text-trail placeholder:text-fog"
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
-            {t('tuner.date_end')}
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || today}
-              disabled={disabled}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
-            />
-          </label>
-          {duration !== null && season && (
-            <p className="rounded-badge bg-gold/20 px-2.5 py-1.5 text-xs font-semibold text-trail">
-              {t('trips.days_count', { count: duration })} · {t(`season.${season}`)} —{' '}
-              {t('tuner.dates_season_hint')}
-            </p>
-          )}
-          {!startDate && (
-            <p className="text-xs text-fog">{t('tuner.dates_hint')}</p>
-          )}
-        </div>
-        {datesInvalid && (
-          <p role="alert" className="mt-2 text-xs font-semibold text-storm">
-            {t('tuner.dates_invalid')}
-          </p>
         )}
       </fieldset>
 
-      <div className="mt-5 flex flex-col gap-5">
-        {AXES.map(({ key, Icon }, i) => {
-          const value = tuning[key];
-          return (
-            <div
-              key={key}
-              className="fade-up flex flex-col gap-1.5"
-              style={{ animationDelay: `${80 + i * 70}ms` }}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <label
-                  htmlFor={`tuner-${key}`}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-trail"
-                >
-                  <Icon size={15} className="text-summit" aria-hidden="true" />
-                  {t(`tuner.${key}_label`)}
-                </label>
-                <span className="rounded-badge bg-gold/20 px-2 py-0.5 font-mono text-xs font-semibold text-trail">
-                  {value}/5
-                </span>
-              </div>
-              <input
-                id={`tuner-${key}`}
-                type="range"
-                min={1}
-                max={5}
-                step={1}
-                value={value}
-                disabled={disabled}
-                onChange={(e) => setAxis(key, Number(e.target.value))}
-                aria-valuetext={`${value}/5 — ${
-                  value <= 2
-                    ? t(`tuner.${key}_low`)
-                    : value >= 4
-                      ? t(`tuner.${key}_high`)
-                      : `${t(`tuner.${key}_low`)} / ${t(`tuner.${key}_high`)}`
-                }`}
-                className="tuner-range"
-              />
-              <div className="flex justify-between text-[11px] text-fog">
-                <span className={value <= 2 ? 'font-semibold text-copper-deep' : ''}>
-                  {t(`tuner.${key}_low`)}
-                </span>
-                <span className={value >= 4 ? 'font-semibold text-copper-deep' : ''}>
-                  {t(`tuner.${key}_high`)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="tuner-note" className="label-mono text-fog">
+          {t('tuner.other_label')}
+        </label>
+        <textarea
+          id="tuner-note"
+          rows={2}
+          value={note}
+          disabled={disabled}
+          placeholder={t('tuner.other_placeholder')}
+          onChange={(e) => setNote(e.target.value)}
+          className="w-full resize-none border border-mist bg-cloud p-3 font-display text-base italic text-trail placeholder:text-fog"
+        />
       </div>
+
+      {/* Relevé de bas de planche — ce qui est déjà acquis */}
+      {dates && duration !== null && season && (
+        <dl className="grid grid-cols-3 border border-mist">
+          <div className="flex flex-col gap-0.5 border-r border-mist p-2.5">
+            <dt className="label-mono text-fog">{t('fenetre.window')}</dt>
+            <dd className="font-display text-base font-semibold text-trail">
+              {new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' }).format(
+                new Date(dates.start),
+              )}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5 border-r border-mist p-2.5">
+            <dt className="label-mono text-fog">{t('fenetre.season')}</dt>
+            <dd className="font-display text-base font-semibold text-trail">
+              {t(`season.${season}`)}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5 p-2.5">
+            <dt className="label-mono text-fog">{t('tuner.summary_engagement')}</dt>
+            <dd className="font-display text-base font-semibold text-trail">
+              {t(`tuner.engagement_${tuning.physical}`)}
+            </dd>
+          </div>
+        </dl>
+      )}
 
       <button
         type="button"
-        disabled={disabled || datesInvalid}
-        onClick={() => onConfirm(tuning, dates, places)}
-        className="cta-plate mt-6 flex min-h-12 w-full items-center justify-center gap-2 px-6 py-3 disabled:translate-y-0 disabled:opacity-60"
+        disabled={disabled}
+        onClick={submit}
+        className="cta-plate flex min-h-13 items-center justify-center px-6 py-4"
       >
-        <Sparkles size={18} aria-hidden="true" />
         {t('tuner.cta')}
       </button>
     </section>

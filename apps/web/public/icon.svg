@@ -1,12 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- VIRE — rose des vents sur papier vieilli (favicon vectoriel) -->
-  <rect width="64" height="64" rx="12" fill="#F4F1EA"/>
-  <rect x="2" y="2" width="60" height="60" rx="10" fill="none" stroke="#222222" stroke-width="2"/>
-  <circle cx="32" cy="32" r="19" fill="none" stroke="#111111" stroke-width="2.6"/>
-  <path d="M32 17 L36 32 L32 47 L28 32 Z" fill="#3A4A3F"/>
-  <circle cx="32" cy="32" r="2.4" fill="#111111"/>
-  <line x1="32" y1="10.5" x2="32" y2="13.5" stroke="#111111" stroke-width="2"/>
-  <line x1="32" y1="50.5" x2="32" y2="53.5" stroke="#111111" stroke-width="2"/>
-  <line x1="10.5" y1="32" x2="13.5" y2="32" stroke="#111111" stroke-width="2"/>
-  <line x1="50.5" y1="32" x2="53.5" y2="32" stroke="#111111" stroke-width="2"/>
+  <!--
+    VIRE — le compas retourné sur papier vieilli (favicon vectoriel).
+
+    C'est ici la RÉDUCTION du logo : un favicon est rendu à 16-32 px, taille à
+    laquelle les hachures de la gravure ne forment plus qu'une tache. Les
+    icônes PNG (192 et 512), elles, portent la gravure complète.
+
+    Le fond papier n'est pas décoratif : sans lui, l'encre sombre disparaîtrait
+    dans la barre d'onglets d'un navigateur en thème sombre.
+  -->
+  <rect width="64" height="64" rx="12" fill="#F4F1EA" />
+  <g transform="translate(14.6 8) scale(0.364)" fill="#111111">
+    <path d="M28.64 6.33 L43.95 85.23 L54.05 82.77 L31.36 5.67 Z" />
+    <path d="M75.36 6.33 L60.05 85.23 L49.95 82.77 L72.64 5.67 Z" />
+    <rect x="8" y="60.3" width="62" height="3.4" />
+    <rect x="26" y="57" width="9" height="10" rx="1" />
+    <rect x="36" y="58.8" width="3" height="6.4" rx="0.7" />
+    <rect x="2" y="57.5" width="7" height="9" rx="3" />
+    <circle cx="52" cy="84.5" r="5" />
+    <rect x="50.6" y="107" width="2.8" height="9" />
+    <circle cx="52" cy="99.5" r="8.6" fill="none" stroke="#111111" stroke-width="4.2" />
+    <circle cx="52" cy="121" r="3.4" fill="none" stroke="#111111" stroke-width="2.4" />
+  </g>
 </svg>
