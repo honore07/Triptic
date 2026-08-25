@@ -1,11 +1,16 @@
 {
   "app": {
+    "name": "VIRE",
     "tagline": "Plan, Explore, Repeat.",
     "promise": "Beschreibe dein Abenteuer. VIRE erstellt 3 maßgeschneiderte Routen. Du wählst. Du verfeinerst. Du gehst los.",
     "offline": "Offline — deine gespeicherten Trips bleiben verfügbar",
     "online": "Online",
     "page_not_found": "Diese Seite existiert nicht.",
     "back_home": "Zurück zur Startseite"
+  },
+  "ouverture": {
+    "tagline": "Plan · Explore · Repeat",
+    "cta": "Loslegen"
   },
   "home": {
     "headline": "Entdecke Europa.",

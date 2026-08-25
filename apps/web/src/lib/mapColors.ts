@@ -6,7 +6,7 @@
  * Toute évolution de la palette doit être répercutée ici ET dans styles.css.
  */
 export const MAP_COLORS = {
-  summit: '#3A4A3F', // pin alpin — tracés route / marqueurs par défaut
+  summit: '#A94E2B', // rouille d'expédition — tracés route / marqueurs par défaut
   trail: '#111111', // encre carbone — marqueurs camp, tracés vélo
   gold: '#C9A24B', // laiton — tracé sur fond sombre (TripCard, photos)
   sky: '#DDD8CD', // papier ombré — surfaces accent

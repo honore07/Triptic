@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { Ouverture, markOuvertureSeen, shouldShowOuverture } from '../components/Ouverture';
 import { useChatStore } from '../store/chatStore';
 
 /**
@@ -14,6 +15,9 @@ export function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  // Planche d'ouverture (PL.01) : première visite seulement — lu une fois au
+  // montage, jamais à chaque rendu.
+  const [ouvertureOpen, setOuvertureOpen] = useState(shouldShowOuverture);
 
   const start = (text: string) => {
     const trimmed = text.trim();
@@ -26,6 +30,17 @@ export function Home() {
   };
 
   const examples = [t('home.example_1'), t('home.example_2'), t('home.example_3')];
+
+  if (ouvertureOpen) {
+    return (
+      <Ouverture
+        onStart={() => {
+          markOuvertureSeen();
+          setOuvertureOpen(false);
+        }}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pb-12 pt-2">

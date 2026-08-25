@@ -3,17 +3,18 @@
 /*
  * Palette TRIPTIC v4 « VIRE — Alpine Heritage & Old Modernity » (août 2026).
  * Carnets d'expédition XIXᵉ, gravures Whymper, papier vieilli / encre carbone,
- * accent unique pin alpin. Source de vérité : DESIGN.md (racine du repo) +
- * projet Claude Design « Moderniser l'app Triptic » (VIRE App).
+ * accent unique rouille d'expédition. Source de vérité : DESIGN.md (racine du
+ * repo) + planches Claude Design « VIRE App » (PL.01 → PL.14).
  * Les NOMS de tokens v2/v3 sont conservés (summit/trail/gold…) pour ne toucher
  * aucun composant — seules les VALEURS changent (même méthode que la
  * migration Acrylique). Miroir JS : src/lib/mapColors.ts (à jour ensemble).
- * Contrastes vérifiés ≥ 4.5:1 : trail sur gold ≈ 7.9:1, summit sur cloud
- * ≈ 8.3:1, ridge sur cloud ≈ 7.8:1, fog sur snow ≈ 4.8:1.
+ * Contrastes vérifiés ≥ 4.5:1 : cloud sur summit ≈ 4.9:1, snow sur summit
+ * ≈ 5.3:1, copper-deep sur cloud ≈ 7.4:1, trail sur gold ≈ 7.9:1, ridge sur
+ * cloud ≈ 7.8:1, fog sur snow ≈ 4.8:1.
  */
 @theme {
-  --color-summit: #3a4a3f; /* pin alpin — accent unique (DESIGN.md --color-accent) */
-  --color-copper-deep: #2c3830; /* accent profond — liens, hover */
+  --color-summit: #a94e2b; /* rouille d'expédition — accent unique (DESIGN.md --color-accent) */
+  --color-copper-deep: #7e3a20; /* rouille profonde — liens, hover (7.4:1 sur cloud) */
   --color-gold: #c9a24b; /* laiton — CTA (toujours avec texte trail : 7.9:1) */
   --color-gold-deep: #a9853a; /* hover CTA */
   --color-trail: #111111; /* encre carbone (DESIGN.md --color-text) */

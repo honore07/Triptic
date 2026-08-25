@@ -1,11 +1,16 @@
 {
   "app": {
+    "name": "VIRE",
     "tagline": "Plan, Explore, Repeat.",
     "promise": "Describe your adventure. VIRE crafts 3 tailored routes. You choose. You refine. You go.",
     "offline": "Offline — your saved trips remain available",
     "online": "Online",
     "page_not_found": "This page does not exist.",
     "back_home": "Back to home"
+  },
+  "ouverture": {
+    "tagline": "Plan · Explore · Repeat",
+    "cta": "Start"
   },
   "home": {
     "headline": "Go explore Europe.",
