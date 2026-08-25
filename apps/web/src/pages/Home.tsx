@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Bike, Caravan, Footprints, Lock } from 'lucide-react';
+import { ArrowUp, Bike, Caravan, Footprints, Lock, Mic, Square } from 'lucide-react';
 import { PLANS, type Trip, type TripMode } from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { listTrips } from '../lib/api';
 import { formatDistance } from '../lib/units';
+import { useDictation } from '../hooks/useDictation';
 import { Ouverture } from '../components/Ouverture';
 import { supabase } from '../lib/supabase';
 import { useChatStore } from '../store/chatStore';
@@ -24,15 +25,14 @@ const FALLBACK_THUMB = '/vire/vire_pic-boussole.jpg';
 
 /**
  * Home — planche PL.03 « ACCUEIL ».
- * En-tête de planche, sélecteur de mode, puis le village alpin en grand fond
- * avec la question et la barre de saisie posées dessus — l'idiome d'une barre
- * de recherche. Les reprises et suggestions restent discrètes en dessous,
- * puis le pied de page géodésique.
+ * En-tête de planche et sélecteur de mode sur le papier, puis le village
+ * alpin en fond plein cadre — comme l'ouverture. La question, le bandeau de
+ * saisie et les reprises se posent dessus ; rien ne quitte l'image.
  *
  * Tant qu'aucun carnet n'est ouvert, l'ouverture (PL.01) précède cet écran.
  */
 export function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<TripMode | null>(null);
@@ -46,6 +46,13 @@ export function Home() {
   // connexion inopérante.
   const [entered, setEntered] = useState(false);
   const allowedModes = PLANS[plan].limits.modes;
+
+  // Dictée : chaque bout de phrase reconnu s'ajoute à la demande en cours,
+  // il ne la remplace pas — on peut commencer au clavier et finir à la voix.
+  const dictation = useDictation({
+    lang: i18n.language,
+    onText: (said) => setQuery((prev) => (prev.trim() ? `${prev.trim()} ${said}` : said)),
+  });
 
   // Reprise des carnets — silencieuse : l'accueil reste utilisable si l'API
   // est injoignable (hors ligne, serveur local éteint).
@@ -102,87 +109,90 @@ export function Home() {
   const question = t(`home.question_${mode ?? 'roadtrip'}`);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 pb-12 pt-2">
-      {/* En-tête de planche — marque à gauche, numéro d'étape à droite */}
-      <div className="fade-up flex items-baseline justify-between border-b border-mist pb-2">
-        <p className="font-display text-xl font-semibold tracking-[0.2em] text-trail">
-          {t('app.name')}
-        </p>
-        <p className="label-mono text-fog">{t('home.plate')}</p>
+    <main className="flex w-full flex-col">
+      {/* En-tête de planche et sélecteur de mode — sur le papier */}
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pt-2">
+        <div className="fade-up flex items-baseline justify-between border-b border-mist pb-2">
+          <p className="font-display text-xl font-semibold tracking-[0.2em] text-trail">
+            {t('app.name')}
+          </p>
+          <p className="label-mono text-fog">{t('home.plate')}</p>
+        </div>
+
+        {/* Sélecteur de mode — filet encre continu, segment actif à l'accent */}
+        <div
+          role="group"
+          aria-label={t('home.mode_label')}
+          className="fade-up flex border border-mist"
+          style={{ animationDelay: '60ms' }}
+        >
+          {MODES.map(({ key, Icon }, i) => {
+            const active = mode === key;
+            const locked = !allowedModes.includes(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={active}
+                // Verrouillé : le nom accessible porte le mode ET la raison —
+                // un `title` seul évince le texte visible du calcul de nom et
+                // le lecteur d'écran n'annonce plus de quel mode il s'agit.
+                {...(locked
+                  ? { 'aria-label': `${t(`mode.${key}`)} — ${t('home.mode_locked')}` }
+                  : {})}
+                onClick={() => pickMode(key)}
+                className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] transition-colors ${
+                  i > 0 ? 'border-l border-mist' : ''
+                } ${
+                  active
+                    ? 'bg-summit text-snow'
+                    : locked
+                      ? 'bg-snow text-fog'
+                      : 'bg-snow text-trail hover:bg-sky'
+                }`}
+              >
+                <Icon size={14} aria-hidden="true" />
+                {t(`mode.${key}`)}
+                {locked && <Lock size={11} aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Sélecteur de mode — filet encre continu, segment actif à l'accent */}
-      <div
-        role="group"
-        aria-label={t('home.mode_label')}
-        className="fade-up flex border border-mist"
-        style={{ animationDelay: '60ms' }}
-      >
-        {MODES.map(({ key, Icon }, i) => {
-          const active = mode === key;
-          const locked = !allowedModes.includes(key);
-          return (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={active}
-              // Verrouillé : le nom accessible porte le mode ET la raison —
-              // un `title` seul évince le texte visible du calcul de nom et
-              // le lecteur d'écran n'annonce plus de quel mode il s'agit.
-              {...(locked
-                ? { 'aria-label': `${t(`mode.${key}`)} — ${t('home.mode_locked')}` }
-                : {})}
-              onClick={() => pickMode(key)}
-              className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] transition-colors ${
-                i > 0 ? 'border-l border-mist' : ''
-              } ${
-                active
-                  ? 'bg-summit text-snow'
-                  : locked
-                    ? 'bg-snow text-fog'
-                    : 'bg-snow text-trail hover:bg-sky'
-              }`}
-            >
-              <Icon size={14} aria-hidden="true" />
-              {t(`mode.${key}`)}
-              {locked && <Lock size={11} aria-hidden="true" />}
-            </button>
-          );
-        })}
-      </div>
+      {/* Village alpin en fond plein cadre — tout ce qui suit vit dessus */}
+      <section className="relative mt-4 flex min-h-[max(30rem,72svh)] flex-col justify-end overflow-hidden">
+        <img
+          src="/vire/vire_village-alpin.webp"
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        {/* Voile d'encre — la photogravure a un ciel très clair ; le bas doit
+         * porter la question, le bandeau ET les reprises. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-trail/90 via-trail/65 to-trail/15"
+        />
 
-      <form
-        className="fade-up flex flex-col gap-4"
-        style={{ animationDelay: '120ms' }}
-        onSubmit={(e) => {
-          e.preventDefault();
-          start(query);
-        }}
-      >
-        {/* Village alpin en grand fond — la question et la barre de saisie
-         * se posent dessus, comme sur une barre de recherche. */}
-        <section className="relative flex min-h-[26rem] flex-col justify-end overflow-hidden border border-mist sm:min-h-[30rem]">
-          <img
-            src="/vire/vire_village-alpin.webp"
-            alt=""
-            aria-hidden="true"
-            fetchPriority="high"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          {/* Voile d'encre — la photogravure a un ciel très clair : sans ce
-           * renfort en bas de cadre, la question passe sous le seuil. */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-trail/90 via-trail/55 to-trail/15"
-          />
+        <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-8 pt-10">
+          <h1 className="fade-up font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
+            {question}
+          </h1>
 
-          <div className="relative flex flex-col gap-4 p-4 sm:p-6">
-            <h1 className="font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
-              {question}
-            </h1>
-
-            {/* Barre de saisie — plaque de papier posée sur le paysage */}
-            <div className="glass-gold flex flex-col gap-3 p-4">
+          <form
+            className="fade-up"
+            style={{ animationDelay: '80ms' }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              start(query);
+            }}
+          >
+            {/* Bandeau de saisie — arrondi et fin, posé sur le paysage.
+             * Seul endroit de l'app aux angles adoucis : c'est le geste
+             * d'une barre de recherche, pas une planche gravée. */}
+            <div className="flex items-center gap-2 rounded-[22px] border border-mist bg-snow/95 py-1 pl-4 pr-1 shadow-[3px_3px_0_rgba(34,34,34,0.5)]">
               <label htmlFor="home-query" className="sr-only">
                 {t('home.question')}
               </label>
@@ -191,106 +201,99 @@ export function Home() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('home.placeholder')}
-                rows={2}
-                className="w-full resize-none bg-transparent font-display text-lg italic leading-snug text-trail placeholder:text-fog focus:outline-none"
+                rows={1}
+                className="max-h-28 min-h-9 flex-1 resize-none self-center bg-transparent py-1.5 font-display text-lg italic leading-snug text-trail placeholder:text-fog focus:outline-none"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) start(query);
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    start(query);
+                  }
                 }}
               />
-              <div className="flex items-end justify-between gap-3">
-                {/* Ajouts rapides — complètent la demande en un tap (aucune
-                 * détection automatique : ce sont des raccourcis de saisie). */}
-                <div
-                  role="group"
-                  aria-label={t('home.quick_add')}
-                  className="flex flex-wrap gap-1.5"
-                >
-                  {[1, 2, 3].map((n) => {
-                    const chip = t(`home.chip_${n}`);
-                    return (
-                      <button
-                        key={chip}
-                        type="button"
-                        onClick={() =>
-                          setQuery((prev) => (prev.trim() ? `${prev.trim()}, ${chip}` : chip))
-                        }
-                        className="min-h-8 border border-mist bg-cloud px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ridge transition-colors hover:bg-sky"
-                      >
-                        {chip}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* Le départ se fait ici : une seule action, comme sur une
-                 * barre de recherche — plus de grande plaque en doublon. */}
+
+              {/* Micro — masqué là où le navigateur ne sait pas dicter, plutôt
+               * qu'un bouton qui ne ferait rien (Firefox). */}
+              {dictation.supported && (
                 <button
-                  type="submit"
-                  disabled={!query.trim()}
-                  aria-label={t('home.cta')}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-mist bg-summit text-cloud transition-colors hover:bg-copper-deep disabled:bg-terrain disabled:text-fog"
+                  type="button"
+                  onClick={dictation.toggle}
+                  aria-pressed={dictation.listening}
+                  aria-label={dictation.listening ? t('home.dictate_stop') : t('home.dictate')}
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-mist transition-colors ${
+                    dictation.listening
+                      ? 'bg-storm text-snow'
+                      : 'bg-cloud text-trail hover:bg-sky'
+                  }`}
                 >
-                  <ArrowUp size={18} aria-hidden="true" />
+                  {dictation.listening ? (
+                    <Square size={14} fill="currentColor" aria-hidden="true" />
+                  ) : (
+                    <Mic size={17} aria-hidden="true" />
+                  )}
                 </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </form>
+              )}
 
-      {/* Reprendre / s'inspirer — volontairement discret : la barre au-dessus
-       * porte l'action, ces lignes ne sont qu'un appui. Pas de cadre, un
-       * simple filet entre les entrées. */}
-      <section className="fade-up flex flex-col" style={{ animationDelay: '200ms' }}>
-        <p className="label-mono mb-1 text-fog">
-          {recent.length > 0 ? t('home.resume') : t('home.examples_title')}
-        </p>
-
-        {recent.length > 0
-          ? recent.map((trip) => (
-              <Link
-                key={trip.id}
-                to={`/trips/${trip.id}`}
-                className="flex items-center gap-3 border-b border-mist/25 py-2.5 transition-colors hover:bg-snow"
-              >
-                <img
-                  src={trip.cover_photo ?? FALLBACK_THUMB}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  className="h-9 w-14 shrink-0 border border-mist/40 object-cover"
-                />
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="label-mono text-fog">
-                    {t(`mode.${trip.mode as TripMode}`)} ·{' '}
-                    {t('home.days', { count: trip.metadata.duration_days })}
-                  </span>
-                  <span className="truncate font-display text-base text-trail">{trip.title}</span>
-                </span>
-                <span className="shrink-0 font-mono text-xs text-fog">
-                  {formatDistance(trip.metadata.distance_km, units)}
-                </span>
-              </Link>
-            ))
-          : examples.map((example, i) => (
               <button
-                key={example}
-                type="button"
-                onClick={() => start(example)}
-                className="flex min-h-11 items-center gap-3 border-b border-mist/25 py-2.5 text-left transition-colors hover:bg-snow"
+                type="submit"
+                disabled={!query.trim()}
+                aria-label={t('home.cta')}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-mist bg-summit text-cloud transition-colors hover:bg-copper-deep disabled:bg-terrain disabled:text-fog"
               >
-                <span
-                  className="shrink-0 font-mono text-[11px] tracking-widest text-fog"
-                  aria-hidden="true"
-                >
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span className="flex-1 text-sm text-ridge">{example}</span>
+                <ArrowUp size={17} aria-hidden="true" />
               </button>
-            ))}
+            </div>
+          </form>
+
+          {/* Reprises ou inspirations — juste sous le bandeau, encore dans
+           * l'image. Ni titre ni numérotation : ce sont des appuis, pas une
+           * section. */}
+          <ul className="fade-up flex flex-col" style={{ animationDelay: '160ms' }}>
+            {recent.length > 0
+              ? recent.map((trip) => (
+                  <li key={trip.id}>
+                    <Link
+                      to={`/trips/${trip.id}`}
+                      className="flex min-h-11 items-center gap-3 border-t border-cloud/20 py-2.5 transition-colors hover:bg-cloud/10"
+                    >
+                      <img
+                        src={trip.cover_photo ?? FALLBACK_THUMB}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        className="h-9 w-14 shrink-0 border border-cloud/30 object-cover"
+                      />
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="label-mono text-cloud/70">
+                          {t(`mode.${trip.mode as TripMode}`)} ·{' '}
+                          {t('home.days', { count: trip.metadata.duration_days })}
+                        </span>
+                        <span className="truncate font-display text-base text-cloud">
+                          {trip.title}
+                        </span>
+                      </span>
+                      <span className="shrink-0 font-mono text-xs text-cloud/70">
+                        {formatDistance(trip.metadata.distance_km, units)}
+                      </span>
+                    </Link>
+                  </li>
+                ))
+              : examples.map((example) => (
+                  <li key={example}>
+                    <button
+                      type="button"
+                      onClick={() => start(example)}
+                      className="flex min-h-11 w-full items-center border-t border-cloud/20 py-2.5 text-left text-sm text-cloud/90 transition-colors hover:bg-cloud/10 hover:text-cloud"
+                    >
+                      {example}
+                    </button>
+                  </li>
+                ))}
+          </ul>
+        </div>
       </section>
 
       {/* Pied de planche — région pilote et son relevé */}
-      <div className="flex items-center justify-between border-t border-mist pt-2">
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4">
         <p className="label-mono text-fog">{t('home.region')}</p>
         <p className="font-mono text-[10px] tracking-[0.14em] text-fog">{t('home.coords')}</p>
       </div>
