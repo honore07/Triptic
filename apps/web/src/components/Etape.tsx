@@ -23,7 +23,7 @@ const ACTIVITY_ICONS: Record<ActivityType, typeof Car> = {
 
 /** Gravure de médaillon par nature de journée (mêmes objets que PL.09). */
 const ACTIVITY_ENGRAVINGS: Record<ActivityType, string> = {
-  drive: '/vire/vire_pic-boussole.jpg',
+  drive: '/vire/vire_logo-compas.webp',
   hike: '/vire/vire_pic-chaussures.jpg',
   visit: '/vire/vire_char-carte.jpg',
   meal: '/vire/vire_pic-sac.jpg',

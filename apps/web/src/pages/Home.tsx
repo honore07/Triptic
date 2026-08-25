@@ -20,8 +20,8 @@ const MODES: Array<{ key: TripMode; Icon: typeof Caravan }> = [
   { key: 'bikepacking', Icon: Bike },
 ];
 
-/** Gravure de repli quand un trip n'a pas encore de photo. */
-const FALLBACK_THUMB = '/vire/vire_pic-boussole.jpg';
+/** Gravure de repli quand un trip n'a pas encore de photo : la marque. */
+const FALLBACK_THUMB = '/vire/vire_logo-compas.webp';
 
 /**
  * Home — planche PL.03 « ACCUEIL ».

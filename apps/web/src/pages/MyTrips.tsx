@@ -22,7 +22,7 @@ const STATUS_STYLES: Record<Trip['status'], string> = {
 
 /** Gravure de repli quand un carnet n'a pas de photo de couverture. */
 const MODE_ENGRAVING: Record<string, string> = {
-  roadtrip: '/vire/vire_pic-boussole.jpg',
+  roadtrip: '/vire/vire_logo-compas.webp',
   trek: '/vire/vire_pic-chaussures.jpg',
   bikepacking: '/vire/vire_pic-sac.jpg',
 };

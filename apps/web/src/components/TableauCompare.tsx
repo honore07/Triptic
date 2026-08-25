@@ -55,9 +55,9 @@ export function TableauCompare({ trips, onChoose }: Props) {
   return (
     <section aria-labelledby="tableau-title" className="fade-up flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        {/* Compas à pointes sèches — l'outil qui reporte et compare */}
+        {/* Le compas de la marque — l'outil qui reporte et compare */}
         <img
-          src="/vire/vire_nav-compas.webp"
+          src="/vire/vire_logo-compas.webp"
           alt=""
           aria-hidden="true"
           loading="lazy"

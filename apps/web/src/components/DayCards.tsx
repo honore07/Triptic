@@ -32,7 +32,7 @@ export function thumbnailUrl(url: string, width = 400): string {
  * garde un objet d'expédition plutôt qu'un carré vide.
  */
 const ACTIVITY_ENGRAVINGS: Record<ActivityType, string> = {
-  drive: '/vire/vire_pic-boussole.jpg',
+  drive: '/vire/vire_logo-compas.webp',
   hike: '/vire/vire_pic-chaussures.jpg',
   visit: '/vire/vire_char-carte.jpg',
   meal: '/vire/vire_pic-sac.jpg',

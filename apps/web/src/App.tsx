@@ -7,6 +7,7 @@ import { fetchMe } from './lib/api';
 import { supabase } from './lib/supabase';
 import { useUserStore } from './store/userStore';
 import { LangSwitcher } from './components/LangSwitcher';
+import { LogoVire } from './components/LogoVire';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
 import { Contribute } from './pages/Contribute';
@@ -131,23 +132,8 @@ export function App() {
       <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-2.5 text-trail">
-          {/* Rose des vents de la maquette VIRE — aiguille à l'accent */}
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-            className="shrink-0"
-          >
-            <circle cx="12" cy="12" r="9.4" stroke="currentColor" strokeWidth="1.3" />
-            <path d="M12 4.6 L14 12 L12 19.4 L10 12 Z" className="fill-summit" />
-            <circle cx="12" cy="12" r="1.2" fill="currentColor" />
-            <line x1="12" y1="1.4" x2="12" y2="2.9" stroke="currentColor" strokeWidth="1" />
-            <line x1="12" y1="21.1" x2="12" y2="22.6" stroke="currentColor" strokeWidth="1" />
-            <line x1="1.4" y1="12" x2="2.9" y2="12" stroke="currentColor" strokeWidth="1" />
-            <line x1="21.1" y1="12" x2="22.6" y2="12" stroke="currentColor" strokeWidth="1" />
-          </svg>
+          {/* La marque VIRE — compas retourné, en réduction pour cette taille */}
+          <LogoVire size={30} />
           <span className="flex flex-col gap-0.5 leading-none">
             <span className="font-display text-xl font-bold uppercase tracking-[0.18em]">
               VIRE
