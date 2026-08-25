@@ -137,8 +137,18 @@ export function TripPage() {
       </Link>
 
       <header className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between border-b border-mist pb-2">
-          <p className="label-mono text-fog">{t('itineraire.plate')}</p>
+        <div className="flex items-center justify-between border-b border-mist pb-2">
+          <p className="label-mono flex items-center gap-2 text-fog">
+            {/* Carte et règle — l'outil de celui qui relève un itinéraire */}
+            <img
+              src="/vire/vire_nav-carte.webp"
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="h-8 w-8 shrink-0 rounded-full border border-mist object-cover"
+            />
+            {t('itineraire.plate')}
+          </p>
           <div className="flex items-center gap-2">
             <span className="label-mono text-copper-deep">{t(`mode.${selected.mode}`)}</span>
             <DifficultyBadge level={selected.difficulty} />

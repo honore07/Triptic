@@ -5,9 +5,11 @@ import { ArrowUp, Bike, Caravan, Footprints, Lock } from 'lucide-react';
 import { PLANS, type Trip, type TripMode } from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { listTrips } from '../lib/api';
+import { formatDistance } from '../lib/units';
 import { Ouverture } from '../components/Ouverture';
 import { supabase } from '../lib/supabase';
 import { useChatStore } from '../store/chatStore';
+import { useProfileStore } from '../store/profileStore';
 import { useUserStore } from '../store/userStore';
 
 /** Van life en premier plan, puis trek, puis bikepacking (objectif produit). */
@@ -22,9 +24,10 @@ const FALLBACK_THUMB = '/vire/vire_pic-boussole.jpg';
 
 /**
  * Home — planche PL.03 « ACCUEIL ».
- * En-tête de planche, sélecteur de mode, bandeau photo gravé de la question,
- * planche de saisie posée dessus, plaque « tracer trois vires », puis la
- * reprise des carnets précédents et le pied de page géodésique.
+ * En-tête de planche, sélecteur de mode, puis le village alpin en grand fond
+ * avec la question et la barre de saisie posées dessus — l'idiome d'une barre
+ * de recherche. Les reprises et suggestions restent discrètes en dessous,
+ * puis le pied de page géodésique.
  *
  * Tant qu'aucun carnet n'est ouvert, l'ouverture (PL.01) précède cet écran.
  */
@@ -37,6 +40,7 @@ export function Home() {
   const email = useUserStore((s) => s.email);
   const plan = useUserStore((s) => s.plan);
   const openPaywall = useUserStore((s) => s.openPaywall);
+  const units = useProfileStore((s) => s.units);
   // Sans auth configurée (dev/démo), aucun carnet ne peut être ouvert : la
   // plaque d'entrée mène alors directement à l'accueil au lieu d'une page de
   // connexion inopérante.
@@ -155,88 +159,89 @@ export function Home() {
           start(query);
         }}
       >
-        {/* Bandeau photo — la question est gravée dessus */}
-        <section className="relative">
+        {/* Village alpin en grand fond — la question et la barre de saisie
+         * se posent dessus, comme sur une barre de recherche. */}
+        <section className="relative flex min-h-[26rem] flex-col justify-end overflow-hidden border border-mist sm:min-h-[30rem]">
           <img
-            src="/vire/vire_bandeau-cretes.webp"
+            src="/vire/vire_village-alpin.webp"
             alt=""
             aria-hidden="true"
-            className="h-44 w-full border border-mist object-cover sm:h-56"
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover"
           />
-          {/* Voile d'encre — la gravure a un ciel parchemin bien plus clair
-           * qu'une photo : sans ce renfort, la question tombe à 3.3:1. */}
+          {/* Voile d'encre — la photogravure a un ciel très clair : sans ce
+           * renfort en bas de cadre, la question passe sous le seuil. */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-trail/85 via-trail/60 to-trail/25"
+            className="absolute inset-0 bg-gradient-to-t from-trail/90 via-trail/55 to-trail/15"
           />
-          <h1 className="absolute inset-x-4 bottom-4 font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
-            {question}
-          </h1>
-        </section>
 
-        {/* Planche de saisie posée à cheval sur le bandeau */}
-        <div className="glass-gold relative z-10 -mt-10 mx-3 flex flex-col gap-3 p-4">
-          <label htmlFor="home-query" className="sr-only">
-            {t('home.question')}
-          </label>
-          <textarea
-            id="home-query"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('home.placeholder')}
-            rows={3}
-            className="w-full resize-none bg-transparent font-display text-lg italic leading-snug text-trail placeholder:text-fog focus:outline-none"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) start(query);
-            }}
-          />
-          <div className="flex items-end justify-between gap-3">
-            {/* Ajouts rapides — complètent la demande en un tap (aucune
-             * détection automatique : ce sont des raccourcis de saisie). */}
-            <div
-              role="group"
-              aria-label={t('home.quick_add')}
-              className="flex flex-wrap gap-1.5"
-            >
-              {[1, 2, 3].map((n) => {
-                const chip = t(`home.chip_${n}`);
-                return (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() =>
-                      setQuery((prev) => (prev.trim() ? `${prev.trim()}, ${chip}` : chip))
-                    }
-                    className="min-h-8 border border-mist bg-cloud px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ridge transition-colors hover:bg-sky"
-                  >
-                    {chip}
-                  </button>
-                );
-              })}
+          <div className="relative flex flex-col gap-4 p-4 sm:p-6">
+            <h1 className="font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
+              {question}
+            </h1>
+
+            {/* Barre de saisie — plaque de papier posée sur le paysage */}
+            <div className="glass-gold flex flex-col gap-3 p-4">
+              <label htmlFor="home-query" className="sr-only">
+                {t('home.question')}
+              </label>
+              <textarea
+                id="home-query"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('home.placeholder')}
+                rows={2}
+                className="w-full resize-none bg-transparent font-display text-lg italic leading-snug text-trail placeholder:text-fog focus:outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) start(query);
+                }}
+              />
+              <div className="flex items-end justify-between gap-3">
+                {/* Ajouts rapides — complètent la demande en un tap (aucune
+                 * détection automatique : ce sont des raccourcis de saisie). */}
+                <div
+                  role="group"
+                  aria-label={t('home.quick_add')}
+                  className="flex flex-wrap gap-1.5"
+                >
+                  {[1, 2, 3].map((n) => {
+                    const chip = t(`home.chip_${n}`);
+                    return (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() =>
+                          setQuery((prev) => (prev.trim() ? `${prev.trim()}, ${chip}` : chip))
+                        }
+                        className="min-h-8 border border-mist bg-cloud px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ridge transition-colors hover:bg-sky"
+                      >
+                        {chip}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Le départ se fait ici : une seule action, comme sur une
+                 * barre de recherche — plus de grande plaque en doublon. */}
+                <button
+                  type="submit"
+                  disabled={!query.trim()}
+                  aria-label={t('home.cta')}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-mist bg-summit text-cloud transition-colors hover:bg-copper-deep disabled:bg-terrain disabled:text-fog"
+                >
+                  <ArrowUp size={18} aria-hidden="true" />
+                </button>
+              </div>
             </div>
-            <button
-              type="submit"
-              disabled={!query.trim()}
-              aria-label={t('home.send')}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-mist bg-summit text-cloud transition-colors hover:bg-copper-deep disabled:bg-terrain disabled:text-fog"
-            >
-              <ArrowUp size={18} aria-hidden="true" />
-            </button>
           </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={!query.trim()}
-          className="cta-plate flex min-h-13 items-center justify-center px-6 py-4"
-        >
-          {t('home.cta')}
-        </button>
+        </section>
       </form>
 
-      {/* Reprendre — carnets déjà tracés ; à défaut, de quoi s'inspirer */}
-      <section className="fade-up flex flex-col gap-2" style={{ animationDelay: '200ms' }}>
-        <p className="label-mono text-fog">
+      {/* Reprendre / s'inspirer — volontairement discret : la barre au-dessus
+       * porte l'action, ces lignes ne sont qu'un appui. Pas de cadre, un
+       * simple filet entre les entrées. */}
+      <section className="fade-up flex flex-col" style={{ animationDelay: '200ms' }}>
+        <p className="label-mono mb-1 text-fog">
           {recent.length > 0 ? t('home.resume') : t('home.examples_title')}
         </p>
 
@@ -245,26 +250,24 @@ export function Home() {
               <Link
                 key={trip.id}
                 to={`/trips/${trip.id}`}
-                className="group flex items-center gap-3 border border-mist bg-snow p-2 transition-colors hover:bg-sky"
+                className="flex items-center gap-3 border-b border-mist/25 py-2.5 transition-colors hover:bg-snow"
               >
                 <img
                   src={trip.cover_photo ?? FALLBACK_THUMB}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
-                  className="h-11 w-16 shrink-0 border border-mist object-cover"
+                  className="h-9 w-14 shrink-0 border border-mist/40 object-cover"
                 />
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="label-mono text-fog">
                     {t(`mode.${trip.mode as TripMode}`)} ·{' '}
                     {t('home.days', { count: trip.metadata.duration_days })}
                   </span>
-                  <span className="truncate font-display text-lg font-semibold text-trail">
-                    {trip.title}
-                  </span>
+                  <span className="truncate font-display text-base text-trail">{trip.title}</span>
                 </span>
-                <span className="shrink-0 font-mono text-xs text-ridge">
-                  {Math.round(trip.metadata.distance_km)} km
+                <span className="shrink-0 font-mono text-xs text-fog">
+                  {formatDistance(trip.metadata.distance_km, units)}
                 </span>
               </Link>
             ))
@@ -273,10 +276,10 @@ export function Home() {
                 key={example}
                 type="button"
                 onClick={() => start(example)}
-                className="flex items-center gap-3 border border-mist bg-snow px-3 py-3 text-left transition-colors hover:bg-sky"
+                className="flex min-h-11 items-center gap-3 border-b border-mist/25 py-2.5 text-left transition-colors hover:bg-snow"
               >
                 <span
-                  className="shrink-0 font-mono text-[11px] font-bold tracking-widest text-copper-deep"
+                  className="shrink-0 font-mono text-[11px] tracking-widest text-fog"
                   aria-hidden="true"
                 >
                   {String(i + 1).padStart(2, '0')}
