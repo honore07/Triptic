@@ -4,38 +4,13 @@ import { useTranslation } from 'react-i18next';
 /**
  * Ouverture — planche PL.01 « OUVERTURE » des maquettes VIRE.
  * Gravure de sommet plein cadre, marque tracée au centre, plaque d'entrée en
- * bas. Ne s'affiche qu'à la PREMIÈRE visite : un habitué arrive directement
- * sur l'accueil (décision produit — le splash est une entrée en matière, pas
- * un péage).
+ * bas. Affichée tant qu'aucun carnet n'est ouvert (pas de compte connecté) :
+ * elle précède alors la page de connexion (PL.02). Un utilisateur connecté
+ * arrive directement sur l'accueil.
  */
-
-/** Clé de mémorisation de la première visite. */
-export const OUVERTURE_SEEN_KEY = 'vire-ouverture-seen';
-
-/**
- * Vrai tant que l'utilisateur n'a jamais franchi l'ouverture.
- * Stockage indisponible (navigation privée stricte) : on ne montre rien —
- * mieux vaut sauter l'intro que la réafficher à chaque page.
- */
-export function shouldShowOuverture(): boolean {
-  try {
-    return localStorage.getItem(OUVERTURE_SEEN_KEY) === null;
-  } catch {
-    return false;
-  }
-}
-
-/** Mémorise le passage — sans effet si le stockage est refusé. */
-export function markOuvertureSeen(): void {
-  try {
-    localStorage.setItem(OUVERTURE_SEEN_KEY, '1');
-  } catch {
-    /* stockage indisponible : l'ouverture se rejouera, sans casse */
-  }
-}
 
 interface OuvertureProps {
-  /** Franchit l'ouverture — l'appelant mémorise et démonte le composant. */
+  /** Franchit l'ouverture — mène à la connexion, ou à l'accueil sans auth. */
   onStart: () => void;
 }
 

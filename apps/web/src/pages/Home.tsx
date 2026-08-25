@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { Ouverture, markOuvertureSeen, shouldShowOuverture } from '../components/Ouverture';
+import { Ouverture } from '../components/Ouverture';
+import { supabase } from '../lib/supabase';
 import { useChatStore } from '../store/chatStore';
+import { useUserStore } from '../store/userStore';
 
 /**
  * Home — "progressivement complexe" : une seule question visible au départ.
@@ -15,9 +17,11 @@ export function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  // Planche d'ouverture (PL.01) : première visite seulement — lu une fois au
-  // montage, jamais à chaque rendu.
-  const [ouvertureOpen, setOuvertureOpen] = useState(shouldShowOuverture);
+  const email = useUserStore((s) => s.email);
+  // Sans auth configurée (dev/démo), aucun carnet ne peut être ouvert : la
+  // plaque d'entrée mène alors directement à l'accueil au lieu d'une page de
+  // connexion inopérante.
+  const [entered, setEntered] = useState(false);
 
   const start = (text: string) => {
     const trimmed = text.trim();
@@ -31,12 +35,14 @@ export function Home() {
 
   const examples = [t('home.example_1'), t('home.example_2'), t('home.example_3')];
 
-  if (ouvertureOpen) {
+  // Tant qu'aucun carnet n'est ouvert : ouverture (PL.01) puis connexion
+  // (PL.02). Un utilisateur connecté ne voit jamais cet écran.
+  if (email === null && !entered) {
     return (
       <Ouverture
         onStart={() => {
-          markOuvertureSeen();
-          setOuvertureOpen(false);
+          if (supabase) navigate('/login');
+          else setEntered(true);
         }}
       />
     );

@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import {
-  OUVERTURE_SEEN_KEY,
-  Ouverture,
-  markOuvertureSeen,
-  shouldShowOuverture,
-} from '../components/Ouverture';
+import { Ouverture } from '../components/Ouverture';
 import { setLang } from '../lib/i18n';
 
 describe('Ouverture (planche PL.01)', () => {
@@ -42,20 +37,4 @@ describe('Ouverture (planche PL.01)', () => {
     expect(document.body.style.overflow).not.toBe('hidden');
   });
 
-  it('ne s’affiche qu’à la première visite', () => {
-    expect(shouldShowOuverture()).toBe(true);
-    markOuvertureSeen();
-    expect(localStorage.getItem(OUVERTURE_SEEN_KEY)).toBe('1');
-    expect(shouldShowOuverture()).toBe(false);
-  });
-
-  it('saute l’intro si le stockage est refusé (navigation privée stricte)', () => {
-    const getItem = vi
-      .spyOn(Storage.prototype, 'getItem')
-      .mockImplementation(() => {
-        throw new Error('storage denied');
-      });
-    expect(shouldShowOuverture()).toBe(false);
-    getItem.mockRestore();
-  });
 });
