@@ -110,18 +110,20 @@ sudo sed -i 's#rule: "Host(`triptic.hakoe-alsace.com`)"#rule: "Host(`triptic.hak
 sed -i 's#^APP_URL=.*#APP_URL=https://triptic.app#' /opt/triptic/.env && pm2 reload triptic-api
 ```
 
-## Reste à durcir (non bloquant)
+## Durcissement
 
-- **Port 3001 exposé.** `ufw` est `inactive` et Express écoute sur `0.0.0.0`,
-  donc `http://82.25.118.185:3001` sert l'app en clair, hors HTTPS. Deux façons
-  de fermer, par ordre de sécurité :
-  1. Faire écouter Express sur la boucle locale uniquement (Traefik tape déjà
-     sur `127.0.0.1:3001`) — demande une petite modif de `server/src/index.ts`,
-     aucun risque de se couper l'accès SSH.
-  2. Activer le firewall — **ne jamais lancer `ufw enable` sans autoriser SSH
-     d'abord**, sous peine de perdre l'accès à la machine :
-     `sudo ufw allow 22 && sudo ufw allow 80 && sudo ufw allow 443 && sudo ufw enable`.
-     (`ufw deny 3001` seul ne fait rien tant que `ufw` est inactive.)
+- **Port 3001 fermé au public.** Express écoute sur `127.0.0.1` (`HOST`, défaut
+  boucle locale) : `http://82.25.118.185:3001` ne répond plus, tout passe par
+  Traefik en HTTPS. Pour réouvrir temporairement (debug) : `HOST=0.0.0.0` dans
+  `/opt/triptic/.env` puis `pm2 restart triptic-api --update-env`.
+  ⚠️ **n8n est en réseau bridge** (`n8n_default`), il ne peut donc pas joindre la
+  loopback de l'hôte : ses workflows appellent l'API par le domaine HTTPS.
+  Toute nouvelle intégration depuis un conteneur doit faire pareil.
+  `ufw` reste `inactive` — si tu l'actives un jour, **`ufw allow 22` d'abord**,
+  sinon tu perds l'accès SSH.
 - **`HEAD /` renvoie 404** alors que `GET /` renvoie 200 : le fallback SPA de
   `server/src/app.ts` ne traite que `GET`. Sans effet pour les navigateurs,
   mais un monitoring d'uptime configuré en HEAD verra le site « down ».
+- Le watchdog `/opt/triptic/deploy/healthcheck-watchdog.sh` (cron 5 min) tape sur
+  `http://127.0.0.1:3001/health` — compatible loopback. Il n'est **pas versionné** :
+  il n'existe que sur le VPS.

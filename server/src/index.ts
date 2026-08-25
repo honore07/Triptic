@@ -33,9 +33,9 @@ if (allowPlanOverride) {
   );
 }
 
-app.listen(env.port, () => {
+app.listen(env.port, env.host, () => {
   logger.info(
-    { port: env.port, provider: provider.name, store: repo ? 'postgres' : 'memory' },
+    { host: env.host, port: env.port, provider: provider.name, store: repo ? 'postgres' : 'memory' },
     'TRIPTIC API started',
   );
 });

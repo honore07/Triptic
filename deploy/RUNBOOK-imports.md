@@ -1,7 +1,7 @@
 # TRIPTIC — Runbook VPS : imports longue traîne (DATAtourisme, villages, Wikidata, TDM)
 
 > Commandes à **coller telles quelles** dans le terminal Hostinger du VPS.
-> Contexte (constaté le 29/07/2026 via `http://82.25.118.185:3001/api/places/stats`) :
+> Contexte (constaté le 29/07/2026 via `https://triptic.hakoe-alsace.com/api/places/stats`) :
 > `by_source = { osm: 148 836, wikidata: 113 }` — **l'import DATAtourisme n'a
 > jamais tourné** et **aucune source TDM n'est enregistrée** (`tdm.sources_total = 0`).
 >
@@ -66,7 +66,7 @@ zip + traces GPX des tours, 15 s max chacune). Fin = ligne de log
 **Vérification après** :
 
 ```bash
-curl -s http://82.25.118.185:3001/api/places/stats
+curl -s https://triptic.hakoe-alsace.com/api/places/stats
 ```
 
 → `by_source` doit contenir une entrée `"source":"datatourisme"` avec un
@@ -171,7 +171,7 @@ fait).
 **Vérification après** :
 
 ```bash
-curl -s http://82.25.118.185:3001/api/places/stats
+curl -s https://triptic.hakoe-alsace.com/api/places/stats
 ```
 
 → `tdm.sources_total` ≥ 1 (la source est enregistrée **même si la page est en
@@ -193,7 +193,7 @@ toutes dans `places` et 2-3 imports simultanés satureraient le KVM 2).
 
 ## Checklist de succès global
 
-`curl -s http://82.25.118.185:3001/api/places/stats` doit montrer :
+`curl -s https://triptic.hakoe-alsace.com/api/places/stats` doit montrer :
 
 - [ ] `by_source` contient `osm` (~149 000), `wikidata` (~113), **et
       `datatourisme` (> 0, quelques milliers attendus)**

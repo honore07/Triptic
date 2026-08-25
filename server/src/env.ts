@@ -9,6 +9,13 @@ dotenv.config({ path: path.resolve(here, '../../.env') });
 export const env = {
   nodeEnv: process.env['NODE_ENV'] ?? 'development',
   port: Number(process.env['PORT'] ?? 3001),
+  /**
+   * Interface d'écoute. Par défaut la boucle locale : en prod c'est
+   * Traefik qui expose l'app en HTTPS (il tape sur 127.0.0.1:3001), donc
+   * le port ne doit pas être joignable en clair depuis Internet.
+   * Mettre HOST=0.0.0.0 pour exposer directement (conteneur, debug).
+   */
+  host: process.env['HOST'] ?? '127.0.0.1',
   appUrl: process.env['APP_URL'] ?? 'http://localhost:5173',
   databaseUrl: process.env['DATABASE_URL'],
   jwtSecret: process.env['JWT_SECRET'],

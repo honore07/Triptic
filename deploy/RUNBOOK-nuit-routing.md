@@ -101,7 +101,7 @@ signifie que le point est hors de la couverture obtenue.
 Bout en bout, via l'API publique TRIPTIC (Colmar → Chamonix) :
 
 ```bash
-curl -sS -X POST http://82.25.118.185:3001/api/trips/recompute -H "Content-Type: application/json" -d '{"mode":"roadtrip","duration_days":1,"days":[{"day":1,"title":"Test","activities":[{"type":"visit","time_of_day":"morning","title":"Colmar","lat":48.0794,"lng":7.3585},{"type":"visit","time_of_day":"afternoon","title":"Chamonix","lat":45.9237,"lng":6.8694}]}]}' | head -c 300
+curl -sS -X POST https://triptic.hakoe-alsace.com/api/trips/recompute -H "Content-Type: application/json" -d '{"mode":"roadtrip","duration_days":1,"days":[{"day":1,"title":"Test","activities":[{"type":"visit","time_of_day":"morning","title":"Colmar","lat":48.0794,"lng":7.3585},{"type":"visit","time_of_day":"afternoon","title":"Chamonix","lat":45.9237,"lng":6.8694}]}]}' | head -c 300
 ```
 
 Attendu : `"routed":true`. Si `false`, le trajet sort de la couverture.
