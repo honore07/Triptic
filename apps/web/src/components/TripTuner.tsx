@@ -4,6 +4,7 @@ import { MapPin } from 'lucide-react';
 import { seasonForDate, tripDurationDays } from '@triptic/shared';
 import type { GroupType, TripRequest, TripTuning, TuningValue } from '@triptic/shared';
 import type { TripDates } from '../store/chatStore';
+import { profileConstraints } from '../store/profileStore';
 
 /** Corrections confirmées à la main, transmises telles quelles au moteur. */
 export type TripPlaces = Pick<
@@ -156,6 +157,8 @@ export function TripTuner({ dates = null, onConfirm, disabled = false }: Props) 
     if (pack !== 3) constraints.push(t(`tuner.pack_${pack}`));
     const free = note.trim();
     if (free) constraints.push(free);
+    // Préférences durables et véhicule enregistré (PL.13/PL.14) — même canal
+    constraints.push(...profileConstraints().map(({ key, params }) => t(key, params ?? {})));
     if (constraints.length > 0) places.constraints = constraints;
 
     onConfirm(tuning, places);

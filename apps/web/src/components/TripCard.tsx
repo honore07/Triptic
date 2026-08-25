@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import type { TripProposal } from '@triptic/shared';
 import { MAP_COLORS } from '../lib/mapColors';
+import { formatDistance, formatElevation } from '../lib/units';
+import { useProfileStore } from '../store/profileStore';
 import { DifficultyBadge } from './DifficultyBadge';
 import { RoutePreview } from './RoutePreview';
 
@@ -31,6 +33,7 @@ function Releve({ label, value }: { label: string; value: string }) {
  */
 export function TripCard({ trip, onChoose, index = 0 }: Props) {
   const { t } = useTranslation();
+  const units = useProfileStore((s) => s.units);
 
   return (
     <article
@@ -79,10 +82,10 @@ export function TripCard({ trip, onChoose, index = 0 }: Props) {
             label={t('trips.days')}
             value={t('trips.days_count', { count: trip.duration_days })}
           />
-          <Releve label={t('trips.distance')} value={`${Math.round(trip.distance_km)} km`} />
+          <Releve label={t('trips.distance')} value={formatDistance(trip.distance_km, units)} />
           <Releve
             label={t('trips.elevation')}
-            value={`${Math.round(trip.elevation_gain_m)} m`}
+            value={formatElevation(trip.elevation_gain_m, units)}
           />
           <Releve
             label={t('budget.title')}

@@ -5,6 +5,8 @@ import { ArrowLeft, Bookmark, Leaf, Pencil, Share2, Undo2, Wallet } from 'lucide
 import type { Lang, TripDay } from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { saveTrip, updateTrip } from '../lib/api';
+import { formatDistance, formatElevation } from '../lib/units';
+import { useProfileStore } from '../store/profileStore';
 import { DayCards } from '../components/DayCards';
 import { DayEditor } from '../components/DayEditor';
 import { DifficultyBadge } from '../components/DifficultyBadge';
@@ -32,6 +34,7 @@ export function TripPage() {
     undo,
   } = useTripStore();
   const { plan } = useUserStore();
+  const units = useProfileStore((s) => s.units);
   const [copied, setCopied] = useState(false);
   const [actionError, setActionError] = useState(false);
   /** URL publique affichée en fallback quand le presse-papiers est indisponible. */
@@ -153,14 +156,14 @@ export function TripPage() {
               label: t('trips.days'),
               value: t('trips.days_count', { count: selected.duration_days }),
             },
-            { label: t('trips.distance'), value: `${Math.round(selected.distance_km)} km` },
+            { label: t('trips.distance'), value: formatDistance(selected.distance_km, units) },
             {
               label: t('trips.elevation'),
-              value: `${Math.round(selected.elevation_gain_m)} m`,
+              value: formatElevation(selected.elevation_gain_m, units),
             },
             {
               label: t('trips.per_day'),
-              value: `${Math.round(selected.daily_distance_km)} km`,
+              value: formatDistance(selected.daily_distance_km, units),
             },
           ].map(({ label, value }) => (
             <div

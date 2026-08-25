@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ActivityType, TripDay } from '@triptic/shared';
+import { formatDistance, formatElevation } from '../lib/units';
+import { useProfileStore } from '../store/profileStore';
 
 /**
  * Cartes-étapes synchronisées avec la carte (planche PL.09) : une rangée par
@@ -51,6 +53,7 @@ interface Props {
 
 export function DayCards({ days, selectedDay, onSelectDay }: Props) {
   const { t } = useTranslation();
+  const units = useProfileStore((s) => s.units);
   const refs = useRef(new Map<number, HTMLElement>());
 
   // Synchro carte → cartes-jours : scroll vers la carte du jour sélectionné
@@ -109,10 +112,10 @@ export function DayCards({ days, selectedDay, onSelectDay }: Props) {
                   <span className="flex shrink-0 flex-col items-end gap-0.5 font-mono text-xs text-ridge">
                     {dayDistance > 0 && (
                       <span>
-                        {Math.round(dayDistance)} km{routed ? '' : ` (${t('days.estimated')})`}
+                        {formatDistance(dayDistance, units)}{routed ? '' : ` (${t('days.estimated')})`}
                       </span>
                     )}
-                    {dayGain > 0 && <span className="text-fog">+ {dayGain} m</span>}
+                    {dayGain > 0 && <span className="text-fog">+ {formatElevation(dayGain, units)}</span>}
                   </span>
                 )}
               </button>

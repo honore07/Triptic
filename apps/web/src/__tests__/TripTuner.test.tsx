@@ -1,13 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { TripTuner } from '../components/TripTuner';
+import { DEFAULT_PREFERENCES, useProfileStore } from '../store/profileStore';
 import { setLang } from '../lib/i18n';
 
 const CTA = /Générer trois vires/;
 const NEUTRAL = { physical: 3, pace: 3, culture: 3, discovery: 3 };
 
 describe('TripTuner (planche PL.05 — précisions)', () => {
-  beforeEach(() => setLang('fr'));
+  beforeEach(() => {
+    setLang('fr');
+    // Profil neutre : les préférences durables (PL.14) ajoutent sinon leurs
+    // propres contraintes, ce que d'autres cas couvrent explicitement.
+    useProfileStore.setState({
+      preferences: { ...DEFAULT_PREFERENCES, legal_bivouac: false },
+      vehicle: null,
+    });
+  });
 
   it('pose la cordée, le sac et les 4 axes de différenciation', () => {
     render(<TripTuner onConfirm={() => {}} />);

@@ -9,6 +9,8 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { dateForTripDay, type ActivityType, type TripDay } from '@triptic/shared';
+import { formatDistance, formatElevation } from '../lib/units';
+import { useProfileStore } from '../store/profileStore';
 
 const ACTIVITY_ICONS: Record<ActivityType, typeof Car> = {
   drive: Car,
@@ -49,6 +51,7 @@ interface EtapeProps {
  */
 export function Etape({ day, startDate }: EtapeProps) {
   const { t, i18n } = useTranslation();
+  const units = useProfileStore((s) => s.units);
   const type = day.activities[0]?.type ?? 'hike';
 
   const distance = (day.segments ?? []).reduce((s, seg) => s + seg.distance_km, 0);
@@ -69,8 +72,8 @@ export function Etape({ day, startDate }: EtapeProps) {
   const maxGain = Math.max(...climbs.map((c) => c.gain), 1);
 
   const releve = [
-    { label: t('trips.distance'), value: distance > 0 ? `${Math.round(distance)} km` : '—' },
-    { label: t('trips.elevation'), value: gain > 0 ? `${gain} m` : '—' },
+    { label: t('trips.distance'), value: distance > 0 ? formatDistance(distance, units) : '—' },
+    { label: t('trips.elevation'), value: gain > 0 ? formatElevation(gain, units) : '—' },
     { label: t('etape.time'), value: minutes > 0 ? asHours(minutes) : '—' },
   ];
 
@@ -114,7 +117,7 @@ export function Etape({ day, startDate }: EtapeProps) {
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
             <p className="label-mono text-fog">{t('etape.profile')}</p>
-            <p className="label-mono text-fog">{maxGain} m max</p>
+            <p className="label-mono text-fog">{formatElevation(maxGain, units)} max</p>
           </div>
           <ul className="flex h-24 items-end gap-1.5 border-b border-mist">
             {climbs.map((climb) => (

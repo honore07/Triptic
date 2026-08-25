@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Trip, TripMode } from '@triptic/shared';
 import { listTrips } from '../lib/api';
+import { formatDistance, formatElevation } from '../lib/units';
+import { useProfileStore } from '../store/profileStore';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from '../store/userStore';
 
@@ -36,6 +38,7 @@ type Filter = (typeof FILTERS)[number];
 export function MyTrips() {
   const { t, i18n } = useTranslation();
   const plan = useUserStore((s) => s.plan);
+  const units = useProfileStore((s) => s.units);
   const email = useUserStore((s) => s.email);
   const [state, setState] = useState<FetchState>({ status: 'loading' });
   const [filter, setFilter] = useState<Filter>('all');
@@ -95,8 +98,8 @@ export function MyTrips() {
         <dl className="grid grid-cols-3 border border-mist">
           {[
             { label: t('my_trips.total_trips'), value: String(totals.count) },
-            { label: t('trips.distance'), value: `${Math.round(totals.km)} km` },
-            { label: t('trips.elevation'), value: `${Math.round(totals.gain)} m` },
+            { label: t('trips.distance'), value: formatDistance(totals.km, units) },
+            { label: t('trips.elevation'), value: formatElevation(totals.gain, units) },
           ].map(({ label, value }, i) => (
             <div
               key={label}
@@ -211,10 +214,10 @@ export function MyTrips() {
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-0.5 font-mono text-xs text-ridge">
                     {Number.isFinite(meta.distance_km) && (
-                      <span>{Math.round(meta.distance_km)} km</span>
+                      <span>{formatDistance(meta.distance_km, units)}</span>
                     )}
                     {Number.isFinite(meta.elevation_gain_m) && (
-                      <span className="text-fog">+ {Math.round(meta.elevation_gain_m)} m</span>
+                      <span className="text-fog">+ {formatElevation(meta.elevation_gain_m, units)}</span>
                     )}
                   </span>
                 </Link>

@@ -18,8 +18,10 @@ import { LegalTdm } from './pages/LegalTdm';
 import { MyTrips } from './pages/MyTrips';
 import { Plan } from './pages/Plan';
 import { SavedTrip } from './pages/SavedTrip';
+import { Profil } from './pages/Profil';
 import { PublicTrip } from './pages/PublicTrip';
 import { TripPage } from './pages/Trip';
+import { Vehicule } from './pages/Vehicule';
 import { AuthPage } from './pages/Auth';
 
 /**
@@ -178,6 +180,14 @@ export function App() {
             <span className="hidden sm:inline">{t('places.nav')}</span>
             <span className="sr-only sm:hidden">{t('places.nav')}</span>
           </Link>
+          <Link
+            to="/profil"
+            className="flex items-center gap-1 text-sm font-semibold text-ridge hover:text-copper-deep"
+          >
+            <UserRound size={15} aria-hidden="true" />
+            <span className="hidden sm:inline">{t('profil.nav')}</span>
+            <span className="sr-only sm:hidden">{t('profil.nav')}</span>
+          </Link>
           <AccountNav />
         </nav>
         <LangSwitcher />
@@ -191,6 +201,8 @@ export function App() {
         <Route path="/trips/:id" element={<SavedTrip />} />
         <Route path="/contribute" element={<Contribute />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/profil" element={<Profil />} />
+        <Route path="/vehicule" element={<Vehicule />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/legal/attributions" element={<LegalAttributions />} />
         <Route path="/legal/tdm" element={<LegalTdm />} />
