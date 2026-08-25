@@ -24,6 +24,52 @@ export function seasonForDate(isoDate: string): Season | null {
   return null;
 }
 
+/**
+ * Activités de référence dont la saison conditionne la praticabilité
+ * (planche PL.04). Une activité hors saison n'est pas interdite : elle reste
+ * proposable, mais l'UI l'affiche en retrait et la génération l'assortit d'un
+ * avertissement.
+ */
+export type SeasonActivity =
+  | 'ridge_trek'
+  | 'bivouac'
+  | 'lake_swim'
+  | 'summit_sunrise'
+  | 'bikepacking'
+  | 'snowshoe'
+  | 'refuge_night';
+
+/** Ordre d'affichage stable (l'UI ne trie pas). */
+export const SEASON_ACTIVITIES: readonly SeasonActivity[] = [
+  'ridge_trek',
+  'bivouac',
+  'lake_swim',
+  'summit_sunrise',
+  'bikepacking',
+  'snowshoe',
+  'refuge_night',
+];
+
+/** Ce que chaque saison rend réellement praticable (Vosges / Alpes du Nord). */
+const PRACTICABLE: Record<Season, readonly SeasonActivity[]> = {
+  winter: ['snowshoe', 'refuge_night'],
+  spring: ['ridge_trek', 'bivouac', 'summit_sunrise', 'bikepacking', 'refuge_night'],
+  summer: [
+    'ridge_trek',
+    'bivouac',
+    'lake_swim',
+    'summit_sunrise',
+    'bikepacking',
+    'refuge_night',
+  ],
+  autumn: ['ridge_trek', 'bivouac', 'summit_sunrise', 'bikepacking', 'refuge_night'],
+};
+
+/** true si la saison rend l'activité praticable sans réserve. */
+export function isPracticable(season: Season, activity: SeasonActivity): boolean {
+  return PRACTICABLE[season].includes(activity);
+}
+
 /** Nombre de jours du trip, bornes incluses (départ = jour 1). */
 export function tripDurationDays(startDate: string, endDate: string): number | null {
   const start = new Date(`${startDate}T12:00:00Z`).getTime();

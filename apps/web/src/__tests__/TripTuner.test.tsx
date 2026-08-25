@@ -24,35 +24,17 @@ describe('TripTuner', () => {
     fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
     expect(onConfirm).toHaveBeenCalledWith(
       { physical: 5, pace: 3, culture: 3, discovery: 1 },
-      null,
       {},
     );
   });
 
-  it('defaults every slider to neutral 3/5 (sans dates → null)', () => {
+  it('defaults every slider to neutral 3/5', () => {
     setLang('fr');
     const onConfirm = vi.fn();
     render(<TripTuner onConfirm={onConfirm} />);
     fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
     expect(onConfirm).toHaveBeenCalledWith(
       { physical: 3, pace: 3, culture: 3, discovery: 3 },
-      null,
-      {},
-    );
-  });
-
-  it('transmet les dates et affiche durée + saison', () => {
-    setLang('fr');
-    const onConfirm = vi.fn();
-    render(<TripTuner onConfirm={onConfirm} />);
-    const year = new Date().getFullYear() + 1;
-    fireEvent.change(screen.getByLabelText(/^Départ$/), { target: { value: `${year}-07-10` } });
-    fireEvent.change(screen.getByLabelText(/Retour/), { target: { value: `${year}-07-14` } });
-    expect(screen.getByText(/5 jours · Été/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-    expect(onConfirm).toHaveBeenCalledWith(
-      expect.anything(),
-      { start: `${year}-07-10`, end: `${year}-07-14` },
       {},
     );
   });
@@ -66,7 +48,7 @@ describe('TripTuner', () => {
       target: { value: '  Strasbourg  ' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-    expect(onConfirm).toHaveBeenCalledWith(expect.anything(), null, {
+    expect(onConfirm).toHaveBeenCalledWith(expect.anything(), {
       departure: 'Strasbourg',
       destination: 'Strasbourg',
     });
@@ -82,7 +64,7 @@ describe('TripTuner', () => {
       target: { value: 'Genève' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-    expect(onConfirm).toHaveBeenCalledWith(expect.anything(), null, {
+    expect(onConfirm).toHaveBeenCalledWith(expect.anything(), {
       departure: 'Colmar',
       destination: 'Genève',
     });
@@ -113,7 +95,7 @@ describe('TripTuner', () => {
       const onConfirm = vi.fn();
       render(<TripTuner onConfirm={onConfirm} />);
       fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-      expect(onConfirm).toHaveBeenCalledWith(expect.anything(), null, {});
+      expect(onConfirm).toHaveBeenCalledWith(expect.anything(), {});
       useUserStore.setState({ plan: 'free' });
     });
 
@@ -126,11 +108,11 @@ describe('TripTuner', () => {
       fireEvent.click(trek);
       expect(trek).toHaveAttribute('aria-pressed', 'true');
       fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-      expect(onConfirm).toHaveBeenLastCalledWith(expect.anything(), null, { modes: ['trek'] });
+      expect(onConfirm).toHaveBeenLastCalledWith(expect.anything(), { modes: ['trek'] });
       fireEvent.click(trek);
       expect(trek).toHaveAttribute('aria-pressed', 'false');
       fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-      expect(onConfirm).toHaveBeenLastCalledWith(expect.anything(), null, {});
+      expect(onConfirm).toHaveBeenLastCalledWith(expect.anything(), {});
       useUserStore.setState({ plan: 'free' });
     });
 
@@ -144,7 +126,7 @@ describe('TripTuner', () => {
       expect(useUserStore.getState().paywallOpen).toBe(true);
       expect(trek).toHaveAttribute('aria-pressed', 'false');
       fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-      expect(onConfirm).toHaveBeenCalledWith(expect.anything(), null, {});
+      expect(onConfirm).toHaveBeenCalledWith(expect.anything(), {});
       useUserStore.setState({ paywallOpen: false });
     });
 
@@ -155,7 +137,7 @@ describe('TripTuner', () => {
       render(<TripTuner onConfirm={onConfirm} />);
       fireEvent.click(screen.getByRole('button', { name: 'Van life' }));
       fireEvent.click(screen.getByRole('button', { name: /Générer mes 3 trips sur-mesure/ }));
-      expect(onConfirm).toHaveBeenCalledWith(expect.anything(), null, { modes: ['roadtrip'] });
+      expect(onConfirm).toHaveBeenCalledWith(expect.anything(), { modes: ['roadtrip'] });
     });
   });
 });

@@ -5,11 +5,12 @@ import { Send } from 'lucide-react';
 import { PLANS, type Lang, type TripProposal } from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { ChatBubble, TypingBubble } from '../components/ChatBubble';
+import { Fenetre } from '../components/Fenetre';
 import { QuickReplies } from '../components/QuickReplies';
 import { RequestChips } from '../components/RequestChips';
 import { TripCompare } from '../components/TripCompare';
 import { TripTuner } from '../components/TripTuner';
-import { useChatStore } from '../store/chatStore';
+import { useChatStore, type TripDates } from '../store/chatStore';
 import { useTripStore } from '../store/tripStore';
 import { useUserStore } from '../store/userStore';
 
@@ -33,13 +34,20 @@ export function Plan() {
   const { plan, openPaywall, setRemaining } = useUserStore();
   const selectTrip = useTripStore((s) => s.select);
   const [input, setInput] = useState('');
+  // Fenêtre retenue à l'étape PL.04, transmise à la génération avec les
+  // curseurs de PL.05 (null = l'IA déduit la durée de la demande).
+  const [dates, setDates] = useState<TripDates | null>(null);
+  const [datesDone, setDatesDone] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
 
   const lang = (i18n.language as Lang) ?? 'fr';
   const busy = status !== 'idle' && status !== 'error';
-  // Le TripTuner s'affiche après la demande initiale, avant la 1re génération
-  const tunerVisible = messages.length > 0 && !tuning && !result && !busy;
+  // Après la demande initiale et avant la 1re génération, deux étapes se
+  // succèdent : la fenêtre (PL.04) puis les précisions (PL.05).
+  const onboarding = messages.length > 0 && !tuning && !result && !busy;
+  const fenetreVisible = onboarding && !datesDone;
+  const tunerVisible = onboarding && datesDone;
 
   useEffect(() => {
     const initial = location.state?.initialQuery;
@@ -131,15 +139,24 @@ export function Plan() {
         <div ref={bottomRef} />
       </section>
 
-      {tunerVisible && (
-        <TripTuner
-          onConfirm={(value, dates, places) =>
-            void confirmTuning(value, lang, plan, dates, places)
-          }
+      {fenetreVisible && (
+        <Fenetre
+          onConfirm={(picked) => {
+            setDates(picked);
+            setDatesDone(true);
+          }}
         />
       )}
 
-      {!result && !tunerVisible && (
+      {tunerVisible && (
+        <TripTuner
+          onConfirm={(value, places) => void confirmTuning(value, lang, plan, dates, places)}
+        />
+      )}
+
+      {/* Le champ de réponse s'efface pendant l'onboarding : la planche en
+       * cours (fenêtre ou précisions) porte la seule action attendue. */}
+      {!result && !onboarding && (
         <form
           className="sticky bottom-4 flex gap-2"
           onSubmit={(e) => {

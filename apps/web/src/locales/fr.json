@@ -314,7 +314,18 @@
     "winter": "Hiver",
     "spring": "Printemps",
     "summer": "Été",
-    "autumn": "Automne"
+    "autumn": "Automne",
+    "note_winter": "Jours courts, neige en altitude, cols souvent fermés.",
+    "note_spring": "Névés en altitude, torrents hauts, journées qui s'allongent.",
+    "note_summer": "Journées longues, orages en fin d'après-midi, lacs baignables.",
+    "note_autumn": "Lumière rase, forêts en couleurs, premiers gels au sommet.",
+    "activity_ridge_trek": "Trek de crête",
+    "activity_bivouac": "Bivouac",
+    "activity_lake_swim": "Baignade en lac",
+    "activity_summit_sunrise": "Lever au sommet",
+    "activity_bikepacking": "Bikepacking",
+    "activity_snowshoe": "Raquettes",
+    "activity_refuge_night": "Nuit en refuge"
   },
   "weather": {
     "title": "Météo du parcours",
@@ -435,5 +446,20 @@
     "unavailable": "La connexion n'est pas disponible pour le moment.",
     "required_generation": "Crée un compte gratuit pour générer tes trips.",
     "launch_offer_banner": "Offre de lancement : toutes les fonctionnalités sont ouvertes gratuitement."
+  },
+  "fenetre": {
+    "plate": "01b — Fenêtre",
+    "title": "Quand pars-tu ?",
+    "prev_month": "Mois précédent",
+    "next_month": "Mois suivant",
+    "window": "Fenêtre retenue",
+    "no_window": "À définir",
+    "nights": "Nuits",
+    "season": "Saison",
+    "activities": "Activités de la saison",
+    "practicable": "praticable",
+    "with_warning": "proposable avec un avertissement",
+    "season_note": "Les activités affichées en plein sont celles que la saison rend praticables. Les autres restent proposables, avec un avertissement.",
+    "cta": "Continuer"
   }
 }

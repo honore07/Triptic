@@ -314,7 +314,18 @@
     "winter": "Winter",
     "spring": "Frühling",
     "summer": "Sommer",
-    "autumn": "Herbst"
+    "autumn": "Herbst",
+    "note_winter": "Kurze Tage, Schnee in der Höhe, Pässe oft gesperrt.",
+    "note_spring": "Altschneefelder oben, volle Bäche, längere Tage.",
+    "note_summer": "Lange Tage, Gewitter am späten Nachmittag, badewarme Seen.",
+    "note_autumn": "Flaches Licht, bunte Wälder, erster Frost am Gipfel.",
+    "activity_ridge_trek": "Grattour",
+    "activity_bivouac": "Biwak",
+    "activity_lake_swim": "Seebaden",
+    "activity_summit_sunrise": "Sonnenaufgang am Gipfel",
+    "activity_bikepacking": "Bikepacking",
+    "activity_snowshoe": "Schneeschuhe",
+    "activity_refuge_night": "Hüttennacht"
   },
   "weather": {
     "title": "Wetter auf der Route",
@@ -435,5 +446,20 @@
     "unavailable": "Die Anmeldung ist derzeit nicht verfügbar.",
     "required_generation": "Erstelle ein kostenloses Konto, um deine Trips zu generieren.",
     "launch_offer_banner": "Startangebot: Alle Funktionen sind kostenlos freigeschaltet."
+  },
+  "fenetre": {
+    "plate": "01b — Fenster",
+    "title": "Wann geht's los?",
+    "prev_month": "Vorheriger Monat",
+    "next_month": "Nächster Monat",
+    "window": "Gewähltes Fenster",
+    "no_window": "Noch offen",
+    "nights": "Nächte",
+    "season": "Saison",
+    "activities": "Aktivitäten der Saison",
+    "practicable": "machbar",
+    "with_warning": "möglich, mit Hinweis",
+    "season_note": "Ausgefüllt dargestellte Aktivitäten macht die Saison machbar. Die übrigen bleiben möglich, mit Hinweis.",
+    "cta": "Weiter"
   }
 }

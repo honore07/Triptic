@@ -314,7 +314,18 @@
     "winter": "Winter",
     "spring": "Spring",
     "summer": "Summer",
-    "autumn": "Autumn"
+    "autumn": "Autumn",
+    "note_winter": "Short days, snow at altitude, passes often closed.",
+    "note_spring": "Snowfields up high, rivers running full, days getting longer.",
+    "note_summer": "Long days, late-afternoon storms, lakes warm enough to swim.",
+    "note_autumn": "Low light, forests turning, first frosts on the summits.",
+    "activity_ridge_trek": "Ridge trek",
+    "activity_bivouac": "Bivouac",
+    "activity_lake_swim": "Lake swim",
+    "activity_summit_sunrise": "Summit sunrise",
+    "activity_bikepacking": "Bikepacking",
+    "activity_snowshoe": "Snowshoeing",
+    "activity_refuge_night": "Hut night"
   },
   "weather": {
     "title": "Route weather",
@@ -435,5 +446,20 @@
     "unavailable": "Sign-in is unavailable right now.",
     "required_generation": "Create a free account to generate your trips.",
     "launch_offer_banner": "Launch offer: every feature is open for free."
+  },
+  "fenetre": {
+    "plate": "01b — Window",
+    "title": "When are you leaving?",
+    "prev_month": "Previous month",
+    "next_month": "Next month",
+    "window": "Selected window",
+    "no_window": "To be set",
+    "nights": "Nights",
+    "season": "Season",
+    "activities": "Activities for the season",
+    "practicable": "practicable",
+    "with_warning": "possible, with a warning",
+    "season_note": "Activities shown filled in are the ones the season makes practicable. The others stay available, with a warning.",
+    "cta": "Continue"
   }
 }

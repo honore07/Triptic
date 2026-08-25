@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Bike,
-  CalendarDays,
   Caravan,
   Compass,
   Footprints,
@@ -13,10 +12,9 @@ import {
   Sparkles,
   Wind,
 } from 'lucide-react';
-import { PLANS, seasonForDate, tripDurationDays } from '@triptic/shared';
+import { PLANS } from '@triptic/shared';
 import type { TripMode, TripRequest, TripTuning, TuningValue } from '@triptic/shared';
 import { track } from '../lib/analytics';
-import type { TripDates } from '../store/chatStore';
 import { useUserStore } from '../store/userStore';
 
 /** Corrections confirmées à la main (boucle = arrivée == départ ; mode choisi). */
@@ -39,7 +37,8 @@ const AXES = [
 const DEFAULT_TUNING: TripTuning = { physical: 3, pace: 3, culture: 3, discovery: 3 };
 
 interface Props {
-  onConfirm: (tuning: TripTuning, dates: TripDates | null, places: TripPlaces) => void;
+  /** Les dates ne transitent plus ici : la fenêtre (PL.04) les a déjà posées. */
+  onConfirm: (tuning: TripTuning, places: TripPlaces) => void;
   disabled?: boolean;
 }
 
@@ -54,8 +53,6 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
   const [tuning, setTuning] = useState<TripTuning>(DEFAULT_TUNING);
   // null = pas de choix explicite → l'IA déduit le mode depuis la conversation
   const [mode, setMode] = useState<TripMode | null>(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [departure, setDeparture] = useState('');
   const [destination, setDestination] = useState('');
   const [roundTrip, setRoundTrip] = useState(true);
@@ -65,13 +62,6 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
   const setAxis = (key: keyof TripTuning, value: number) => {
     setTuning((prev) => ({ ...prev, [key]: value as TuningValue }));
   };
-
-  const today = new Date().toISOString().slice(0, 10);
-  const duration = startDate && endDate ? tripDurationDays(startDate, endDate) : null;
-  const season = startDate ? seasonForDate(startDate) : null;
-  const datesInvalid = Boolean(startDate && endDate && duration === null);
-  const dates: TripDates | null =
-    startDate && endDate && duration !== null ? { start: startDate, end: endDate } : null;
 
   // Champs vides = on laisse l'IA déduire depuis la conversation (pas d'override)
   const places: TripPlaces = {};
@@ -190,54 +180,6 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
         </label>
       </fieldset>
 
-      <fieldset className="mt-4 rounded-xl border border-mist bg-cloud p-3">
-        <legend className="flex items-center gap-1.5 px-1 text-sm font-semibold text-trail">
-          <CalendarDays size={15} className="text-summit" aria-hidden="true" />
-          {t('tuner.dates_label')}
-        </legend>
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
-            {t('tuner.date_start')}
-            <input
-              type="date"
-              value={startDate}
-              min={today}
-              disabled={disabled}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                if (endDate && e.target.value > endDate) setEndDate(e.target.value);
-              }}
-              className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
-            {t('tuner.date_end')}
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || today}
-              disabled={disabled}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="min-h-11 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
-            />
-          </label>
-          {duration !== null && season && (
-            <p className="rounded-badge bg-gold/20 px-2.5 py-1.5 text-xs font-semibold text-trail">
-              {t('trips.days_count', { count: duration })} · {t(`season.${season}`)} —{' '}
-              {t('tuner.dates_season_hint')}
-            </p>
-          )}
-          {!startDate && (
-            <p className="text-xs text-fog">{t('tuner.dates_hint')}</p>
-          )}
-        </div>
-        {datesInvalid && (
-          <p role="alert" className="mt-2 text-xs font-semibold text-storm">
-            {t('tuner.dates_invalid')}
-          </p>
-        )}
-      </fieldset>
-
       <div className="mt-5 flex flex-col gap-5">
         {AXES.map(({ key, Icon }, i) => {
           const value = tuning[key];
@@ -292,8 +234,8 @@ export function TripTuner({ onConfirm, disabled = false }: Props) {
 
       <button
         type="button"
-        disabled={disabled || datesInvalid}
-        onClick={() => onConfirm(tuning, dates, places)}
+        disabled={disabled}
+        onClick={() => onConfirm(tuning, places)}
         className="cta-plate mt-6 flex min-h-12 w-full items-center justify-center gap-2 px-6 py-3 disabled:translate-y-0 disabled:opacity-60"
       >
         <Sparkles size={18} aria-hidden="true" />
