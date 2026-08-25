@@ -139,7 +139,12 @@
     "status_draft": "Brouillon",
     "status_saved": "Sauvegardé",
     "status_shared": "Partagé",
-    "open": "Ouvrir {{title}}"
+    "open": "Ouvrir {{title}}",
+    "plate": "04 — Carnet de course",
+    "headline": "Ce qui est derrière toi.",
+    "total_trips": "Vires",
+    "filter_all": "Toutes",
+    "new": "Nouvelle vire"
   },
   "difficulty": {
     "easy": "Facile",

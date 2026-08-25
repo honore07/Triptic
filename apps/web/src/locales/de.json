@@ -139,7 +139,12 @@
     "status_draft": "Entwurf",
     "status_saved": "Gespeichert",
     "status_shared": "Geteilt",
-    "open": "{{title}} öffnen"
+    "open": "{{title}} öffnen",
+    "plate": "04 — Tourenbuch",
+    "headline": "Was hinter dir liegt.",
+    "total_trips": "Linien",
+    "filter_all": "Alle",
+    "new": "Neue Linie"
   },
   "difficulty": {
     "easy": "Leicht",

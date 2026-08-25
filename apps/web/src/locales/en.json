@@ -139,7 +139,12 @@
     "status_draft": "Draft",
     "status_saved": "Saved",
     "status_shared": "Shared",
-    "open": "Open {{title}}"
+    "open": "Open {{title}}",
+    "plate": "04 — Route book",
+    "headline": "What is behind you.",
+    "total_trips": "Lines",
+    "filter_all": "All",
+    "new": "New line"
   },
   "difficulty": {
     "easy": "Easy",

@@ -87,9 +87,13 @@ describe('MyTrips', () => {
     expect(screen.getByText('Tour du Hohneck')).toBeInTheDocument();
     expect(screen.getByText('Brouillon')).toBeInTheDocument();
     expect(screen.getByText('Sauvegardé')).toBeInTheDocument();
-    expect(screen.getAllByText('Van life')).toHaveLength(2);
-    expect(screen.getAllByText('3 jours')).toHaveLength(2);
+    // PL.12 : le mode vit dans l'intitulé de rangée, avec le mois et le statut
+    const rows = screen.getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('Van life');
     expect(screen.getAllByText('240 km')).toHaveLength(2);
+    // Le bilan cumule tout le carnet
+    expect(screen.getByText('480 km')).toBeInTheDocument();
 
     const links = screen.getAllByRole('link', { name: /Ouvrir/ });
     // Tri : le plus récemment modifié d'abord
@@ -102,8 +106,9 @@ describe('MyTrips', () => {
     renderPage();
 
     expect(await screen.findByText("Aucun trip pour l'instant.")).toBeInTheDocument();
+    // La nouvelle demande part de l'accueil (PL.03), qui porte la saisie
     const cta = screen.getByRole('link', { name: 'Planifier mon premier trip' });
-    expect(cta).toHaveAttribute('href', '/plan');
+    expect(cta).toHaveAttribute('href', '/');
   });
 
   it('affiche une erreur avec bouton réessayer qui relance le fetch', async () => {
