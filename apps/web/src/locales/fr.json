@@ -93,14 +93,14 @@
     "engagement_5": "Sévère"
   },
   "trips": {
-    "compare_title": "3 itinéraires en compétition",
-    "compare_hint": "Proches mais distincts — à toi de choisir.",
+    "compare_title": "Trois voies possibles.",
+    "compare_hint": "Compare, écarte, reviens sur ce qui te parle.",
     "days": "jours",
     "day": "Jour",
     "elevation": "D+",
     "distance": "Distance",
     "per_day": "par jour",
-    "choose": "Choisir ce trip",
+    "choose": "Choisissez cette vire",
     "locked_title": "2 autres variantes t'attendent",
     "locked_cta": "Débloquer les 3 trips",
     "waypoints_title": "Étapes",
@@ -113,7 +113,18 @@
     "error_action": "L'action a échoué. Vérifie ta connexion et réessaie.",
     "copy_manual": "La copie automatique n'est pas disponible ici — sélectionne le lien ci-dessous pour le copier.",
     "days_count_one": "{{count}} jour",
-    "days_count_other": "{{count}} jours"
+    "days_count_other": "{{count}} jours",
+    "plate": "02 — Comparer",
+    "count": "{{total}} voies",
+    "line": "Vire",
+    "view_label": "Mode de lecture",
+    "view_cards": "Cartes",
+    "view_table": "Tableau",
+    "rank_min": "Le plus court",
+    "rank_mid": "Médian",
+    "rank_max": "Le plus long",
+    "rank_min_budget": "Le moins cher",
+    "rank_max_budget": "Le plus cher"
   },
   "my_trips": {
     "nav": "Mes trips",
@@ -486,5 +497,16 @@
     "axis": "Segments analysés",
     "running": "en cours",
     "note": "Trois voies proches, jamais identiques. C'est à toi de trancher."
+  },
+  "tableau": {
+    "plate": "02b — Relevé comparé",
+    "title": "Les trois, côte à côte.",
+    "sort_by": "Trier par",
+    "metric_duration": "Durée",
+    "metric_distance": "Dist.",
+    "metric_elevation": "D+",
+    "metric_budget": "Budget",
+    "gap": "Écart au plus court",
+    "open": "Ouvrir {{title}}"
   }
 }

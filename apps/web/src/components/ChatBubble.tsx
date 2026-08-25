@@ -16,18 +16,3 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
     </div>
   );
 }
-
-export function TypingBubble({ label }: { label: string }) {
-  return (
-    <div className="fade-up flex justify-start" role="status" aria-label={label}>
-      <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm bg-snow px-4 py-3 shadow-sm">
-        <span className="flex gap-1">
-          <span className="typing-dot h-1.5 w-1.5 rounded-full bg-summit" />
-          <span className="typing-dot h-1.5 w-1.5 rounded-full bg-summit" />
-          <span className="typing-dot h-1.5 w-1.5 rounded-full bg-summit" />
-        </span>
-        <span className="text-xs text-ridge">{label}</span>
-      </div>
-    </div>
-  );
-}

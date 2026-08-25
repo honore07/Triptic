@@ -26,17 +26,20 @@ describe('TripCard', () => {
     setLang('fr');
     render(<TripCard trip={TRIP} onChoose={() => {}} />);
     expect(screen.getByText('Crêtes des Vosges')).toBeInTheDocument();
-    expect(screen.getByText('Trek')).toBeInTheDocument();
+    // PL.07 : numéro de vire + ambiance en tête de planche, mode porté par
+    // le relevé de l'itinéraire — la carte affiche l'ambiance, pas le mode.
+    expect(screen.getByText('sauvage')).toBeInTheDocument();
     expect(screen.getByText('Modéré')).toBeInTheDocument();
     expect(screen.getByText('55 km')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Choisir ce trip' })).toBeInTheDocument();
+    expect(screen.getByText('Vire I')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choisissez cette vire' })).toBeInTheDocument();
   });
 
   it('calls onChoose with the trip', () => {
     setLang('fr');
     const onChoose = vi.fn();
     render(<TripCard trip={TRIP} onChoose={onChoose} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Choisir ce trip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Choisissez cette vire' }));
     expect(onChoose).toHaveBeenCalledWith(TRIP);
   });
 
@@ -49,7 +52,7 @@ describe('TripCard', () => {
   it('translates to German', () => {
     setLang('de');
     render(<TripCard trip={TRIP} onChoose={() => {}} />);
-    expect(screen.getByRole('button', { name: 'Diesen Trip wählen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Diese Linie wählen' })).toBeInTheDocument();
     setLang('fr');
   });
 });

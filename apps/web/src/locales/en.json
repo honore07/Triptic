@@ -93,14 +93,14 @@
     "engagement_5": "Severe"
   },
   "trips": {
-    "compare_title": "3 competing routes",
-    "compare_hint": "Close but distinct — the choice is yours.",
+    "compare_title": "Three possible lines.",
+    "compare_hint": "Compare, set aside, come back to what speaks to you.",
     "days": "days",
     "day": "Day",
     "elevation": "Elev.",
     "distance": "Distance",
     "per_day": "per day",
-    "choose": "Choose this trip",
+    "choose": "Choose this line",
     "locked_title": "2 more variants await you",
     "locked_cta": "Unlock all 3 trips",
     "waypoints_title": "Stages",
@@ -113,7 +113,18 @@
     "error_action": "The action failed. Check your connection and try again.",
     "copy_manual": "Automatic copy isn't available here — select the link below to copy it.",
     "days_count_one": "{{count}} day",
-    "days_count_other": "{{count}} days"
+    "days_count_other": "{{count}} days",
+    "plate": "02 — Compare",
+    "count": "{{total}} lines",
+    "line": "Line",
+    "view_label": "Reading mode",
+    "view_cards": "Cards",
+    "view_table": "Table",
+    "rank_min": "Shortest",
+    "rank_mid": "Median",
+    "rank_max": "Longest",
+    "rank_min_budget": "Cheapest",
+    "rank_max_budget": "Priciest"
   },
   "my_trips": {
     "nav": "My trips",
@@ -486,5 +497,16 @@
     "axis": "Segments analysed",
     "running": "running",
     "note": "Three close lines, never identical. The call is yours."
+  },
+  "tableau": {
+    "plate": "02b — Compared survey",
+    "title": "The three, side by side.",
+    "sort_by": "Sort by",
+    "metric_duration": "Days",
+    "metric_distance": "Dist.",
+    "metric_elevation": "Elev.",
+    "metric_budget": "Budget",
+    "gap": "Gap to the shortest",
+    "open": "Open {{title}}"
   }
 }

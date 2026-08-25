@@ -93,14 +93,14 @@
     "engagement_5": "Hart"
   },
   "trips": {
-    "compare_title": "3 Routen im Wettbewerb",
-    "compare_hint": "Ähnlich, aber verschieden — du hast die Wahl.",
+    "compare_title": "Drei mögliche Linien.",
+    "compare_hint": "Vergleiche, verwirf, kehre zurück zu dem, was dich anspricht.",
     "days": "Tage",
     "day": "Tag",
     "elevation": "Hm",
     "distance": "Distanz",
     "per_day": "pro Tag",
-    "choose": "Diesen Trip wählen",
+    "choose": "Diese Linie wählen",
     "locked_title": "2 weitere Varianten warten auf dich",
     "locked_cta": "Alle 3 Trips freischalten",
     "waypoints_title": "Etappen",
@@ -113,7 +113,18 @@
     "error_action": "Die Aktion ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
     "copy_manual": "Automatisches Kopieren ist hier nicht verfügbar — wähle den Link unten aus, um ihn zu kopieren.",
     "days_count_one": "{{count}} Tag",
-    "days_count_other": "{{count}} Tage"
+    "days_count_other": "{{count}} Tage",
+    "plate": "02 — Vergleichen",
+    "count": "{{total}} Linien",
+    "line": "Linie",
+    "view_label": "Leseart",
+    "view_cards": "Karten",
+    "view_table": "Tabelle",
+    "rank_min": "Am kürzesten",
+    "rank_mid": "Mittel",
+    "rank_max": "Am längsten",
+    "rank_min_budget": "Am günstigsten",
+    "rank_max_budget": "Am teuersten"
   },
   "my_trips": {
     "nav": "Meine Trips",
@@ -486,5 +497,16 @@
     "axis": "Analysierte Abschnitte",
     "running": "läuft",
     "note": "Drei ähnliche Linien, nie identisch. Die Wahl liegt bei dir."
+  },
+  "tableau": {
+    "plate": "02b — Vergleichende Aufnahme",
+    "title": "Die drei, nebeneinander.",
+    "sort_by": "Sortieren nach",
+    "metric_duration": "Tage",
+    "metric_distance": "Dist.",
+    "metric_elevation": "Hm",
+    "metric_budget": "Budget",
+    "gap": "Abstand zur kürzesten",
+    "open": "{{title}} öffnen"
   }
 }
