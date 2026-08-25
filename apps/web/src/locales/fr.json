@@ -525,5 +525,10 @@
     "loading": "Recherche des emplacements…",
     "empty": "Aucun emplacement connu autour de cette étape.",
     "error": "La base des lieux n’est pas joignable — réessaie dans un instant."
+  },
+  "etape": {
+    "time": "Marche",
+    "profile": "Profil des montées",
+    "profile_note": "Une barre par montée de la journée — le profil au point demande l’altimétrie serveur."
   }
 }

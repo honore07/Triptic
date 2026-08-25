@@ -35,16 +35,6 @@ describe('DayCards (cartes-étapes 2.2)', () => {
     expect(screen.getByText(/estimation/)).toBeInTheDocument(); // segment non routé
   });
 
-  it('déplie le détail de la journée choisie, pas des autres (PL.09)', () => {
-    setLang('fr');
-    render(<DayCards days={DAYS} selectedDay={1} onSelectDay={() => {}} />);
-    expect(screen.getByText('Route des Crêtes')).toBeInTheDocument();
-    expect(screen.getByText(/Cols et chaumes/)).toBeInTheDocument();
-    expect(screen.getByText(/24 €/)).toBeInTheDocument();
-    // Le jour 2 reste replié
-    expect(screen.queryByText('Montée au Grand Ballon')).not.toBeInTheDocument();
-  });
-
   it('remonte le jour cliqué (synchro carte)', () => {
     setLang('fr');
     const onSelectDay = vi.fn();

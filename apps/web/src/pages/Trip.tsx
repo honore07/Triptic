@@ -8,6 +8,7 @@ import { saveTrip, updateTrip } from '../lib/api';
 import { DayCards } from '../components/DayCards';
 import { DayEditor } from '../components/DayEditor';
 import { DifficultyBadge } from '../components/DifficultyBadge';
+import { Etape } from '../components/Etape';
 import { GPXExportButton } from '../components/GPXExportButton';
 import { MapView } from '../components/MapView';
 import { Nuitee } from '../components/Nuitee';
@@ -320,7 +321,9 @@ export function TripPage() {
             <DayCards days={selected.days} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
           )}
 
-          {/* Nuitée (PL.10) — proposée pour la journée ouverte, jamais en vrac */}
+          {/* Fiche d'étape (PL.11) puis nuitée (PL.10) — pour la journée ouverte */}
+          {!editing && nightDay && <Etape day={nightDay} startDate={selected.start_date} />}
+
           {!editing && nightDay && (
             <Nuitee
               day={nightDay}

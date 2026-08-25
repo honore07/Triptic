@@ -525,5 +525,10 @@
     "loading": "Looking for spots…",
     "empty": "No known spot around this stage.",
     "error": "The places database is unreachable — try again shortly."
+  },
+  "etape": {
+    "time": "Moving",
+    "profile": "Climb profile",
+    "profile_note": "One bar per climb of the day — a point-by-point profile needs server elevation data."
   }
 }

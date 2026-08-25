@@ -525,5 +525,10 @@
     "loading": "Stellplätze werden gesucht…",
     "empty": "Kein bekannter Stellplatz rund um diese Etappe.",
     "error": "Die Ortsdatenbank ist nicht erreichbar — versuche es gleich erneut."
+  },
+  "etape": {
+    "time": "Unterwegs",
+    "profile": "Anstiegsprofil",
+    "profile_note": "Ein Balken je Anstieg des Tages — ein Punktprofil braucht Höhendaten vom Server."
   }
 }
