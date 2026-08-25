@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { tripDurationDays } from '@triptic/shared';
-import type { ChatMessage, Lang, PlanId, TripRequest, TripTuning } from '@triptic/shared';
+import type {
+  ChatMessage,
+  Lang,
+  PlanId,
+  TripMode,
+  TripRequest,
+  TripTuning,
+} from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { ApiError, generateTripsStream, type TripsPayload } from '../lib/api';
 
@@ -42,6 +49,11 @@ interface ChatState {
   dates: TripDates | null;
   /** Applique une correction de puce et régénère avec les valeurs confirmées. */
   applyOverrides: (patch: Partial<TripRequest>, lang: Lang, plan: PlanId) => Promise<void>;
+  /**
+   * Mode choisi sur l'accueil (PL.03), repris tel quel par la génération.
+   * null efface le choix : l'IA redéduit le mode depuis la demande.
+   */
+  setMode: (mode: TripMode | null) => void;
   /** Pose la demande initiale SANS générer — le TripTuner s'affiche ensuite. */
   begin: (content: string) => void;
   /** Valide curseurs + dates éventuelles et lance la génération. */
@@ -141,6 +153,13 @@ export const useChatStore = create<ChatState>()(
       if (get().status !== 'idle' || get().messages.length === 0) return;
       set({ overrides: { ...get().overrides, ...patch } });
       await run(get().messages, lang, plan);
+    },
+
+    setMode: (mode) => {
+      const overrides = { ...get().overrides };
+      if (mode) overrides.modes = [mode];
+      else delete overrides.modes;
+      set({ overrides });
     },
 
     begin: (content) => {
