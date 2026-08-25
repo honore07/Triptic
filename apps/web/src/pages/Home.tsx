@@ -110,7 +110,24 @@ export function Home() {
 
   return (
     <main className="flex w-full flex-col">
-      {/* En-tête de planche et sélecteur de mode — sur le papier */}
+      {/* Fond plein écran — posé derrière TOUT, en-tête et pied de page
+       * compris. `fixed` le fait déborder de la colonne et de <main> ;
+       * -z-10 le laisse sous le contenu sans masquer le fond de body. */}
+      <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden">
+        <img
+          src="/vire/vire_vallee-glacier.webp"
+          alt=""
+          fetchPriority="high"
+          className="h-full w-full object-cover"
+        />
+        {/* Voile en trois temps, chaque palier calé sur ce qui se pose
+         * dessus : papier en haut (l'en-tête reste en encre sombre),
+         * quasi transparent au milieu (l'image respire), encre en bas
+         * (la question et la saisie sont en clair). */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(244,241,234,0.94)_0%,rgba(244,241,234,0.72)_12%,rgba(244,241,234,0.18)_30%,rgba(17,17,17,0.35)_40%,rgba(17,17,17,0.70)_50%,rgba(17,17,17,0.90)_100%)]" />
+      </div>
+
+      {/* En-tête de planche et sélecteur de mode */}
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pt-2">
         <div className="fade-up flex items-baseline justify-between border-b border-mist pb-2">
           <p className="font-display text-xl font-semibold tracking-[0.2em] text-trail">
@@ -160,23 +177,9 @@ export function Home() {
         </div>
       </div>
 
-      {/* Village alpin en fond plein cadre — tout ce qui suit vit dessus */}
-      <section className="relative mt-4 flex min-h-[max(30rem,72svh)] flex-col justify-end overflow-hidden">
-        <img
-          src="/vire/vire_village-alpin.webp"
-          alt=""
-          aria-hidden="true"
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        {/* Voile d'encre — la photogravure a un ciel très clair ; le bas doit
-         * porter la question, le bandeau ET les reprises. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-trail/90 via-trail/65 to-trail/15"
-        />
-
-        <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-8 pt-10">
+      {/* La saisie se pose en bas du premier écran, sur le fond */}
+      <section className="flex min-h-[max(26rem,66svh)] flex-col justify-end">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-10">
           <h1 className="fade-up font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
             {question}
           </h1>
@@ -192,7 +195,7 @@ export function Home() {
             {/* Bandeau de saisie — arrondi et fin, posé sur le paysage.
              * Seul endroit de l'app aux angles adoucis : c'est le geste
              * d'une barre de recherche, pas une planche gravée. */}
-            <div className="flex items-center gap-2 rounded-[22px] border border-mist bg-snow/95 py-1 pl-4 pr-1 shadow-[3px_3px_0_rgba(34,34,34,0.5)]">
+            <div className="search-bar flex items-center gap-2 rounded-[22px] border border-mist bg-snow/95 py-1 pl-4 pr-1 shadow-[3px_3px_0_rgba(34,34,34,0.5)]">
               <label htmlFor="home-query" className="sr-only">
                 {t('home.question')}
               </label>

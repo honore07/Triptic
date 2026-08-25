@@ -211,7 +211,12 @@ export function App() {
         <Route path="/legal/terms" element={<LegalPage section="terms" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
+      {/* Bande papier sous le pied de page : l'accueil pose une photo plein
+       * écran derrière tout, et ces liens sont en encre sombre. Sans fond
+       * opaque ils deviendraient illisibles sur le bas assombri. Ailleurs,
+       * la bande se confond avec le papier de la page. */}
+      <footer className="mt-auto border-t border-mist/30 bg-cloud/92">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-5 px-4 py-4">
         <Link
           to="/legal/attributions"
           className="inline-flex min-h-11 items-center text-xs text-ridge underline-offset-2 hover:text-copper-deep hover:underline"
@@ -242,6 +247,7 @@ export function App() {
         >
           {t('legal.terms_nav')}
         </Link>
+        </div>
       </footer>
       <PaywallModal />
     </BrowserRouter>

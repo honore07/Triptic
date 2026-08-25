@@ -73,6 +73,20 @@ body {
   outline-offset: 2px;
 }
 
+/* Bandeau de saisie : c'est LUI qui porte le focus, pas son champ. Un liseré
+ * rectangulaire à l'intérieur d'un bandeau arrondi jure — on déplace le
+ * repère sans jamais le supprimer (un focus invisible perdrait le clavier).
+ * Ces règles vivent hors des couches Tailwind, comme :focus-visible : c'est
+ * ce qui leur permet de l'emporter sur les utilitaires. */
+.search-bar textarea:focus-visible,
+.search-bar input:focus-visible {
+  outline: none;
+}
+.search-bar:focus-within {
+  outline: 2px solid var(--color-summit);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
