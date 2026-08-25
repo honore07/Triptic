@@ -61,12 +61,15 @@ export function Ouverture({ onStart }: OuvertureProps) {
       aria-labelledby="ouverture-title"
       className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-trail"
     >
-      {/* Gravure de sommet — décorative : la marque est du vrai texte en dessous */}
+      {/* Gravure de sommet — décorative : la marque est du vrai texte en dessous.
+       * L'asset est déjà monochrome ; grayscale reste par sécurité si la photo
+       * est un jour remplacée par une couleur. */}
       <img
-        src="/vire/vire_crete-sauvage.jpg"
+        src="/vire/vire_ouverture-cime.webp"
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover grayscale contrast-125 brightness-[0.62]"
+        fetchPriority="high"
+        className="absolute inset-0 h-full w-full object-cover grayscale contrast-110 brightness-[0.72]"
       />
       {/* Voile d'encre — dimensionné pour le PIRE cas (ciel clair derrière la
        * signature) : 50 % d'encre au centre plafonnent le fond sous #5F5F5F,
