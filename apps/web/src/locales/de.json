@@ -508,5 +508,8 @@
     "metric_budget": "Budget",
     "gap": "Abstand zur kürzesten",
     "open": "{{title}} öffnen"
+  },
+  "itineraire": {
+    "plate": "03 — Route"
   }
 }

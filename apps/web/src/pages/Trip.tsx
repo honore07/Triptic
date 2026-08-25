@@ -128,20 +128,47 @@ export function TripPage() {
         {t('trips.back')}
       </Link>
 
-      <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span className="rounded-badge bg-summit/10 px-2 py-0.5 text-xs font-semibold text-copper-deep">
-            {t(`mode.${selected.mode}`)}
-          </span>
-          <DifficultyBadge level={selected.difficulty} />
+      <header className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between border-b border-mist pb-2">
+          <p className="label-mono text-fog">{t('itineraire.plate')}</p>
+          <div className="flex items-center gap-2">
+            <span className="label-mono text-copper-deep">{t(`mode.${selected.mode}`)}</span>
+            <DifficultyBadge level={selected.difficulty} />
+          </div>
         </div>
-        <h1 className="font-display text-3xl font-bold text-trail">{selected.title}</h1>
-        <p className="text-sm text-ridge">{selected.summary}</p>
-        <p className="font-mono text-xs text-ridge">
-          {t('trips.days_count', { count: selected.duration_days })} · {Math.round(selected.distance_km)} km ·{' '}
-          {t('trips.elevation')} {Math.round(selected.elevation_gain_m)} m ·{' '}
-          {Math.round(selected.daily_distance_km)} km {t('trips.per_day')}
-        </p>
+        <h1 className="font-display text-3xl font-semibold leading-tight text-trail">
+          {selected.title}
+        </h1>
+        <p className="font-display text-base italic leading-snug text-ridge">{selected.summary}</p>
+
+        {/* Relevé de l'itinéraire — étiquettes mono, valeurs en serif */}
+        <dl className="grid grid-cols-2 border border-mist sm:grid-cols-4">
+          {[
+            {
+              label: t('trips.days'),
+              value: t('trips.days_count', { count: selected.duration_days }),
+            },
+            { label: t('trips.distance'), value: `${Math.round(selected.distance_km)} km` },
+            {
+              label: t('trips.elevation'),
+              value: `${Math.round(selected.elevation_gain_m)} m`,
+            },
+            {
+              label: t('trips.per_day'),
+              value: `${Math.round(selected.daily_distance_km)} km`,
+            },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="flex flex-col gap-0.5 border-mist p-2.5 [&:not(:last-child)]:border-r"
+            >
+              <dt className="label-mono text-fog">{label}</dt>
+              <dd className="font-display text-xl font-semibold leading-none text-trail">
+                {value}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </header>
 
       <MapView

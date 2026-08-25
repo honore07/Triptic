@@ -508,5 +508,8 @@
     "metric_budget": "Budget",
     "gap": "Écart au plus court",
     "open": "Ouvrir {{title}}"
+  },
+  "itineraire": {
+    "plate": "03 — Itinéraire"
   }
 }
