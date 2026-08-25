@@ -292,11 +292,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* Pied de planche — région pilote et son relevé */}
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4">
-        <p className="label-mono text-fog">{t('home.region')}</p>
-        <p className="font-mono text-[10px] tracking-[0.14em] text-fog">{t('home.coords')}</p>
-      </div>
     </main>
   );
 }
