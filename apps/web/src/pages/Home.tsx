@@ -158,14 +158,16 @@ export function Home() {
         {/* Bandeau photo — la question est gravée dessus */}
         <section className="relative">
           <img
-            src="/vire/vire_crete-sauvage.jpg"
+            src="/vire/vire_bandeau-cretes.webp"
             alt=""
             aria-hidden="true"
             className="h-44 w-full border border-mist object-cover sm:h-56"
           />
+          {/* Voile d'encre — la gravure a un ciel parchemin bien plus clair
+           * qu'une photo : sans ce renfort, la question tombe à 3.3:1. */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-trail/80 via-trail/30 to-trail/10"
+            className="absolute inset-0 bg-gradient-to-t from-trail/85 via-trail/60 to-trail/25"
           />
           <h1 className="absolute inset-x-4 bottom-4 font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
             {question}

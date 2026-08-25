@@ -54,14 +54,24 @@ export function TableauCompare({ trips, onChoose }: Props) {
 
   return (
     <section aria-labelledby="tableau-title" className="fade-up flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <p className="label-mono text-fog">{t('tableau.plate')}</p>
-        <h2
-          id="tableau-title"
-          className="font-display text-3xl font-semibold leading-tight text-trail"
-        >
-          {t('tableau.title')}
-        </h2>
+      <div className="flex items-center gap-3">
+        {/* Compas à pointes sèches — l'outil qui reporte et compare */}
+        <img
+          src="/vire/vire_nav-compas.webp"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className="h-12 w-12 shrink-0 rounded-full border border-mist object-cover"
+        />
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="label-mono text-fog">{t('tableau.plate')}</p>
+          <h2
+            id="tableau-title"
+            className="font-display text-3xl font-semibold leading-tight text-trail"
+          >
+            {t('tableau.title')}
+          </h2>
+        </div>
       </div>
 
       {/* Axe de tri */}

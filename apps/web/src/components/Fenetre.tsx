@@ -90,11 +90,21 @@ export function Fenetre({ onConfirm, disabled = false }: FenetreProps) {
 
   return (
     <section className="fade-up flex flex-col gap-5 border border-mist bg-snow p-5">
-      <div className="flex flex-col gap-2">
-        <p className="label-mono text-fog">{t('fenetre.plate')}</p>
-        <h2 className="font-display text-3xl font-semibold leading-tight text-trail">
-          {t('fenetre.title')}
-        </h2>
+      <div className="flex items-center gap-3">
+        {/* Baromètre de poche — la planche parle de fenêtre et de saison */}
+        <img
+          src="/vire/vire_nav-barometre.webp"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className="h-12 w-12 shrink-0 rounded-full border border-mist object-cover"
+        />
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="label-mono text-fog">{t('fenetre.plate')}</p>
+          <h2 className="font-display text-3xl font-semibold leading-tight text-trail">
+            {t('fenetre.title')}
+          </h2>
+        </div>
       </div>
 
       {/* Navigation de mois */}

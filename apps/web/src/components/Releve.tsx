@@ -112,7 +112,7 @@ export function Releve({ status }: ReleveProps) {
       {/* Rappel de la promesse pendant l'attente */}
       <div className="flex items-center gap-3 border border-mist bg-cloud p-3">
         <img
-          src="/vire/vire_pic-boussole.jpg"
+          src="/vire/vire_nav-sextant.webp"
           alt=""
           aria-hidden="true"
           loading="lazy"

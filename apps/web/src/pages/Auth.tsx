@@ -81,9 +81,9 @@ export function AuthPage() {
   return (
     <main className="mx-auto w-full max-w-md px-4 pb-12 pt-2">
       <section className="fade-up border border-mist bg-snow">
-        {/* Crête au couchant — décorative, le titre porte le sens */}
+        {/* Gravure d'aube sur la crête — décorative, le titre porte le sens */}
         <img
-          src="/vire/vire_crete-sauvage.jpg"
+          src="/vire/vire_bandeau-aube.webp"
           alt=""
           aria-hidden="true"
           className="h-40 w-full border-b border-mist object-cover sm:h-48"
