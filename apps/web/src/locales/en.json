@@ -511,5 +511,19 @@
   },
   "itineraire": {
     "plate": "03 — Route"
+  },
+  "nuitee": {
+    "plate": "03b — Overnight",
+    "title": "Where do you sleep tonight?",
+    "hint": "Spots around {{place}}, at the end of the stage.",
+    "filter_label": "Kind of spot",
+    "filter_all": "All",
+    "filter_camp": "Bivouac",
+    "filter_refuge": "Hut",
+    "detour": "Detour",
+    "add": "Spend the night here",
+    "loading": "Looking for spots…",
+    "empty": "No known spot around this stage.",
+    "error": "The places database is unreachable — try again shortly."
   }
 }

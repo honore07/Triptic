@@ -511,5 +511,19 @@
   },
   "itineraire": {
     "plate": "03 — Route"
+  },
+  "nuitee": {
+    "plate": "03b — Übernachtung",
+    "title": "Wo schläfst du heute?",
+    "hint": "Stellplätze rund um {{place}}, am Etappenende.",
+    "filter_label": "Art des Stellplatzes",
+    "filter_all": "Alle",
+    "filter_camp": "Biwak",
+    "filter_refuge": "Hütte",
+    "detour": "Umweg",
+    "add": "Hier übernachten",
+    "loading": "Stellplätze werden gesucht…",
+    "empty": "Kein bekannter Stellplatz rund um diese Etappe.",
+    "error": "Die Ortsdatenbank ist nicht erreichbar — versuche es gleich erneut."
   }
 }

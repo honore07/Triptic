@@ -10,6 +10,7 @@ import { DayEditor } from '../components/DayEditor';
 import { DifficultyBadge } from '../components/DifficultyBadge';
 import { GPXExportButton } from '../components/GPXExportButton';
 import { MapView } from '../components/MapView';
+import { Nuitee } from '../components/Nuitee';
 import { TripEditChat } from '../components/TripEditChat';
 import { WeatherStrip } from '../components/WeatherStrip';
 import { useTripStore } from '../store/tripStore';
@@ -120,6 +121,9 @@ export function TripPage() {
     min === max ? `${min} €` : `${min}–${max} €`;
 
   const sortedWaypoints = [...selected.waypoints].sort((a, b) => a.day - b.day);
+  // La nuitée ne se propose que sur une journée ouverte : sans choix, pas de
+  // liste d'emplacements en vrac sous l'itinéraire.
+  const nightDay = selectedDay === null ? null : (selected.days?.find((d) => d.day === selectedDay) ?? null);
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6">
@@ -314,6 +318,20 @@ export function TripPage() {
             <DayEditor days={selected.days} busy={recomputing} onChange={onDaysChange} />
           ) : (
             <DayCards days={selected.days} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+          )}
+
+          {/* Nuitée (PL.10) — proposée pour la journée ouverte, jamais en vrac */}
+          {!editing && nightDay && (
+            <Nuitee
+              day={nightDay}
+              onAdd={(activity) =>
+                onDaysChange(
+                  selected.days!.map((d) =>
+                    d.day === nightDay.day ? { ...d, activities: [...d.activities, activity] } : d,
+                  ),
+                )
+              }
+            />
           )}
 
           <TripEditChat

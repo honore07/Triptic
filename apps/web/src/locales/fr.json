@@ -511,5 +511,19 @@
   },
   "itineraire": {
     "plate": "03 — Itinéraire"
+  },
+  "nuitee": {
+    "plate": "03b — Nuitée",
+    "title": "Où dormir ce soir ?",
+    "hint": "Les emplacements autour de {{place}}, en fin d’étape.",
+    "filter_label": "Nature de l’emplacement",
+    "filter_all": "Tous",
+    "filter_camp": "Bivouac",
+    "filter_refuge": "Refuge",
+    "detour": "Détour",
+    "add": "Poser la nuit ici",
+    "loading": "Recherche des emplacements…",
+    "empty": "Aucun emplacement connu autour de cette étape.",
+    "error": "La base des lieux n’est pas joignable — réessaie dans un instant."
   }
 }
