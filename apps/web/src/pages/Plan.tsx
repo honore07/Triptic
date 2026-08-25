@@ -150,6 +150,7 @@ export function Plan() {
 
       {tunerVisible && (
         <TripTuner
+          dates={dates}
           onConfirm={(value, places) => void confirmTuning(value, lang, plan, dates, places)}
         />
       )}

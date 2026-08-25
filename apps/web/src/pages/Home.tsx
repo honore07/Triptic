@@ -110,7 +110,7 @@ export function Home() {
       {/* Sélecteur de mode — filet encre continu, segment actif à l'accent */}
       <div
         role="group"
-        aria-label={t('tuner.mode_label')}
+        aria-label={t('home.mode_label')}
         className="fade-up flex border border-mist"
         style={{ animationDelay: '60ms' }}
       >
@@ -126,7 +126,7 @@ export function Home() {
               // un `title` seul évince le texte visible du calcul de nom et
               // le lecteur d'écran n'annonce plus de quel mode il s'agit.
               {...(locked
-                ? { 'aria-label': `${t(`mode.${key}`)} — ${t('tuner.mode_locked')}` }
+                ? { 'aria-label': `${t(`mode.${key}`)} — ${t('home.mode_locked')}` }
                 : {})}
               onClick={() => pickMode(key)}
               className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] transition-colors ${

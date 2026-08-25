@@ -31,7 +31,9 @@
     "examples_title": "Need inspiration?",
     "example_1": "5-day van road trip in the Jura, wild vibes",
     "example_2": "3-day trek around the Hohneck with bivouac",
-    "example_3": "4-day bikepacking along the Rhine, easy level"
+    "example_3": "4-day bikepacking along the Rhine, easy level",
+    "mode_label": "Adventure mode",
+    "mode_locked": "Adventurer and Explorer plans only"
   },
   "chat": {
     "title": "Describe your adventure",
@@ -49,12 +51,8 @@
     "quick_replies": "Suggested replies"
   },
   "tuner": {
-    "mode_label": "Adventure mode",
-    "mode_hint": "Van life first — or leave empty and the AI will infer it from your request.",
-    "mode_locked": "Adventurer and Explorer plans only",
-    "title": "Let's fine-tune your adventure",
-    "hint": "Set the sliders — your 3 trips will be tailor-made.",
-    "cta": "Generate my 3 tailored trips",
+    "title": "Three things before we trace.",
+    "cta": "Trace three lines",
     "physical_label": "Fitness level",
     "physical_low": "Easy-going",
     "physical_high": "Athlete",
@@ -67,19 +65,32 @@
     "discovery_label": "Exploration",
     "discovery_low": "Must-sees",
     "discovery_high": "Off the beaten path",
-    "dates_label": "Trip dates (optional)",
-    "date_start": "Departure",
-    "date_end": "Return",
-    "dates_hint": "Without dates, the AI infers the duration from your request.",
-    "dates_season_hint": "activities will match the season",
-    "dates_invalid": "The return date must be after departure.",
     "places_label": "Start and finish",
-    "places_hint": "Optional — set your real starting point for accurate travel times (home, station, rental agency).",
     "place_from": "Starting point",
     "place_from_placeholder": "E.g.: Strasbourg, Colmar station…",
     "place_to": "End point",
     "place_to_placeholder": "E.g.: Geneva, Lyon station…",
-    "round_trip": "Loop — back to the starting point"
+    "round_trip": "Loop — back to the starting point",
+    "plate": "01c — Last questions",
+    "group_label": "We will be",
+    "pack_label": "Pack weight",
+    "pack_1": "Ultralight",
+    "pack_2": "Light",
+    "pack_3": "Standard",
+    "pack_4": "Loaded",
+    "pack_5": "Heavy",
+    "constraints_label": "Constraints",
+    "constraint_train": "Arriving by train",
+    "constraint_exposed": "Avoid exposed sections",
+    "constraint_dog": "Dog on the rope",
+    "other_label": "Anything else?",
+    "other_placeholder": "A pass to avoid, an inn worth trying…",
+    "summary_engagement": "Commitment",
+    "engagement_1": "Easy-going",
+    "engagement_2": "Accessible",
+    "engagement_3": "Sustained",
+    "engagement_4": "Demanding",
+    "engagement_5": "Severe"
   },
   "trips": {
     "compare_title": "3 competing routes",
@@ -461,5 +472,11 @@
     "with_warning": "possible, with a warning",
     "season_note": "Activities shown filled in are the ones the season makes practicable. The others stay available, with a warning.",
     "cta": "Continue"
+  },
+  "group": {
+    "solo": "Alone",
+    "couple": "As a pair",
+    "family": "As a family",
+    "group": "As a group"
   }
 }

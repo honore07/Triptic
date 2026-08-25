@@ -31,7 +31,9 @@
     "examples_title": "Besoin d'inspiration ?",
     "example_1": "Road trip van 5 jours dans le Jura, ambiance sauvage",
     "example_2": "Trek de 3 jours autour du Hohneck avec bivouac",
-    "example_3": "Bikepacking 4 jours le long du Rhin, niveau facile"
+    "example_3": "Bikepacking 4 jours le long du Rhin, niveau facile",
+    "mode_label": "Mode d'aventure",
+    "mode_locked": "Réservé aux plans Aventurier et Explorateur"
   },
   "chat": {
     "title": "Décris ton aventure",
@@ -49,12 +51,8 @@
     "quick_replies": "Suggestions de réponse"
   },
   "tuner": {
-    "mode_label": "Mode d'aventure",
-    "mode_hint": "Van life en tête — ou laisse vide, l'IA déduira depuis ta demande.",
-    "mode_locked": "Réservé aux plans Aventurier et Explorateur",
-    "title": "Affinons ton aventure",
-    "hint": "Règle les curseurs — tes 3 trips seront taillés sur mesure.",
-    "cta": "Générer mes 3 trips sur-mesure",
+    "title": "Trois choses avant de tracer.",
+    "cta": "Générer trois vires",
     "physical_label": "Niveau sportif",
     "physical_low": "Tranquille",
     "physical_high": "Athlète",
@@ -67,19 +65,32 @@
     "discovery_label": "Exploration",
     "discovery_low": "Incontournables",
     "discovery_high": "Hors des sentiers",
-    "dates_label": "Dates du trip (optionnel)",
-    "date_start": "Départ",
-    "date_end": "Retour",
-    "dates_hint": "Sans dates, l’IA déduit la durée de ta demande.",
-    "dates_season_hint": "les activités seront adaptées à la saison",
-    "dates_invalid": "La date de retour doit être après le départ.",
     "places_label": "Départ et arrivée",
-    "places_hint": "Facultatif — précise ton point de départ réel pour des temps de trajet justes (domicile, gare, agence de location).",
     "place_from": "Point de départ",
     "place_from_placeholder": "Ex. : Strasbourg, gare de Colmar…",
     "place_to": "Point d'arrivée",
     "place_to_placeholder": "Ex. : Genève, gare de Lyon…",
-    "round_trip": "Boucle — retour au point de départ"
+    "round_trip": "Boucle — retour au point de départ",
+    "plate": "01c — Dernières questions",
+    "group_label": "Nous serons",
+    "pack_label": "Poids du sac",
+    "pack_1": "Ultra-léger",
+    "pack_2": "Léger",
+    "pack_3": "Standard",
+    "pack_4": "Chargé",
+    "pack_5": "Lourd",
+    "constraints_label": "Contraintes",
+    "constraint_train": "Arrivée en train",
+    "constraint_exposed": "Éviter les passages exposés",
+    "constraint_dog": "Chien de la cordée",
+    "other_label": "Autre chose ?",
+    "other_placeholder": "Un col à éviter, une auberge à tenter…",
+    "summary_engagement": "Engagement",
+    "engagement_1": "Tranquille",
+    "engagement_2": "Accessible",
+    "engagement_3": "Soutenu",
+    "engagement_4": "Exigeant",
+    "engagement_5": "Sévère"
   },
   "trips": {
     "compare_title": "3 itinéraires en compétition",
@@ -461,5 +472,11 @@
     "with_warning": "proposable avec un avertissement",
     "season_note": "Les activités affichées en plein sont celles que la saison rend praticables. Les autres restent proposables, avec un avertissement.",
     "cta": "Continuer"
+  },
+  "group": {
+    "solo": "Seul",
+    "couple": "À deux",
+    "family": "En famille",
+    "group": "En groupe"
   }
 }

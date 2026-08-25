@@ -31,7 +31,9 @@
     "examples_title": "Brauchst du Inspiration?",
     "example_1": "5-tägiger Van-Roadtrip im Jura, wilde Stimmung",
     "example_2": "3-tägiges Trekking um den Hohneck mit Biwak",
-    "example_3": "4 Tage Bikepacking am Rhein, leichtes Niveau"
+    "example_3": "4 Tage Bikepacking am Rhein, leichtes Niveau",
+    "mode_label": "Abenteuer-Modus",
+    "mode_locked": "Nur mit Abenteurer- oder Profi-Plan"
   },
   "chat": {
     "title": "Beschreibe dein Abenteuer",
@@ -49,12 +51,8 @@
     "quick_replies": "Antwortvorschläge"
   },
   "tuner": {
-    "mode_label": "Abenteuer-Modus",
-    "mode_hint": "Vanlife zuerst — oder leer lassen, die KI leitet ihn aus deiner Anfrage ab.",
-    "mode_locked": "Nur mit Abenteurer- oder Profi-Plan",
-    "title": "Verfeinern wir dein Abenteuer",
-    "hint": "Stelle die Regler ein — deine 3 Trips werden maßgeschneidert.",
-    "cta": "Meine 3 maßgeschneiderten Trips generieren",
+    "title": "Drei Dinge vor dem Zeichnen.",
+    "cta": "Drei Linien ziehen",
     "physical_label": "Sportlevel",
     "physical_low": "Gemütlich",
     "physical_high": "Athlet",
@@ -67,19 +65,32 @@
     "discovery_label": "Erkundung",
     "discovery_low": "Klassiker",
     "discovery_high": "Abseits der Pfade",
-    "dates_label": "Reisedaten (optional)",
-    "date_start": "Abfahrt",
-    "date_end": "Rückkehr",
-    "dates_hint": "Ohne Daten leitet die KI die Dauer aus deiner Anfrage ab.",
-    "dates_season_hint": "Aktivitäten werden an die Saison angepasst",
-    "dates_invalid": "Das Rückreisedatum muss nach der Abfahrt liegen.",
     "places_label": "Start und Ziel",
-    "places_hint": "Optional — gib deinen echten Startpunkt an für genaue Fahrzeiten (Zuhause, Bahnhof, Mietstation).",
     "place_from": "Startpunkt",
     "place_from_placeholder": "z. B.: Straßburg, Bahnhof Colmar…",
     "place_to": "Zielpunkt",
     "place_to_placeholder": "z. B.: Genf, Bahnhof Lyon…",
-    "round_trip": "Rundtour — zurück zum Startpunkt"
+    "round_trip": "Rundtour — zurück zum Startpunkt",
+    "plate": "01c — Letzte Fragen",
+    "group_label": "Wir sind",
+    "pack_label": "Rucksackgewicht",
+    "pack_1": "Ultraleicht",
+    "pack_2": "Leicht",
+    "pack_3": "Standard",
+    "pack_4": "Beladen",
+    "pack_5": "Schwer",
+    "constraints_label": "Einschränkungen",
+    "constraint_train": "Anreise mit dem Zug",
+    "constraint_exposed": "Ausgesetzte Stellen meiden",
+    "constraint_dog": "Hund in der Seilschaft",
+    "other_label": "Noch etwas?",
+    "other_placeholder": "Ein Pass zum Meiden, ein Gasthaus zum Testen…",
+    "summary_engagement": "Anspruch",
+    "engagement_1": "Gemütlich",
+    "engagement_2": "Machbar",
+    "engagement_3": "Fordernd",
+    "engagement_4": "Anspruchsvoll",
+    "engagement_5": "Hart"
   },
   "trips": {
     "compare_title": "3 Routen im Wettbewerb",
@@ -461,5 +472,11 @@
     "with_warning": "möglich, mit Hinweis",
     "season_note": "Ausgefüllt dargestellte Aktivitäten macht die Saison machbar. Die übrigen bleiben möglich, mit Hinweis.",
     "cta": "Weiter"
+  },
+  "group": {
+    "solo": "Allein",
+    "couple": "Zu zweit",
+    "family": "Als Familie",
+    "group": "Als Gruppe"
   }
 }
