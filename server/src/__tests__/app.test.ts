@@ -229,4 +229,27 @@ describe('TRIPTIC API', () => {
     expect(res.status).toBe(200);
     expect(res.body.title).toBe('Trip public');
   });
+
+  it('parse-filters : budget de tokens suffisant pour que le modèle réponde', async () => {
+    let budget: number | undefined;
+    const filterProvider: LlmProvider = {
+      name: 'mock',
+      complete: async (opts) => {
+        budget = opts.maxTokens;
+        return '{"kinds": ["lake", "restaurant"], "keywords": ["baignade"]}';
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const app = createApp({ provider: filterProvider });
+    const res = await request(app)
+      .post('/api/ai/parse-filters')
+      .send({ text: 'on veut se baigner puis manger une tarte flambée' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ kinds: ['lake', 'restaurant'], keywords: ['baignade'] });
+    // Régression : Deepseek v4 consomme le budget en reasoning_content avant
+    // d'écrire. À 300, la réponse revenait vide (finish_reason « length ») et la
+    // route renvoyait des filtres vides sans erreur visible.
+    expect(budget).toBeGreaterThanOrEqual(4000);
+  });
 });
