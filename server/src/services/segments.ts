@@ -1,3 +1,4 @@
+import { haversineKm } from '@triptic/shared';
 import type {
   SegmentMode,
   TripActivity,
@@ -122,17 +123,9 @@ function round1(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
-/** Distance grand-cercle (fallback uniquement — voir en-tête du fichier). */
-export function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-  const R = 6371;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(s));
-}
-
-function toRad(deg: number): number {
-  return (deg * Math.PI) / 180;
-}
+/**
+ * Distance grand-cercle (fallback uniquement — voir en-tête du fichier).
+ * Ré-exportée depuis @triptic/shared : le moteur IA en a besoin aussi pour
+ * valider les trips, et il n'a pas accès à ce package.
+ */
+export { haversineKm };
