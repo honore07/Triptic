@@ -125,7 +125,7 @@ Jules valide, lance les commandes sur le VPS (workflow habituel : il tape,
 il valide), puis contrôle le résultat via l'API publique :
 
 ```bash
-curl -s http://82.25.118.185:3001/api/places/stats
+curl -s https://triptic.hakoe-alsace.com/api/places/stats
 ```
 
 → `tdm.sources_total` a augmenté ; `tdm.web_active`/`web_pending` > 0 si des

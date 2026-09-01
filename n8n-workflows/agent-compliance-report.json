@@ -23,7 +23,7 @@
     },
     {
       "parameters": {
-        "url": "http://82.25.118.185:3001/api/places/stats",
+        "url": "https://triptic.hakoe-alsace.com/api/places/stats",
         "options": {}
       },
       "id": "c5000000-0000-4000-8000-000000000002",

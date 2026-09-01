@@ -4,7 +4,7 @@
 
 ## État : MVP fonctionnel, déployé en production
 
-- **App en ligne : http://82.25.118.185:3001** (VPS Hostinger srv1731348, PM2 `triptic-api` sert l'API + la PWA buildée, démarrage auto au boot)
+- **App en ligne : https://triptic.hakoe-alsace.com** (VPS Hostinger srv1731348, PM2 `triptic-api` sert l'API + la PWA buildée derrière Traefik, démarrage auto au boot)
 - **PR #1, #2, #3 mergées dans `main`** le 2026-07-17. Session 2 : PgTripRepo (Drizzle + PostGIS), agent correcteur recalibré, `vps-setup.sh` installe PostgreSQL+PostGIS
 - **VPS À JOUR : PostgreSQL 16 + PostGIS actifs** (store `postgres`, vérifié : trip API → ligne en base avec longueur PostGIS), **Deepseek actif** (clé posée le 17/07, `provider: deepseek` au /health)
 - Tests : 35 Vitest verts (`pnpm test`), build strict vert (`pnpm build`)
@@ -19,12 +19,14 @@
 | `server/` | Express 5 : SSE `/api/ai/generate-trips`, CRUD trips, lien public par slug, GPX gated par plan (402), quota free 3/mois (in-memory), rate limiting, Pino, schéma Drizzle PostGIS + migration `server/src/db/migrations/0000_init.sql`, PgTripRepo (Drizzle + PostGIS, actif si `DATABASE_URL` défini, sinon MemoryTripRepo) |
 | `apps/web/` | PWA React 19 + Vite 6 + Tailwind v4 : chat SSE, TripCompare (cartes verrouillées → PaywallModal), régénération auto après upgrade de plan, MapView (Mapbox si `VITE_MAPBOX_PUBLIC_TOKEN`, sinon aperçu SVG), i18n fr/en/de complet, service worker Workbox |
 | `server/src/repo/places.ts` + `server/src/import/` | **Base de connaissance des lieux (session 4)** : table `places` (PostGIS, migration `0001`), imports OSM (Overpass, région pilote Alsace-Vosges + Alpes FR/CH/IT), DATAtourisme (flux créé sur le compte de Jules, URL+clé dans `.env` : `DATATOURISME_WEBSERVICE_URL`), villages classés + notoriété Wikidata. Grounding : `generateTrips` révise les trips avec la shortlist PostGIS (`shortlistForCorridor`, mix incontournables/pépites selon curseur Exploration). Auto-enrichissement zones pauvres (`services/enrichment.ts`, file mémoire — BullMQ quand Redis sera posé). Contributions : `POST /api/places` (pending/modération, migration `0002`), avis, page web `/contribute` |
-| `deploy/` | `vps-setup.sh` (idempotent, applique toutes les migrations `*.sql`), `nginx-triptic.conf` (pas utilisé pour l'instant) |
+| `deploy/` | `vps-setup.sh` (idempotent, applique toutes les migrations `*.sql`), `nginx-triptic.conf` (**non utilisé** : le VPS tourne sous Traefik, cf. `RUNBOOK-https.md`) |
 | `.claude/skills/` | 19 skills installés + 4 créés (guide : `.claude/SKILLS_GUIDE.md`) |
 
 ## Particularités du VPS (importantes, découvertes à la main)
 
-- **Pas de Nginx** ; Traefik (Docker) tient 80/443 pour n8n (:5678), Hermes, Gotenberg → TRIPTIC vit sur le **port 3001** servi par Express directement
+- **Pas de Nginx** ; Traefik (Docker, network `host`) tient 80/443 pour n8n (:5678), Hermes, Gotenberg → TRIPTIC écoute sur le **port 3001** (Express) et Traefik l'expose en HTTPS
+- **HTTPS en service depuis le 2026-08-19** : Traefik route `triptic.hakoe-alsace.com` vers `127.0.0.1:3001` (`/docker/traefik/dynamic/triptic.yml`), certificat Let's Encrypt **renouvelé automatiquement** par Traefik, redirection 80→443 globale. ⚠️ **Ne jamais installer nginx/certbot sur ce VPS** : conflit sur le port 80 → coupe tous les sites. Détails : `deploy/RUNBOOK-https.md`
+- **Port 3001 fermé au public** : Express écoute sur `127.0.0.1` (`HOST` dans `.env`, défaut boucle locale) — tout passe par Traefik en HTTPS. ⚠️ n8n tourne en réseau **bridge** (`n8n_default`) : ses workflows ne peuvent pas joindre la loopback de l'hôte, ils appellent l'API par `https://triptic.hakoe-alsace.com`. `ufw` reste `inactive`
 - **PostgreSQL 16 + PostGIS installés le 2026-07-17** (base `triptic_db`, rôle `triptic_user`, DATABASE_URL dans le .env) → trips persistants ; les **quotas free restent in-memory** (`server/src/services/quota.ts`)
 - ⚠️ Reboot du VPS recommandé à l'occasion (kernel 6.8.0-134 en attente) — PM2 `pm2 save` fait, redémarrage auto OK
 - npm global prefix = `/root/.hermes/node` (hors PATH) → symlinks pnpm/pm2 créés dans `/usr/local/bin`

@@ -14,7 +14,7 @@ packages/map-utils/  Export GPX, helpers géo
 server/              API Express 5 : SSE /api/ai/generate-trips, trips CRUD, GPX, quotas, Drizzle + PostGIS
                      + base de connaissance des lieux (places) : imports OSM/DATAtourisme/Wikidata,
                      grounding des générations, auto-enrichissement, contributions utilisateurs
-deploy/              Config Nginx VPS
+deploy/              Runbooks VPS (HTTPS/Traefik, routing, imports)
 ```
 
 ## Démarrage local
@@ -39,7 +39,7 @@ pnpm build       # typecheck strict + build Vite + service worker PWA
 1. Migrations (idempotentes, PostGIS requis) :
    `for f in server/src/db/migrations/*.sql; do sudo -u postgres psql -d triptic_db -f "$f"; done`
 2. `pm2 start ecosystem.config.cjs --env production`
-3. Nginx : `deploy/nginx-triptic.conf`
+3. HTTPS : déjà en service via **Traefik** (`deploy/RUNBOOK-https.md`) — pas de Nginx sur le VPS
 4. CI/CD : `.github/workflows/ci.yml` (déploiement SSH activable via `DEPLOY_ENABLED`)
 
 ## Base de connaissance des lieux (places)

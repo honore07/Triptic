@@ -50,7 +50,7 @@ sinon (b) géocodé via Nominatim (→ non recoupé, `pending` pour revue).
 Contrôle après :
 
 ```bash
-curl -s http://82.25.118.185:3001/api/places/stats
+curl -s https://triptic.hakoe-alsace.com/api/places/stats
 ```
 
 → `tdm.sources_total` ≥ nb de domaines fouillés ; `tdm.web_active` +

@@ -94,7 +94,7 @@ profil scenic évite l'A31, donc plus long que l'autoroute). Si
 ### Vérification A2 — via l'API publique TRIPTIC
 
 ```bash
-curl -sS -X POST http://82.25.118.185:3001/api/trips/recompute -H "Content-Type: application/json" -d '{"mode":"roadtrip","duration_days":1,"days":[{"day":1,"title":"Test Lorraine","activities":[{"type":"visit","time_of_day":"morning","title":"Nancy - place Stanislas","lat":48.6937,"lng":6.1834},{"type":"visit","time_of_day":"afternoon","title":"Metz - cathedrale","lat":49.1203,"lng":6.1778}]}]}' | python3 -c "import sys,json;d=json.load(sys.stdin);s=d['days'][0]['segments'][0] if 'days' in d else None;print('routed:',s.get('routed'),'| distance_km:',s['distance_km'],'| duration_min:',s['duration_min']) if s else print('erreur API:',d)"
+curl -sS -X POST https://triptic.hakoe-alsace.com/api/trips/recompute -H "Content-Type: application/json" -d '{"mode":"roadtrip","duration_days":1,"days":[{"day":1,"title":"Test Lorraine","activities":[{"type":"visit","time_of_day":"morning","title":"Nancy - place Stanislas","lat":48.6937,"lng":6.1834},{"type":"visit","time_of_day":"afternoon","title":"Metz - cathedrale","lat":49.1203,"lng":6.1778}]}]}' | python3 -c "import sys,json;d=json.load(sys.stdin);s=d['days'][0]['segments'][0] if 'days' in d else None;print('routed:',s.get('routed'),'| distance_km:',s['distance_km'],'| duration_min:',s['duration_min']) if s else print('erreur API:',d)"
 ```
 
 Attendu : `routed: True | distance_km: ~55-90 | duration_min: ~60-110`.
@@ -140,7 +140,7 @@ curl -sS "http://localhost:8989/route?point=48.0631,7.0209&point=47.9014,7.0994&
 ### Vérification B3 — API publique, trip Alpes
 
 ```bash
-curl -sS -X POST http://82.25.118.185:3001/api/trips/recompute -H "Content-Type: application/json" -d '{"mode":"roadtrip","duration_days":1,"days":[{"day":1,"title":"Test Alpes","activities":[{"type":"visit","time_of_day":"morning","title":"Chamonix","lat":45.9237,"lng":6.8694},{"type":"visit","time_of_day":"afternoon","title":"Annecy","lat":45.8992,"lng":6.1294}]}]}' | python3 -c "import sys,json;d=json.load(sys.stdin);s=d['days'][0]['segments'][0] if 'days' in d else None;print('routed:',s.get('routed'),'| distance_km:',s['distance_km'],'| duration_min:',s['duration_min']) if s else print('erreur API:',d)"
+curl -sS -X POST https://triptic.hakoe-alsace.com/api/trips/recompute -H "Content-Type: application/json" -d '{"mode":"roadtrip","duration_days":1,"days":[{"day":1,"title":"Test Alpes","activities":[{"type":"visit","time_of_day":"morning","title":"Chamonix","lat":45.9237,"lng":6.8694},{"type":"visit","time_of_day":"afternoon","title":"Annecy","lat":45.8992,"lng":6.1294}]}]}' | python3 -c "import sys,json;d=json.load(sys.stdin);s=d['days'][0]['segments'][0] if 'days' in d else None;print('routed:',s.get('routed'),'| distance_km:',s['distance_km'],'| duration_min:',s['duration_min']) if s else print('erreur API:',d)"
 ```
 
 Attendu : `routed: True | distance_km: ~90-140`.
