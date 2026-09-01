@@ -118,7 +118,7 @@ export function Home() {
           src="/vire/vire_vallee-glacier.webp"
           alt=""
           fetchPriority="high"
-          className="h-full w-full object-cover"
+          className="hero-drift h-full w-full object-cover"
         />
         {/* Voile en trois temps, chaque palier calé sur ce qui se pose
          * dessus : papier en haut (l'en-tête reste en encre sombre),

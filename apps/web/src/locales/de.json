@@ -117,7 +117,8 @@
     "rank_mid": "Mittel",
     "rank_max": "Am längsten",
     "rank_min_budget": "Am günstigsten",
-    "rank_max_budget": "Am teuersten"
+    "rank_max_budget": "Am teuersten",
+    "rank_equal": "Gleichstand"
   },
   "my_trips": {
     "nav": "Meine Trips",
@@ -494,7 +495,10 @@
     "progress_label": "Aufgenommen",
     "axis": "Analysierte Abschnitte",
     "running": "läuft",
-    "note": "Drei ähnliche Linien, nie identisch. Die Wahl liegt bei dir."
+    "note": "Drei ähnliche Linien, nie identisch. Die Wahl liegt bei dir.",
+    "step_label": "Schritt",
+    "elapsed": "Verstrichen",
+    "typical": "Rechne mit zwei bis sechs Minuten: VIRE denkt über Gelände und echte Orte nach, bevor es zeichnet. Der erste Schritt dauert am längsten."
   },
   "tableau": {
     "plate": "02b — Vergleichende Aufnahme",

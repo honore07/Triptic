@@ -37,16 +37,16 @@ export function TripCard({ trip, onChoose, index = 0 }: Props) {
 
   return (
     <article
-      className="trip-card-enter flex flex-col border border-mist bg-snow"
+      className="trip-card-enter plate-hover flex flex-col border border-mist bg-snow"
       style={{ animationDelay: `${index * 90}ms` }}
     >
-      <div className="relative h-44 border-b border-mist bg-trail sm:h-48">
+      <div className="relative h-44 overflow-hidden border-b border-mist bg-trail sm:h-48">
         {trip.photo_url ? (
           <img
             src={trip.photo_url}
             alt={`${trip.title} — ${trip.ambiance}`}
             loading="lazy"
-            className="h-full w-full object-cover"
+            className="photo-settle h-full w-full object-cover"
           />
         ) : (
           <RoutePreview
@@ -62,20 +62,20 @@ export function TripCard({ trip, onChoose, index = 0 }: Props) {
           <span className="label-mono text-copper-deep">
             {t('trips.line')} {ROMAN[index] ?? index + 1}
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="label-mono border border-mist px-2 py-1 text-ridge">
-              {trip.ambiance}
-            </span>
-            <DifficultyBadge level={trip.difficulty} />
-          </div>
+          <DifficultyBadge level={trip.difficulty} />
         </div>
 
-        <h3 className="font-display text-2xl font-semibold leading-tight text-trail">
-          {trip.title}
-        </h3>
-        <p className="line-clamp-3 flex-1 font-display text-base italic leading-snug text-ridge">
-          {trip.summary}
-        </p>
+        <div className="flex flex-col gap-1">
+          <h3 className="font-display text-2xl font-semibold leading-tight text-trail">
+            {trip.title}
+          </h3>
+          {/* L'ambiance est une phrase du moteur, pas une étiquette : elle se
+           * lit en sous-titre serif, jamais dans un cartouche mono. */}
+          <p className="font-display text-base italic leading-snug text-copper-deep">
+            {trip.ambiance}
+          </p>
+        </div>
+        <p className="line-clamp-3 flex-1 text-sm leading-relaxed text-ridge">{trip.summary}</p>
 
         <dl className="grid grid-cols-2 border border-mist [&>div:nth-child(-n+2)]:border-b [&>div:nth-child(odd)]:border-r">
           <Releve

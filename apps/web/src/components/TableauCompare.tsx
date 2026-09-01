@@ -45,6 +45,8 @@ export function TableauCompare({ trips, onChoose }: Props) {
   const order = trips.map((_, i) => i).sort((a, b) => (values[a] ?? 0) - (values[b] ?? 0));
 
   const rankLabel = (value: number) => {
+    // Trois valeurs identiques : personne n'est « le plus court »
+    if (min === max) return t('trips.rank_equal');
     if (value === min) return metric === 'budget' ? t('trips.rank_min_budget') : t('trips.rank_min');
     if (value === max) return metric === 'budget' ? t('trips.rank_max_budget') : t('trips.rank_max');
     return t('trips.rank_mid');

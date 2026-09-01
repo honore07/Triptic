@@ -100,7 +100,17 @@ export function Plan() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
-      <h1 className="fade-up font-display text-2xl font-bold text-trail">{t('chat.title')}</h1>
+      {/* En-tête de planche — même filet que l'accueil : la conversation est
+       * la suite de la demande, pas une autre app. */}
+      <div className="fade-up flex items-baseline justify-between border-b border-mist pb-2">
+        <p className="font-display text-xl font-semibold tracking-[0.2em] text-trail">
+          {t('app.name')}
+        </p>
+        <p className="label-mono text-fog">{t('home.plate')}</p>
+      </div>
+      <h1 className="fade-up font-display text-3xl font-semibold leading-tight text-trail">
+        {t('chat.title')}
+      </h1>
 
       <section aria-label={t('chat.title')} className="flex flex-col gap-3">
         {messages.map((message, i) => (
@@ -117,7 +127,10 @@ export function Plan() {
           />
         )}
         {status === 'error' && (
-          <p role="alert" className="fade-up rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
+          <p
+            role="alert"
+            className="fade-up border border-storm-deep bg-storm-tint px-4 py-3 text-sm text-storm-deep"
+          >
             {error === 'quota_exceeded'
               ? t('chat.error_quota')
               : error === 'auth_required'
@@ -158,9 +171,11 @@ export function Plan() {
         />
       )}
 
-      {/* Le champ de réponse s'efface pendant l'onboarding : la planche en
-       * cours (fenêtre ou précisions) porte la seule action attendue. */}
-      {!result && !onboarding && (
+      {/* Le champ de réponse s'efface pendant l'onboarding et pendant le
+       * relevé : la planche en cours (fenêtre, précisions, génération) porte
+       * la seule action attendue — un champ grisé qui flotte dessus ne
+       * ferait que la cacher. */}
+      {!result && !onboarding && !busy && (
         <form
           className="sticky bottom-4 flex gap-2"
           onSubmit={(e) => {
@@ -175,7 +190,7 @@ export function Plan() {
             placeholder={messages.length === 0 ? t('home.placeholder') : t('chat.placeholder')}
             aria-label={t('chat.placeholder')}
             disabled={busy}
-            className="min-h-12 flex-1 rounded-xl border border-mist bg-snow px-4 text-sm text-trail shadow-sm placeholder:text-fog disabled:opacity-60"
+            className="min-h-12 flex-1 border border-mist bg-snow px-4 font-display text-base italic text-trail shadow-[3px_3px_0_rgba(34,34,34,0.5)] placeholder:text-fog disabled:opacity-60"
           />
           <button
             type="submit"

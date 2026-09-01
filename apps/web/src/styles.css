@@ -383,3 +383,126 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ---------- Relevé (PL.06) — le tracé qui se dessine ---------- */
+
+/* Ligne de crête à la plume : le trait se trace puis s'efface, en boucle.
+ * pathLength=1 sur le path → dasharray/dashoffset en unités de tracé. */
+@keyframes trace-draw {
+  0% {
+    stroke-dashoffset: 1;
+  }
+  55% {
+    stroke-dashoffset: 0;
+  }
+  85% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -1;
+  }
+}
+.trace-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: trace-draw 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Balayage du segment en cours : la barre respire sans prétendre avancer. */
+@keyframes releve-sweep {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(200%);
+    opacity: 0.35;
+  }
+}
+.releve-sweep {
+  animation: releve-sweep 1.8s ease-in-out infinite;
+}
+
+/* Pastille de l'étape en cours : halo rouille qui bat lentement. */
+@keyframes releve-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(169, 78, 43, 0.45);
+  }
+  60% {
+    box-shadow: 0 0 0 6px rgba(169, 78, 43, 0);
+  }
+}
+.releve-pulse {
+  animation: releve-pulse 1.6s ease-out infinite;
+}
+
+/* ---------- Planches qui se lèvent (PL.07) ---------- */
+
+/* Au survol, la planche se soulève d'un cran : ombre portée dure qui
+ * apparaît — même vocabulaire que la plaque CTA, jamais de flou. */
+.plate-hover {
+  transition:
+    transform 180ms ease-out,
+    box-shadow 180ms ease-out;
+}
+@media (hover: hover) {
+  .plate-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 rgba(34, 34, 34, 0.9);
+  }
+}
+
+/* La photo se pose : très léger zoom arrière à l'entrée, comme une épreuve
+ * qu'on glisse dans son cadre. */
+@keyframes photo-settle {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.photo-settle {
+  animation: photo-settle 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- Mouvements de page ---------- */
+
+/* Le fond de l'accueil dérive à peine — 40 s pour un déplacement de 3 %,
+ * comme une gravure qu'on regarde de plus près. */
+@keyframes hero-drift {
+  from {
+    transform: scale(1) translateY(0);
+  }
+  to {
+    transform: scale(1.06) translateY(-1.5%);
+  }
+}
+.hero-drift {
+  animation: hero-drift 40s ease-out both;
+  transform-origin: 50% 40%;
+}
+
+/* La page se pose (changement de route). Opacité seule, JAMAIS de transform :
+ * un transform sur cet ancêtre deviendrait le bloc conteneur des éléments
+ * `position: fixed` (ouverture, fond plein écran de l'accueil) et les
+ * sortirait de l'écran. */
+@keyframes page-turn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* `backwards` et non `both` : une animation d'opacité qui « remplit » après
+ * sa fin garde un contexte d'empilement — le fond fixe de l'accueil (-z-10)
+ * passait alors AU-DESSUS de l'en-tête. Une fois finie, l'animation lâche
+ * tout et l'empilement redevient celui du document. */
+.page-turn {
+  animation: page-turn 260ms ease-out backwards;
+}
