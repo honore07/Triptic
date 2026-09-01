@@ -143,3 +143,16 @@ export const vanSpots = pgTable('van_spots', {
   location: geographyPoint('location'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+/**
+ * Galeries photo des lieux (migration 0009) — carrousel de la carte.
+ * Filtrées une fois par l'agent photo, servies ensuite : le cache mémoire
+ * seul repartait de zéro à chaque redémarrage du process.
+ */
+export const placeGalleries = pgTable('place_galleries', {
+  cache_key: text('cache_key').primaryKey(),
+  media: jsonb('media').notNull(),
+  query: text('query'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});

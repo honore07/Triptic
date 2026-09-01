@@ -1,6 +1,7 @@
 import type { LlmProvider } from '@triptic/ai-engine';
 import { filterUsefulPhotos } from '../agents/photoAgent.js';
 import { logger } from '../logger.js';
+import type { GalleryStore } from '../repo/galleries.js';
 
 /** Un média de lieu avec son crédit (obligatoire : CGU / licences CC). */
 export interface PlaceMedia {
@@ -38,12 +39,30 @@ function cacheGet(key: string): PlaceMedia[] | null {
   return hit.media;
 }
 
+/**
+ * Persistance optionnelle des galeries (migration 0009). Absente en dev sans
+ * DATABASE_URL : on retombe alors sur le seul cache mémoire, comme avant.
+ */
+let galleryStore: GalleryStore | null = null;
+
+export function setGalleryStore(store: GalleryStore | null): void {
+  galleryStore = store;
+}
+
 function cacheSet(key: string, media: PlaceMedia[]): void {
   if (galleryCache.size >= GALLERY_MAX_ENTRIES) {
     const oldest = galleryCache.keys().next().value;
     if (oldest !== undefined) galleryCache.delete(oldest);
   }
   galleryCache.set(key, { at: Date.now(), media });
+}
+
+/** Écriture best-effort : une base absente ou en panne ne casse pas l'affichage. */
+function persist(key: string, query: string, media: PlaceMedia[]): void {
+  if (!galleryStore) return;
+  void galleryStore.set(key, query, media).catch((error) => {
+    logger.warn({ error, context: 'gallery-store' }, 'Gallery write failed');
+  });
 }
 
 /** Wikimedia demande un User-Agent identifiant l'application. */
@@ -209,6 +228,19 @@ export async function findPlacePhotos(
   const cached = cacheGet(key);
   if (cached) return cached;
 
+  // Galerie déjà filtrée lors d'une session précédente : ni Wikimedia ni
+  // agent photo à refaire. Une base indisponible ne doit rien casser.
+  if (galleryStore) {
+    const stored = await galleryStore.get(key).catch((error) => {
+      logger.warn({ error, context: 'gallery-store' }, 'Gallery read failed');
+      return null;
+    });
+    if (stored && stored.length > 0) {
+      cacheSet(key, stored);
+      return stored;
+    }
+  }
+
   // 1) Position → photos réellement prises sur place. Si Commons répond, on
   // s'arrête là : la recherche par mot-clé qui suit n'a aucune notion de lieu
   // et produit des hors-sujet (« Petit Ballon » → ballons de baudruche).
@@ -220,6 +252,7 @@ export async function findPlacePhotos(
       const geo = useful.slice(0, limit);
       if (geo.length > 0) {
         cacheSet(key, geo);
+        void persist(key, query, geo);
         return geo;
       }
     }
@@ -299,7 +332,10 @@ export async function findPlacePhotos(
   const videos = await findPexelsVideos(query, VIDEO_SLOTS);
   const media = [...photos.slice(0, limit), ...videos];
 
-  if (media.length > 0) cacheSet(key, media);
+  if (media.length > 0) {
+    cacheSet(key, media);
+    void persist(key, query, media);
+  }
   return media;
 }
 
