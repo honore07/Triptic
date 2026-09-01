@@ -11,6 +11,7 @@ import {
 import { PLANS, type TripRequest } from '@triptic/shared';
 import { logger } from '../logger.js';
 import { SEARCHABLE_KINDS } from './places.js';
+import { filtersFromText } from '../services/exploreFilters.js';
 import { recomputeTrip } from '../services/recompute.js';
 import { applyTripEstimates } from '../services/budget.js';
 import { findDayPhotos, findTripPhoto } from '../services/photos.js';
@@ -247,6 +248,14 @@ export function createAiRouter(
     const parsed = parseFiltersBodySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
+      return;
+    }
+    // Dictionnaire d'abord : les envies courantes (« se baigner », « un bon
+    // resto ») sont du vocabulaire, pas du langage. Réponse immédiate, sans
+    // réseau. Le modèle ne sert qu'aux formulations que le dictionnaire ignore.
+    const known = filtersFromText(parsed.data.text);
+    if (known.length > 0) {
+      res.json({ kinds: known, keywords: [] });
       return;
     }
     try {

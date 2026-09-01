@@ -8,14 +8,12 @@ import type {
   TripTuning,
 } from '@triptic/shared';
 import {
-  buildCorrectorPrompt,
   buildEditPrompt,
   buildGroundingMessage,
   buildOverridesMessage,
   buildSystemPrompt,
 } from './prompts.js';
 import {
-  correctorOutputSchema,
   editOutputSchema,
   engineOutputSchema,
   extractJson,
@@ -23,12 +21,14 @@ import {
   type EngineOutput,
 } from './schema.js';
 import { sanitizeUserInput } from './sanitize.js';
+import { validateDays, validateTrips } from './validate.js';
 import type { LlmProvider } from './providers.js';
 
 export * from './providers.js';
 export * from './schema.js';
 export * from './prompts.js';
 export { sanitizeUserInput } from './sanitize.js';
+export { validateTrips, validateDays } from './validate.js';
 
 export type EngineEvent =
   | {
@@ -121,11 +121,14 @@ export async function generateTrips(
   // Zone non couverte (shortlist trop petite) : on garde la génération telle
   // quelle ; la taille de la shortlist sert de signal de couverture (phase D).
   const grounding: GroundingInfo = { applied: false, shortlistSize: 0 };
+  // Conservée au-delà du grounding : la validation s'en sert pour repérer les
+  // coordonnées inventées, sans requête supplémentaire.
+  let shortlist: ShortlistPlace[] = [];
   if (opts.getShortlist) {
     const points = output.trips.flatMap((t) =>
       t.waypoints.map((w) => ({ lat: w.lat, lng: w.lng })),
     );
-    const shortlist = await opts.getShortlist(points).catch(() => [] as ShortlistPlace[]);
+    shortlist = await opts.getShortlist(points).catch(() => [] as ShortlistPlace[]);
     grounding.shortlistSize = shortlist.length;
     if (shortlist.length >= MIN_SHORTLIST_SIZE) {
       emit({ kind: 'status', step: 'grounding' });
@@ -146,15 +149,17 @@ export async function generateTrips(
     }
   }
 
-  // Agent correcteur — aucun trip ne s'affiche sans validation (règle qualité #5)
+  // Agent correcteur — aucun trip ne s'affiche sans validation (règle qualité #5).
+  // Calculé, plus appelé au modèle : mêmes critères, ~18 s de moins, et un
+  // verdict reproductible (voir validate.ts).
   emit({ kind: 'status', step: 'validating' });
-  let issues = await runCorrector(provider, output);
+  const validateOpts = {
+    physicalLevel: output.request?.physical_level,
+    shortlist,
+  };
+  let issues = validateTrips(output.trips, validateOpts);
 
-  // Panne technique du correcteur ≠ problème de contenu : inutile de payer
-  // une régénération complète (~minutes), on renvoie avec validated=false.
-  const correctorDown = issues.length === 1 && issues[0] === CORRECTOR_UNAVAILABLE;
-
-  if (issues.length > 0 && !correctorDown) {
+  if (issues.length > 0) {
     emit({ kind: 'status', step: 'retrying' });
     emit({ kind: 'warning', message: `Corrector found issues: ${issues.join('; ')}` });
     const retryMessages: ChatMessage[] = [
@@ -168,7 +173,7 @@ export async function generateTrips(
     const retried = await completeAndParse(provider, system, retryMessages);
     if (retried.type === 'trips') {
       output = retried;
-      issues = await runCorrector(provider, output);
+      issues = validateTrips(output.trips, validateOpts);
     }
   }
 
@@ -222,10 +227,10 @@ export async function editTrip(
   }
 
   emit({ kind: 'status', step: 'validating' });
-  let issues = await correctDays(provider, output.days);
-  const correctorDown = issues.length === 1 && issues[0] === CORRECTOR_UNAVAILABLE;
+  const editMode = (['roadtrip', 'trek', 'bikepacking'] as const).find((m) => m === trip.mode);
+  let issues = validateDays(output.days, editMode ?? 'roadtrip');
 
-  if (issues.length > 0 && !correctorDown) {
+  if (issues.length > 0) {
     emit({ kind: 'status', step: 'retrying' });
     const retried = await provider.complete({
       system,
@@ -242,7 +247,7 @@ export async function editTrip(
     const reparsed = editOutputSchema.parse(extractJson(retried));
     if (reparsed.type === 'edit') {
       output = reparsed;
-      issues = await correctDays(provider, output.days);
+      issues = validateDays(output.days, editMode ?? 'roadtrip');
     }
   }
 
@@ -254,20 +259,6 @@ export async function editTrip(
   };
 }
 
-async function correctDays(provider: LlmProvider, days: unknown): Promise<string[]> {
-  try {
-    const raw = await provider.correct({
-      system: buildCorrectorPrompt(),
-      messages: [{ role: 'user', content: JSON.stringify({ trips: [{ days }] }) }],
-      maxTokens: 2000,
-    });
-    const verdict = correctorOutputSchema.parse(extractJson(raw));
-    return verdict.valid ? [] : verdict.issues;
-  } catch {
-    return [CORRECTOR_UNAVAILABLE];
-  }
-}
-
 async function completeAndParse(
   provider: LlmProvider,
   system: string,
@@ -276,23 +267,4 @@ async function completeAndParse(
   // Les longs road trips (10 j+) produisent un gros JSON : large marge de sortie
   const raw = await provider.complete({ system, messages, maxTokens: 32000 });
   return engineOutputSchema.parse(extractJson(raw));
-}
-
-const CORRECTOR_UNAVAILABLE = 'corrector_unavailable';
-
-async function runCorrector(provider: LlmProvider, output: EngineOutput): Promise<string[]> {
-  if (output.type !== 'trips') return [];
-  try {
-    const raw = await provider.correct({
-      system: buildCorrectorPrompt(),
-      messages: [{ role: 'user', content: JSON.stringify({ trips: output.trips }) }],
-      maxTokens: 2000,
-    });
-    const verdict = correctorOutputSchema.parse(extractJson(raw));
-    return verdict.valid ? [] : verdict.issues;
-  } catch {
-    // Le correcteur ne doit jamais bloquer la génération : en cas d'échec
-    // technique on renvoie les trips avec validated=false côté appelant.
-    return [CORRECTOR_UNAVAILABLE];
-  }
 }

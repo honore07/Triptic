@@ -230,13 +230,13 @@ describe('TRIPTIC API', () => {
     expect(res.body.title).toBe('Trip public');
   });
 
-  it('parse-filters : budget de tokens suffisant pour que le modèle réponde', async () => {
-    let budget: number | undefined;
+  it('parse-filters : le dictionnaire répond sans appeler le modèle', async () => {
+    let modelCalled = false;
     const filterProvider: LlmProvider = {
       name: 'mock',
-      complete: async (opts) => {
-        budget = opts.maxTokens;
-        return '{"kinds": ["lake", "restaurant"], "keywords": ["baignade"]}';
+      complete: async () => {
+        modelCalled = true;
+        return '{"kinds": [], "keywords": []}';
       },
       correct: async () => '{"valid": true, "issues": []}',
     };
@@ -246,7 +246,28 @@ describe('TRIPTIC API', () => {
       .send({ text: 'on veut se baigner puis manger une tarte flambée' });
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ kinds: ['lake', 'restaurant'], keywords: ['baignade'] });
+    expect(res.body.kinds).toEqual(expect.arrayContaining(['lake', 'restaurant']));
+    expect(modelCalled).toBe(false);
+  });
+
+  it('parse-filters : repli sur le modèle, avec de quoi répondre', async () => {
+    let budget: number | undefined;
+    const filterProvider: LlmProvider = {
+      name: 'mock',
+      complete: async (opts) => {
+        budget = opts.maxTokens;
+        return '{"kinds": ["viewpoint"], "keywords": []}';
+      },
+      correct: async () => '{"valid": true, "issues": []}',
+    };
+    const app = createApp({ provider: filterProvider });
+    // Formulation que le dictionnaire ne couvre pas : le modèle prend le relais.
+    const res = await request(app)
+      .post('/api/ai/parse-filters')
+      .send({ text: 'un endroit où souffler loin de tout' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ kinds: ['viewpoint'], keywords: [] });
     // Régression : Deepseek v4 consomme le budget en reasoning_content avant
     // d'écrire. À 300, la réponse revenait vide (finish_reason « length ») et la
     // route renvoyait des filtres vides sans erreur visible.

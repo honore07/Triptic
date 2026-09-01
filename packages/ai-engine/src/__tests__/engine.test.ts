@@ -55,6 +55,28 @@ const TRIPS_OUTPUT = {
   differentiator: 'Durée et difficulté varient légèrement.',
 };
 
+/** Même trip, mais avec une étape à pied de 90 km : infaisable par construction. */
+const IMPOSSIBLE_TRIPS_OUTPUT = {
+  ...TRIPS_OUTPUT,
+  trips: [
+    {
+      ...VALID_TRIP,
+      days: [
+        {
+          day: 1,
+          title: 'Étape impossible',
+          activities: [
+            { type: 'hike', time_of_day: 'morning', title: 'Col de la Schlucht', lat: 48.0631, lng: 7.0209 },
+          ],
+          segments: [{ distance_km: 90, duration_min: 900, mode: 'foot', routed: true }],
+        },
+      ],
+    },
+    { ...VALID_TRIP, duration_days: 4 },
+    { ...VALID_TRIP, difficulty: 'easy' },
+  ],
+};
+
 function mockProvider(completeResponse: string, correctResponse: string): LlmProvider {
   return {
     name: 'mock',
@@ -349,6 +371,13 @@ describe('editTrip — édition conversationnelle (3.2)', () => {
     },
   ];
   const TRIP = { title: 'Crêtes des Vosges', mode: 'trek', days: EDIT_DAYS };
+  /** Même journée, portée à 90 km à pied : rejetée par le validateur. */
+  const IMPOSSIBLE_EDIT_DAYS = [
+    {
+      ...EDIT_DAYS[0]!,
+      segments: [{ distance_km: 90, duration_min: 900, mode: 'foot', routed: true }],
+    },
+  ];
 
   it('applique la modification et valide via le correcteur', async () => {
     const provider: LlmProvider = {
@@ -385,12 +414,13 @@ describe('editTrip — édition conversationnelle (3.2)', () => {
       name: 'mock',
       complete: async () => {
         completeCalls += 1;
-        return JSON.stringify({ type: 'edit', days: EDIT_DAYS });
+        // 1re passe : journée de marche infaisable → rejet et nouvelle passe.
+        return JSON.stringify({
+          type: 'edit',
+          days: completeCalls === 1 ? IMPOSSIBLE_EDIT_DAYS : EDIT_DAYS,
+        });
       },
-      correct: async () =>
-        completeCalls === 1
-          ? '{"valid": false, "issues": ["coordonnées douteuses"]}'
-          : '{"valid": true, "issues": []}',
+      correct: async () => '{"valid": true, "issues": []}',
     };
     const result = await editTrip(provider, TRIP, 'change la nuit', { lang: 'fr' });
     expect(completeCalls).toBe(2);
@@ -471,12 +501,11 @@ describe('generateTrips', () => {
       name: 'mock',
       complete: async () => {
         completeCalls += 1;
-        return JSON.stringify(TRIPS_OUTPUT);
+        // 1re passe : une étape à pied de 90 km, infaisable → le validateur
+        // rejette et la génération est relancée. 2e passe : trip correct.
+        return JSON.stringify(completeCalls === 1 ? IMPOSSIBLE_TRIPS_OUTPUT : TRIPS_OUTPUT);
       },
-      correct: async () =>
-        completeCalls === 1
-          ? '{"valid": false, "issues": ["distance jour 2 irréaliste"]}'
-          : '{"valid": true, "issues": []}',
+      correct: async () => '{"valid": true, "issues": []}',
     };
     const result = await generateTrips(
       provider,
@@ -489,8 +518,9 @@ describe('generateTrips', () => {
     }
   });
 
-  it('does not regenerate when the corrector is technically unavailable', async () => {
+  it('valide sans jamais appeler le modèle correcteur', async () => {
     let completeCalls = 0;
+    let correctCalls = 0;
     const provider: LlmProvider = {
       name: 'mock',
       complete: async () => {
@@ -498,7 +528,8 @@ describe('generateTrips', () => {
         return JSON.stringify(TRIPS_OUTPUT);
       },
       correct: async () => {
-        throw new Error('deepseek-reasoner down');
+        correctCalls += 1;
+        return '{"valid": true, "issues": []}';
       },
     };
     const result = await generateTrips(
@@ -506,11 +537,14 @@ describe('generateTrips', () => {
       [{ role: 'user', content: '3 jours de trek dans les Vosges' }],
       { lang: 'fr', maxProposals: 3 },
     );
-    expect(completeCalls).toBe(1); // pas de retry : panne technique ≠ contenu invalide
+    // La validation est calculée : plus d'appel réseau, donc plus de panne
+    // possible de ce côté, et ~18 s de moins par génération.
+    expect(correctCalls).toBe(0);
+    expect(completeCalls).toBe(1);
     expect(result.type).toBe('trips');
     if (result.type === 'trips') {
-      expect(result.validated).toBe(false);
-      expect(result.issues).toEqual(['corrector_unavailable']);
+      expect(result.validated).toBe(true);
+      expect(result.issues).toEqual([]);
     }
   });
 });
