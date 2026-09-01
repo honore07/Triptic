@@ -1,0 +1,134 @@
+{
+  "name": "TRIPTIC — Reprise des zones en attente",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "hours",
+              "value": 6
+            }
+          ]
+        }
+      },
+      "id": "cron-drain",
+      "name": "Toutes les 6 h",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://triptic.hakoe-alsace.com/api/maintenance/drain-enrichment",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={{ JSON.stringify({ 'x-maintenance-token': $env.TRIPTIC_MAINTENANCE_TOKEN }) }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ limit: 10 }) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "http-drain",
+      "name": "Reprendre les zones",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 120000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.processed }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "if-processed",
+      "name": "Des zones reprises ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=TRIPTIC — {{ $json.processed }} zone(s) restée(s) en attente ont été reprises. Un redémarrage a probablement interrompu un enrichissement.",
+        "additionalFields": {}
+      },
+      "id": "telegram-drain",
+      "name": "Notifier Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        220
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram TRIPTIC Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Toutes les 6 h": {
+      "main": [
+        [
+          {
+            "node": "Reprendre les zones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reprendre les zones": {
+      "main": [
+        [
+          {
+            "node": "Des zones reprises ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Des zones reprises ?": {
+      "main": [
+        [
+          {
+            "node": "Notifier Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

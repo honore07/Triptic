@@ -17,9 +17,12 @@ import {
 } from './middleware/rateLimit.js';
 import { MemoryTripRepo, type TripRepo } from './repo/trips.js';
 import type { PgPlaceRepo } from './repo/places.js';
+import type { GalleryStore } from './repo/galleries.js';
+import type { EnrichmentQueueStore } from './repo/enrichmentQueue.js';
 import { createAiRouter } from './routes/ai.js';
 import { createPlacesRouter } from './routes/places.js';
 import { createPhotosRouter } from './routes/photos.js';
+import { createMaintenanceRouter } from './routes/maintenance.js';
 import { createPublicTripsRouter, createTripsRouter } from './routes/trips.js';
 import { QuotaService, type Quota } from './services/quota.js';
 import type { PgUserRepo } from './repo/users.js';
@@ -38,6 +41,10 @@ export interface AppDeps {
   placeRepo?: PgPlaceRepo;
   /** Routing GraphHopper — segments réels des trips (0.2/0.3). */
   routing?: RoutingService;
+  /** Galeries photo persistées (migration 0009) — prod avec BDD seulement. */
+  galleryStore?: GalleryStore;
+  /** File d'enrichissement persistée (migration 0010) — prod avec BDD seulement. */
+  enrichmentQueue?: EnrichmentQueueStore;
   /** Dossier du build web statique (défaut : apps/web/dist) — injectable en test. */
   webDist?: string;
 }
@@ -49,6 +56,8 @@ export function createApp({
   users,
   placeRepo,
   routing,
+  galleryStore,
+  enrichmentQueue,
   webDist,
 }: AppDeps): Express {
   const app = express();
@@ -164,6 +173,7 @@ export function createApp({
   const enrichment = placeRepo
     ? new EnrichmentService(placeRepo, {
         webhookUrl: process.env['N8N_ENRICH_WEBHOOK_URL'],
+        store: enrichmentQueue,
       })
     : undefined;
   app.use(
@@ -171,6 +181,8 @@ export function createApp({
     aiRateLimiter,
     createAiRouter(provider, quotaService, placeRepo, enrichment, routingService),
   );
+  // Déclenchée par n8n (CRON), protégée par MAINTENANCE_TOKEN — pas de visiteur ici.
+  app.use('/api/maintenance', createMaintenanceRouter(galleryStore, provider, enrichment));
   app.use(
     '/api/trips',
     methodAwareRateLimiter,

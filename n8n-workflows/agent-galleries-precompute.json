@@ -1,0 +1,134 @@
+{
+  "name": "TRIPTIC — Pré-calcul des galeries photo",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 3,
+              "minute": 30
+            }
+          ]
+        }
+      },
+      "id": "cron-galleries",
+      "name": "Chaque nuit 03:30",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://triptic.hakoe-alsace.com/api/maintenance/precompute-galleries",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={{ JSON.stringify({ 'x-maintenance-token': $env.TRIPTIC_MAINTENANCE_TOKEN }) }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ limit: 25, max_age_days: 90 }) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "http-precompute",
+      "name": "Pré-calculer un lot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 60000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.empty }}",
+              "operation": "larger",
+              "value2": "={{ $json.filled }}"
+            }
+          ]
+        }
+      },
+      "id": "if-degrade",
+      "name": "Plus d'échecs que de succès ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=TRIPTIC — Pré-calcul des galeries en difficulté : {{ $json.filled }} remplie(s) contre {{ $json.empty }} vide(s) sur {{ $json.examined }} lieu(x). Vérifier Wikimedia et l'agent photo.",
+        "additionalFields": {}
+      },
+      "id": "telegram-galleries",
+      "name": "Alerter Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        220
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram TRIPTIC Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chaque nuit 03:30": {
+      "main": [
+        [
+          {
+            "node": "Pré-calculer un lot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pré-calculer un lot": {
+      "main": [
+        [
+          {
+            "node": "Plus d'échecs que de succès ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plus d'échecs que de succès ?": {
+      "main": [
+        [
+          {
+            "node": "Alerter Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

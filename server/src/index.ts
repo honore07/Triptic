@@ -2,10 +2,13 @@ import { createProviderFromEnv } from '@triptic/ai-engine';
 import { createApp } from './app.js';
 import { env } from './env.js';
 import { logger } from './logger.js';
+import { setGalleryStore } from './services/photos.js';
 import { allowPlanOverride } from './middleware/auth.js';
 import { PgTripRepo } from './repo/pgTrips.js';
 import { PgPlaceRepo } from './repo/places.js';
 import { PgUserRepo } from './repo/users.js';
+import { PgGalleryStore } from './repo/galleries.js';
+import { PgEnrichmentQueueStore } from './repo/enrichmentQueue.js';
 import { PgQuotaService } from './services/quota.js';
 
 const provider = createProviderFromEnv();
@@ -16,12 +19,21 @@ const placeRepo = env.databaseUrl ? new PgPlaceRepo(env.databaseUrl) : undefined
 const users = env.databaseUrl ? new PgUserRepo(env.databaseUrl) : undefined;
 // Quota persisté par utilisateur (survit aux reloads PM2) dès qu'il y a une BDD
 const quota = env.databaseUrl ? new PgQuotaService(env.databaseUrl) : undefined;
+// Galeries photo persistées : filtrées une fois par l'agent photo, relues
+// ensuite — le cache mémoire seul repartait de zéro à chaque redémarrage.
+const galleryStore = env.databaseUrl ? new PgGalleryStore(env.databaseUrl) : undefined;
+if (galleryStore) setGalleryStore(galleryStore);
+// File d'enrichissement persistée : ce qui n'aboutit pas est repris plus tard
+// au lieu d'être perdu avec le process.
+const enrichmentQueue = env.databaseUrl ? new PgEnrichmentQueueStore(env.databaseUrl) : undefined;
 const app = createApp({
   provider,
   ...(repo ? { repo } : {}),
   ...(placeRepo ? { placeRepo } : {}),
   ...(users ? { users } : {}),
   ...(quota ? { quota } : {}),
+  ...(galleryStore ? { galleryStore } : {}),
+  ...(enrichmentQueue ? { enrichmentQueue } : {}),
 });
 
 // QA 1.2 — durcissement paywall : rendre le mode démo impossible à rater.

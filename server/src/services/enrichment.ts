@@ -11,6 +11,7 @@
  */
 import { MIN_SHORTLIST_SIZE } from '@triptic/ai-engine';
 import { logger } from '../logger.js';
+import type { EnrichmentQueueStore } from '../repo/enrichmentQueue.js';
 import { regionForPoint, type Bbox } from '../import/osm/regions.js';
 import { OSM_CATEGORIES, buildOverpassQuery } from '../import/osm/categories.js';
 import { fetchOverpass } from '../import/osm/overpassClient.js';
@@ -55,6 +56,11 @@ export interface EnrichmentDeps {
   fetchImpl?: typeof fetchOverpass;
   /** Webhook n8n notifié après chaque enrichissement (optionnel). */
   webhookUrl?: string | undefined;
+  /**
+   * File persistée (migration 0010). Absente en dev sans base : on retombe sur
+   * la file mémoire seule, comme avant — une zone perdue le reste.
+   */
+  store?: EnrichmentQueueStore | undefined;
 }
 
 export class EnrichmentService {
@@ -80,6 +86,11 @@ export class EnrichmentService {
     if (this.seenZones.has(key)) return;
     this.seenZones.add(key);
     this.queue.push(bbox);
+    // Écrite avant traitement : si le process tombe pendant l'enrichissement,
+    // la zone reste 'pending' et la reprise nocturne la récupérera.
+    void this.deps.store?.enqueue(key, bbox).catch((error) => {
+      logger.warn({ error, zone: key }, "File d'enrichissement : écriture échouée");
+    });
     void this.drain();
   }
 
@@ -89,14 +100,41 @@ export class EnrichmentService {
     try {
       let bbox = this.queue.shift();
       while (bbox) {
-        await this.enrichZone(bbox).catch((error) => {
+        const current = bbox;
+        await this.enrichZone(current).catch((error) => {
           logger.error({ error }, 'Auto-enrichissement échoué');
+          void this.deps.store
+            ?.markFailed(zoneKey(current), error instanceof Error ? error.message : String(error))
+            .catch(() => undefined);
         });
         bbox = this.queue.shift();
       }
     } finally {
       this.running = false;
     }
+  }
+
+  /**
+   * Rejoue les zones restées en attente (reprise déclenchée par n8n).
+   * Retourne le nombre de zones traitées.
+   */
+  async drainPending(limit: number): Promise<number> {
+    const store = this.deps.store;
+    if (!store) return 0;
+    const waiting = await store.pending(limit);
+    let processed = 0;
+    for (const { zoneKey: key, bbox } of waiting) {
+      this.seenZones.add(key);
+      try {
+        await this.enrichZone(bbox);
+        processed += 1;
+      } catch (error) {
+        await store
+          .markFailed(key, error instanceof Error ? error.message : String(error))
+          .catch(() => undefined);
+      }
+    }
+    return processed;
   }
 
   private async enrichZone(bbox: Bbox): Promise<void> {
@@ -114,6 +152,7 @@ export class EnrichmentService {
       added += inputs.length;
     }
     logger.info({ zone: zoneKey(bbox), added }, 'Zone auto-enrichie (OSM)');
+    void this.deps.store?.markDone(zoneKey(bbox), added).catch(() => undefined);
     if (this.deps.webhookUrl) {
       await fetch(this.deps.webhookUrl, {
         method: 'POST',
