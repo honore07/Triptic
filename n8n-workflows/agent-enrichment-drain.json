@@ -26,15 +26,14 @@
       "parameters": {
         "method": "POST",
         "url": "https://triptic.hakoe-alsace.com/api/maintenance/drain-enrichment",
-        "sendHeaders": true,
-        "specifyHeaders": "json",
-        "jsonHeaders": "={{ JSON.stringify({ 'x-maintenance-token': $env.TRIPTIC_MAINTENANCE_TOKEN }) }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ limit: 10 }) }}",
         "options": {
           "timeout": 600000
-        }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "http-drain",
       "name": "Reprendre les zones",
@@ -46,7 +45,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 120000
+      "waitBetweenTries": 120000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "tripticmaint0001",
+          "name": "TRIPTIC Maintenance"
+        }
+      }
     },
     {
       "parameters": {

@@ -26,15 +26,14 @@
       "parameters": {
         "method": "POST",
         "url": "https://triptic.hakoe-alsace.com/api/maintenance/precompute-galleries",
-        "sendHeaders": true,
-        "specifyHeaders": "json",
-        "jsonHeaders": "={{ JSON.stringify({ 'x-maintenance-token': $env.TRIPTIC_MAINTENANCE_TOKEN }) }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ limit: 25, max_age_days: 90 }) }}",
         "options": {
           "timeout": 600000
-        }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "http-precompute",
       "name": "Pré-calculer un lot",
@@ -46,7 +45,13 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 60000
+      "waitBetweenTries": 60000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "tripticmaint0001",
+          "name": "TRIPTIC Maintenance"
+        }
+      }
     },
     {
       "parameters": {
