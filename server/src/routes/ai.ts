@@ -253,7 +253,12 @@ export function createAiRouter(
       const raw = await provider.complete({
         system: buildFilterPrompt(parsed.data.lang, SEARCHABLE_KINDS),
         messages: [{ role: 'user', content: parsed.data.text }],
-        maxTokens: 300,
+        // Deepseek v4 raisonne avant de répondre : le budget couvre d'abord le
+        // reasoning_content. À 300, la réponse était tronquée (finish_reason
+        // « length ») et arrivait VIDE — donc filtres toujours vides, sans
+        // erreur visible puisque le catch renvoie une réponse valide. Même
+        // valeur que les autres agents (photoAgent, complianceAgent).
+        maxTokens: 4000,
       });
       res.json(filtersOutputSchema.parse(extractJson(raw)));
     } catch (error) {
