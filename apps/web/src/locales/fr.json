@@ -117,7 +117,8 @@
     "rank_mid": "Médian",
     "rank_max": "Le plus long",
     "rank_min_budget": "Le moins cher",
-    "rank_max_budget": "Le plus cher"
+    "rank_max_budget": "Le plus cher",
+    "rank_equal": "Égalité"
   },
   "my_trips": {
     "nav": "Mes trips",
@@ -494,7 +495,10 @@
     "progress_label": "Relevé",
     "axis": "Segments analysés",
     "running": "en cours",
-    "note": "Trois voies proches, jamais identiques. C'est à toi de trancher."
+    "note": "Trois voies proches, jamais identiques. C'est à toi de trancher.",
+    "step_label": "Étape",
+    "elapsed": "Temps écoulé",
+    "typical": "Compte deux à six minutes : VIRE raisonne sur le relief et les lieux réels avant de tracer. La première étape est la plus longue."
   },
   "tableau": {
     "plate": "02b — Relevé comparé",

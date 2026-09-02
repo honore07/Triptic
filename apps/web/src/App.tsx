@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Backpack, Compass, LogOut, MapPinPlus, PartyPopper, UserRound } from 'lucide-react';
@@ -113,6 +113,20 @@ function NotFound() {
   );
 }
 
+/**
+ * Chaque page se pose sur la planche — un fondu remonté court, relancé à
+ * chaque changement de route (la clé force le remontage). Rien de plus :
+ * l'animation est éditoriale, pas cinématographique.
+ */
+function PageTurn({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  return (
+    <div key={pathname} className="page-turn flex flex-1 flex-col">
+      {children}
+    </div>
+  );
+}
+
 /** Pageview SPA à chaque navigation — chemin seul (jamais query ni hash). */
 function Pageviews() {
   const { pathname } = useLocation();
@@ -179,6 +193,7 @@ export function App() {
         </nav>
         <LangSwitcher />
       </header>
+      <PageTurn>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/plan" element={<Plan />} />
@@ -198,6 +213,7 @@ export function App() {
         <Route path="/legal/terms" element={<LegalPage section="terms" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </PageTurn>
       {/* Bande papier sous le pied de page : l'accueil pose une photo plein
        * écran derrière tout, et ces liens sont en encre sombre. Sans fond
        * opaque ils deviendraient illisibles sur le bas assombri. Ailleurs,

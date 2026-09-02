@@ -117,7 +117,8 @@
     "rank_mid": "Median",
     "rank_max": "Longest",
     "rank_min_budget": "Cheapest",
-    "rank_max_budget": "Priciest"
+    "rank_max_budget": "Priciest",
+    "rank_equal": "Tie"
   },
   "my_trips": {
     "nav": "My trips",
@@ -494,7 +495,10 @@
     "progress_label": "Surveyed",
     "axis": "Segments analysed",
     "running": "running",
-    "note": "Three close lines, never identical. The call is yours."
+    "note": "Three close lines, never identical. The call is yours.",
+    "step_label": "Step",
+    "elapsed": "Elapsed",
+    "typical": "Allow two to six minutes: VIRE reasons over the terrain and real places before tracing. The first step is the longest."
   },
   "tableau": {
     "plate": "02b — Compared survey",
