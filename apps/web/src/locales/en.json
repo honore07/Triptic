@@ -118,7 +118,8 @@
     "rank_max": "Longest",
     "rank_min_budget": "Cheapest",
     "rank_max_budget": "Priciest",
-    "rank_equal": "Tie"
+    "rank_equal": "Tie",
+    "same": "Same"
   },
   "my_trips": {
     "nav": "My trips",

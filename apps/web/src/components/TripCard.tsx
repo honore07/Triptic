@@ -10,74 +10,99 @@ interface Props {
   trip: TripProposal;
   onChoose: (trip: TripProposal) => void;
   index?: number;
+  /** Planche mise en avant : la photo prend ses couleurs, le cadre rouille. */
+  active?: boolean;
+  /** Un tap sur la planche la met en avant (sans encore l'ouvrir). */
+  onActivate?: (() => void) | undefined;
 }
 
 /** I, II, III — la numérotation des planches, pas des chiffres arabes. */
 const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 
-/** Case du relevé — étiquette mono au-dessus, valeur en serif. */
+/** Case du relevé — étiquette mono au-dessus, valeur en serif, sur l'encre. */
 function Releve({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-0.5 border-mist p-2.5">
-      <dt className="label-mono text-fog">{label}</dt>
-      <dd className="font-display text-xl font-semibold leading-none text-trail">{value}</dd>
+    <div className="flex min-w-0 flex-col gap-0.5 px-2.5 py-2">
+      <dt className="label-mono text-cloud/65">{label}</dt>
+      <dd className="font-display text-xl font-semibold leading-none text-cloud">
+        {value}
+      </dd>
     </div>
   );
 }
 
 /**
- * TripCard — planche PL.07 « COMPARER ».
- * Photo réelle en tête (la seule image non gravée de l'app : c'est le
- * terrain), puis planche papier — numéro de vire, ambiance, titre serif,
- * résumé en italique et relevé chiffré en 2×2.
+ * TripCard — planche PL.07 « COMPARER », volet du triptyque.
+ * La photo réelle du terrain remplit toute la planche : c'est la seule
+ * image non gravée de l'app, et elle porte le relevé. Au repos elle se lit
+ * comme une gravure (tonalité encre) ; dès qu'on s'y arrête — survol, tap,
+ * volet centré sur mobile — elle prend ses couleurs. Le relevé chiffré se
+ * pose sur l'encre du bas, la plaque d'action ferme la planche.
  */
-export function TripCard({ trip, onChoose, index = 0 }: Props) {
+export function TripCard({ trip, onChoose, index = 0, active = false, onActivate }: Props) {
   const { t } = useTranslation();
   const units = useProfileStore((s) => s.units);
+  const numeral = ROMAN[index] ?? String(index + 1);
 
   return (
     <article
-      className="trip-card-enter plate-hover flex flex-col border border-mist bg-snow"
-      style={{ animationDelay: `${index * 90}ms` }}
+      className={`trip-card-enter triptych-plate relative flex flex-col overflow-hidden border bg-trail text-cloud ${
+        active ? 'is-active border-summit' : 'border-mist'
+      }`}
+      style={{ animationDelay: `${index * 110}ms` }}
+      onClick={onActivate}
+      aria-current={active ? 'true' : undefined}
     >
-      <div className="relative h-44 overflow-hidden border-b border-mist bg-trail sm:h-48">
+      {/* Le terrain — photo réelle plein cadre, tracé SVG à défaut */}
+      <div aria-hidden={trip.photo_url ? undefined : 'true'} className="absolute inset-0">
         {trip.photo_url ? (
           <img
             src={trip.photo_url}
             alt={`${trip.title} — ${trip.ambiance}`}
             loading="lazy"
-            className="photo-settle h-full w-full object-cover"
+            className="plate-photo h-full w-full object-cover"
           />
         ) : (
           <RoutePreview
             waypoints={trip.waypoints}
-            className="h-full w-full opacity-60"
+            className="h-full w-full p-10 opacity-60"
             stroke={MAP_COLORS.gold}
           />
         )}
+        {/* Voile d'encre : léger en haut (le numéro se lit sur l'image),
+         * plein en bas (le relevé et la plaque sont en clair). */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.35)_0%,rgba(17,17,17,0.05)_28%,rgba(17,17,17,0.45)_55%,rgba(17,17,17,0.94)_100%)]" />
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="label-mono text-copper-deep">
-            {t('trips.line')} {ROMAN[index] ?? index + 1}
-          </span>
-          <DifficultyBadge level={trip.difficulty} />
-        </div>
+      {/* Tête de planche : le numéro en grand, la difficulté en cartouche */}
+      <div className="relative flex items-start justify-between p-4">
+        <span
+          aria-hidden="true"
+          className="font-display text-6xl font-semibold leading-none text-cloud drop-shadow-[2px_2px_0_rgba(17,17,17,0.8)]"
+        >
+          {numeral}
+        </span>
+        <DifficultyBadge level={trip.difficulty} />
+      </div>
 
+      {/* Relevé — posé sur l'encre du bas */}
+      <div className="relative mt-auto flex flex-col gap-3 p-4 pt-16">
         <div className="flex flex-col gap-1">
-          <h3 className="font-display text-2xl font-semibold leading-tight text-trail">
+          <span className="label-mono self-start border border-cloud/30 bg-trail/85 px-2 py-1 text-gold">
+            {t('trips.line')} {numeral}
+          </span>
+          <h3 className="font-display text-2xl font-semibold leading-tight text-cloud sm:text-[1.7rem]">
             {trip.title}
           </h3>
-          {/* L'ambiance est une phrase du moteur, pas une étiquette : elle se
-           * lit en sous-titre serif, jamais dans un cartouche mono. */}
-          <p className="font-display text-base italic leading-snug text-copper-deep">
-            {trip.ambiance}
-          </p>
+          {/* L'ambiance est une phrase du moteur : sous-titre serif, pas une étiquette */}
+          <p className="font-display text-base italic leading-snug text-sky">{trip.ambiance}</p>
         </div>
-        <p className="line-clamp-3 flex-1 text-sm leading-relaxed text-ridge">{trip.summary}</p>
 
-        <dl className="grid grid-cols-2 border border-mist [&>div:nth-child(-n+2)]:border-b [&>div:nth-child(odd)]:border-r">
+        <p className="plate-summary line-clamp-2 text-sm leading-relaxed text-cloud/85">
+          {trip.summary}
+        </p>
+
+        <dl className="grid grid-cols-2 border border-cloud/30 [&>div:nth-child(-n+2)]:border-b [&>div:nth-child(odd)]:border-r [&>div]:border-cloud/30">
           <Releve
             label={t('trips.days')}
             value={t('trips.days_count', { count: trip.duration_days })}
@@ -90,16 +115,17 @@ export function TripCard({ trip, onChoose, index = 0 }: Props) {
           <Releve
             label={t('budget.title')}
             value={
-              trip.budget
-                ? `${trip.budget.total_eur[0]}–${trip.budget.total_eur[1]} €`
-                : '—'
+              trip.budget ? `${trip.budget.total_eur[0]}–${trip.budget.total_eur[1]} €` : '—'
             }
           />
         </dl>
 
         <button
           type="button"
-          onClick={() => onChoose(trip)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onChoose(trip);
+          }}
           className="cta-plate flex min-h-12 items-center justify-center px-4 py-3"
         >
           {t('trips.choose')}
