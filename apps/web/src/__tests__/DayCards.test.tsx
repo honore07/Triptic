@@ -59,8 +59,8 @@ describe('DayCards (cartes-étapes 2.2)', () => {
       },
     ];
     const { container } = render(<DayCards days={days} selectedDay={null} onSelectDay={() => {}} />);
-    // Le médaillon fait 48 px : inutile de tirer 400 px de CDN
-    expect(container.querySelector('img')?.getAttribute('src')).toContain('w=160');
+    // La planche fait ~200 px de large : 400 px suffisent, jamais le 1080 d'origine
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('w=400');
   });
 });
 

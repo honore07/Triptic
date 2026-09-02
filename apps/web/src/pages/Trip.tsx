@@ -13,6 +13,8 @@ import { DifficultyBadge } from '../components/DifficultyBadge';
 import { Etape } from '../components/Etape';
 import { GPXExportButton } from '../components/GPXExportButton';
 import { MapView } from '../components/MapView';
+import { RoutePreview } from '../components/RoutePreview';
+import { MAP_COLORS } from '../lib/mapColors';
 import { Nuitee } from '../components/Nuitee';
 import { TripEditChat } from '../components/TripEditChat';
 import { WeatherStrip } from '../components/WeatherStrip';
@@ -136,57 +138,85 @@ export function TripPage() {
         {t('trips.back')}
       </Link>
 
-      <header className="flex flex-col gap-3">
-        <div className="flex items-center justify-between border-b border-mist pb-2">
-          <p className="label-mono flex items-center gap-2 text-fog">
-            {/* Carte et règle — l'outil de celui qui relève un itinéraire */}
+      {/* Tête d'itinéraire — la photo réelle de la vire choisie, plein cadre :
+       * c'est le terrain, la seule image non gravée avec la carte. Le relevé
+       * se pose sur l'encre du bas ; sans photo, le tracé se dessine sur
+       * l'encre. */}
+      <header className="relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
+        <div aria-hidden="true" className="absolute inset-0">
+          {selected.photo_url ? (
             <img
-              src="/vire/vire_nav-carte.webp"
+              src={selected.photo_url}
               alt=""
-              aria-hidden="true"
-              loading="lazy"
-              className="h-8 w-8 shrink-0 rounded-full border border-mist object-cover"
+              fetchPriority="high"
+              className="hero-drift h-full w-full object-cover"
             />
-            {t('itineraire.plate')}
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="label-mono text-copper-deep">{t(`mode.${selected.mode}`)}</span>
-            <DifficultyBadge level={selected.difficulty} />
-          </div>
+          ) : (
+            <RoutePreview
+              waypoints={selected.waypoints}
+              className="h-full w-full p-10 opacity-60"
+              stroke={MAP_COLORS.gold}
+            />
+          )}
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.45)_0%,rgba(17,17,17,0.10)_30%,rgba(17,17,17,0.55)_60%,rgba(17,17,17,0.94)_100%)]" />
         </div>
-        <h1 className="font-display text-3xl font-semibold leading-tight text-trail">
-          {selected.title}
-        </h1>
-        <p className="font-display text-base italic leading-snug text-ridge">{selected.summary}</p>
 
-        {/* Relevé de l'itinéraire — étiquettes mono, valeurs en serif */}
-        <dl className="grid grid-cols-2 border border-mist sm:grid-cols-4">
-          {[
-            {
-              label: t('trips.days'),
-              value: t('trips.days_count', { count: selected.duration_days }),
-            },
-            { label: t('trips.distance'), value: formatDistance(selected.distance_km, units) },
-            {
-              label: t('trips.elevation'),
-              value: formatElevation(selected.elevation_gain_m, units),
-            },
-            {
-              label: t('trips.per_day'),
-              value: formatDistance(selected.daily_distance_km, units),
-            },
-          ].map(({ label, value }) => (
-            <div
-              key={label}
-              className="flex flex-col gap-0.5 border-mist p-2.5 [&:not(:last-child)]:border-r"
-            >
-              <dt className="label-mono text-fog">{label}</dt>
-              <dd className="font-display text-xl font-semibold leading-none text-trail">
-                {value}
-              </dd>
+        <div className="relative flex min-h-[22rem] flex-col justify-end gap-4 p-4 sm:min-h-[26rem] sm:p-6">
+          <div className="absolute inset-x-4 top-4 flex items-center justify-between sm:inset-x-6 sm:top-5">
+            <p className="label-mono flex items-center gap-2 border border-cloud/30 bg-trail/80 py-1 pl-1 pr-2.5 text-cloud">
+              {/* Carte et règle — l'outil de celui qui relève un itinéraire */}
+              <img
+                src="/vire/vire_nav-carte.webp"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                className="h-6 w-6 shrink-0 rounded-full border border-cloud/40 object-cover"
+              />
+              {t('itineraire.plate')}
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="label-mono border border-cloud/30 bg-trail/80 px-2 py-1 text-gold">
+                {t(`mode.${selected.mode}`)}
+              </span>
+              <DifficultyBadge level={selected.difficulty} />
             </div>
-          ))}
-        </dl>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h1 className="font-display text-3xl font-semibold leading-tight text-cloud sm:text-5xl">
+              {selected.title}
+            </h1>
+            <p className="max-w-2xl font-display text-base italic leading-snug text-sky sm:text-lg">
+              {selected.summary}
+            </p>
+          </div>
+
+          {/* Relevé de l'itinéraire — étiquettes mono, valeurs en serif, sur l'encre */}
+          <dl className="grid grid-cols-2 divide-cloud/25 border-y border-cloud/30 sm:grid-cols-4 sm:divide-x">
+            {[
+              {
+                label: t('trips.days'),
+                value: t('trips.days_count', { count: selected.duration_days }),
+              },
+              { label: t('trips.distance'), value: formatDistance(selected.distance_km, units) },
+              {
+                label: t('trips.elevation'),
+                value: formatElevation(selected.elevation_gain_m, units),
+              },
+              {
+                label: t('trips.per_day'),
+                value: formatDistance(selected.daily_distance_km, units),
+              },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex flex-col gap-0.5 px-2.5 py-2.5">
+                <dt className="label-mono text-cloud/65">{label}</dt>
+                <dd className="font-display text-xl font-semibold leading-none text-cloud">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </header>
 
       <MapView
@@ -196,12 +226,12 @@ export function TripPage() {
         onSelectDay={setSelectedDay}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
         <button
           type="button"
           onClick={onSave}
           disabled={isSaved}
-          className="cta-plate flex min-h-11 items-center gap-2 px-4 py-2.5 disabled:translate-y-0 disabled:bg-pine disabled:text-snow"
+          className="cta-plate flex min-h-11 items-center justify-center gap-2 px-4 py-2.5 disabled:translate-y-0 disabled:bg-pine disabled:text-snow"
         >
           <Bookmark size={16} aria-hidden="true" />
           {isSaved ? t('trips.saved') : t('trips.save')}
@@ -210,7 +240,7 @@ export function TripPage() {
         <button
           type="button"
           onClick={onShare}
-          className="cta-plate-ghost flex min-h-11 items-center gap-2 px-4 py-2.5"
+          className="cta-plate-ghost flex min-h-11 items-center justify-center gap-2 px-4 py-2.5"
         >
           <Share2 size={16} aria-hidden="true" />
           {copied ? t('trips.copied') : t('trips.share')}
@@ -237,57 +267,6 @@ export function TripPage() {
         </div>
       )}
 
-      {(selected.budget || (selected.co2_kg !== undefined && selected.co2_kg > 0)) && (
-        <section
-          aria-labelledby="budget-title"
-          className="flex flex-col gap-3 rounded-trip border border-mist bg-snow p-5"
-        >
-          <h2 id="budget-title" className="flex items-center gap-2 font-display text-xl font-bold text-trail">
-            <Wallet size={18} className="text-summit" aria-hidden="true" />
-            {t('budget.title')}
-          </h2>
-          {selected.budget && (
-            <dl className="flex flex-col gap-1.5 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-ridge">{t('budget.fuel')}</dt>
-                <dd className="font-mono text-trail">{selected.budget.fuel_eur} €</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ridge">{t('budget.tolls')}</dt>
-                <dd className="font-mono text-trail">{eurRange(selected.budget.tolls_eur)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ridge">{t('budget.nights')}</dt>
-                <dd className="font-mono text-trail">{eurRange(selected.budget.nights_eur)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ridge">{t('budget.meals')}</dt>
-                <dd className="font-mono text-trail">{eurRange(selected.budget.meals_eur)}</dd>
-              </div>
-              {selected.budget.activities_eur > 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-ridge">{t('budget.activities')}</dt>
-                  <dd className="font-mono text-trail">{selected.budget.activities_eur} €</dd>
-                </div>
-              )}
-              <div className="mt-1 flex justify-between border-t border-mist pt-2 font-semibold">
-                <dt className="text-trail">{t('budget.total')}</dt>
-                <dd className="font-mono text-trail">{eurRange(selected.budget.total_eur)}</dd>
-              </div>
-            </dl>
-          )}
-          {selected.co2_kg !== undefined && selected.co2_kg > 0 && (
-            <p className="flex items-center gap-1.5 text-sm text-ridge">
-              <Leaf size={15} className="text-pine" aria-hidden="true" />
-              <span>
-                {t('budget.co2')} <strong className="font-mono">≈ {selected.co2_kg} kg CO₂e</strong>
-              </span>
-            </p>
-          )}
-          <p className="text-xs text-fog">{t('budget.note')}</p>
-        </section>
-      )}
-
       {selected.days && selected.days.length > 0 && (
         <>
           <WeatherStrip trip={selected} plan={plan} />
@@ -297,10 +276,8 @@ export function TripPage() {
               type="button"
               onClick={() => setEditing(!editing)}
               aria-pressed={editing}
-              className={`flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
-                editing
-                  ? 'border-summit bg-summit/10 text-copper-deep'
-                  : 'border-mist text-trail hover:border-summit'
+              className={`flex min-h-11 items-center gap-2 px-4 py-2.5 ${
+                editing ? 'cta-plate' : 'cta-plate-ghost'
               }`}
             >
               <Pencil size={15} aria-hidden="true" />
@@ -363,6 +340,58 @@ export function TripPage() {
           />
         </>
       )}
+
+      {(selected.budget || (selected.co2_kg !== undefined && selected.co2_kg > 0)) && (
+        <section
+          aria-labelledby="budget-title"
+          className="flex flex-col gap-3 rounded-trip border border-mist bg-snow p-5"
+        >
+          <h2 id="budget-title" className="flex items-center gap-2 font-display text-xl font-bold text-trail">
+            <Wallet size={18} className="text-summit" aria-hidden="true" />
+            {t('budget.title')}
+          </h2>
+          {selected.budget && (
+            <dl className="flex flex-col gap-1.5 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.fuel')}</dt>
+                <dd className="font-mono text-trail">{selected.budget.fuel_eur} €</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.tolls')}</dt>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.tolls_eur)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.nights')}</dt>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.nights_eur)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ridge">{t('budget.meals')}</dt>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.meals_eur)}</dd>
+              </div>
+              {selected.budget.activities_eur > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-ridge">{t('budget.activities')}</dt>
+                  <dd className="font-mono text-trail">{selected.budget.activities_eur} €</dd>
+                </div>
+              )}
+              <div className="mt-1 flex justify-between border-t border-mist pt-2 font-semibold">
+                <dt className="text-trail">{t('budget.total')}</dt>
+                <dd className="font-mono text-trail">{eurRange(selected.budget.total_eur)}</dd>
+              </div>
+            </dl>
+          )}
+          {selected.co2_kg !== undefined && selected.co2_kg > 0 && (
+            <p className="flex items-center gap-1.5 text-sm text-ridge">
+              <Leaf size={15} className="text-pine" aria-hidden="true" />
+              <span>
+                {t('budget.co2')} <strong className="font-mono">≈ {selected.co2_kg} kg CO₂e</strong>
+              </span>
+            </p>
+          )}
+          <p className="text-xs text-fog">{t('budget.note')}</p>
+        </section>
+      )}
+
 
       {(!selected.days || selected.days.length === 0) && (
       <section aria-labelledby="waypoints-title" className="flex flex-col gap-2">

@@ -35,10 +35,8 @@ export function GPXExportButton({ tripId, title }: Props) {
       onClick={onClick}
       disabled={state === 'downloading'}
       title={allowed ? t('gpx.export') : t('gpx.locked')}
-      className={`flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
-        allowed
-          ? 'bg-pine text-snow hover:bg-pine/90'
-          : 'border border-mist text-fog hover:border-summit'
+      className={`flex min-h-11 items-center justify-center gap-2 px-4 py-2.5 ${
+        allowed ? 'cta-plate-ghost' : 'cta-plate-ghost text-fog'
       }`}
     >
       <Download size={16} aria-hidden="true" className={state === 'downloading' ? 'animate-bounce' : ''} />
