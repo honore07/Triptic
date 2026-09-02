@@ -601,5 +601,11 @@
     "error_not_an_image": "Diese Datei ist kein Bild.",
     "error_too_large": "Bild zu groß — wähle eine Datei unter 12 MB.",
     "error_unreadable": "Dieses Bild konnte nicht gelesen werden."
+  },
+  "public": {
+    "plate": "Eine geteilte Linie",
+    "loading": "Linie wird geladen…",
+    "pitch": "Beschreib dein Abenteuer. Drei ähnliche Linien, nie identisch. Du wählst, du fährst.",
+    "cta": "Meine eigene ziehen"
   }
 }

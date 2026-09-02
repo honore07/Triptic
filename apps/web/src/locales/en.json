@@ -601,5 +601,11 @@
     "error_not_an_image": "That file is not an image.",
     "error_too_large": "Image too heavy — pick a file under 12 MB.",
     "error_unreadable": "That image could not be read."
+  },
+  "public": {
+    "plate": "A shared line",
+    "loading": "Loading the line…",
+    "pitch": "Describe your adventure. Three close lines, never identical. You choose, you go.",
+    "cta": "Trace my own"
   }
 }
