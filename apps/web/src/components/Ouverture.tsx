@@ -44,7 +44,7 @@ export function Ouverture({ onStart }: OuvertureProps) {
         alt=""
         aria-hidden="true"
         fetchPriority="high"
-        className="absolute inset-0 h-full w-full object-cover grayscale contrast-110 brightness-[0.72]"
+        className="settle-back absolute inset-0 h-full w-full object-cover grayscale contrast-110 brightness-[0.72]"
       />
       {/* Voile d'encre — dimensionné pour le PIRE cas (ciel clair derrière la
        * signature) : 50 % d'encre au centre plafonnent le fond sous #5F5F5F,
@@ -58,7 +58,7 @@ export function Ouverture({ onStart }: OuvertureProps) {
       <div className="relative flex flex-1 flex-col items-center justify-center px-6 text-center">
         <h1
           id="ouverture-title"
-          className="fade-up font-display text-6xl font-semibold leading-none text-cloud sm:text-7xl"
+          className="title-breathe font-display text-6xl font-semibold leading-none text-cloud sm:text-7xl"
           // Le tracking pousse la marque vers la gauche : l'indentation
           // compense la chasse ajoutée après le E pour rester centré.
           style={{ letterSpacing: '0.3em', textIndent: '0.3em' }}
@@ -67,7 +67,7 @@ export function Ouverture({ onStart }: OuvertureProps) {
         </h1>
         <p
           className="fade-up label-mono mt-5 text-sky"
-          style={{ animationDelay: '140ms' }}
+          style={{ animationDelay: '700ms' }}
         >
           {t('ouverture.tagline')}
         </p>
@@ -81,7 +81,7 @@ export function Ouverture({ onStart }: OuvertureProps) {
           type="button"
           onClick={onStart}
           className="cta-plate fade-up flex min-h-13 w-full items-center justify-center px-6 py-4"
-          style={{ animationDelay: '220ms' }}
+          style={{ animationDelay: '1000ms' }}
         >
           {t('ouverture.cta')}
         </button>

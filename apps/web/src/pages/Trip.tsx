@@ -142,7 +142,7 @@ export function TripPage() {
        * c'est le terrain, la seule image non gravée avec la carte. Le relevé
        * se pose sur l'encre du bas ; sans photo, le tracé se dessine sur
        * l'encre. */}
-      <header className="relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
+      <header className="hero-open relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
         <div aria-hidden="true" className="absolute inset-0">
           {selected.photo_url ? (
             <img

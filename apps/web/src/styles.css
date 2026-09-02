@@ -551,3 +551,156 @@ body {
 .triptych::-webkit-scrollbar {
   display: none;
 }
+
+
+/* ---------- Mouvements signature — l'épreuve, la plume, la crête ---------- */
+
+/* L'épreuve sort de la presse : la planche se révèle par un balayage du
+ * bas vers le haut (clip-path), l'image en dessous glisse à peine dans le
+ * sens inverse. Cadence par --i (0, 1, 2…). */
+@keyframes ink-reveal {
+  from {
+    clip-path: inset(100% 0 0 0);
+    transform: translateY(12px);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+  }
+}
+/* `backwards` : une fois révélée, la planche ne garde aucun clip — ses
+ * éléments en marge négative (tête d'étape plein cadre) restent entiers. */
+.ink-reveal {
+  animation: ink-reveal 720ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 120ms);
+}
+
+/* La montée se dresse depuis le sol (profil d'étape). */
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.bar-grow {
+  transform-origin: bottom;
+  animation: bar-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Le tracé se dessine à la plume (aperçu SVG des vires et de l'itinéraire). */
+@keyframes route-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.route-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: route-draw 1600ms cubic-bezier(0.4, 0, 0.2, 1) 200ms both;
+}
+.route-dot {
+  animation: fade-up 400ms ease-out both;
+  animation-delay: 1500ms;
+}
+
+/* Le titre de l'ouverture s'écarte en respirant : les lettres arrivent
+ * serrées et trouvent leur chasse, la marque se pose. */
+@keyframes title-breathe {
+  from {
+    opacity: 0;
+    letter-spacing: 0.08em;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.3em;
+    filter: blur(0);
+  }
+}
+.title-breathe {
+  animation: title-breathe 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* La cime respire : très lent zoom arrière au chargement, comme si l'on
+ * reculait d'un pas devant la gravure. */
+@keyframes settle-back {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.settle-back {
+  animation: settle-back 6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: 50% 35%;
+}
+
+/* Texte qui monte derrière un cache (question de l'accueil) : la ligne
+ * sort d'une fente, comme une ligne imprimée qui apparaît. */
+.mask-reveal {
+  overflow: hidden;
+}
+@keyframes mask-up {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.mask-reveal > * {
+  display: block;
+  animation: mask-up 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 110ms);
+}
+
+/* Tête d'itinéraire liée au défilement : la photo commence en épreuve
+ * posée sur le papier (marges) et s'ouvre plein cadre quand on descend.
+ * Navigateurs sans animation-timeline : la tête est simplement plein cadre. */
+@supports (animation-timeline: scroll()) {
+  @keyframes hero-open {
+    from {
+      clip-path: inset(0 5% 0 5%);
+      transform: scale(0.97);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+      transform: scale(1);
+    }
+  }
+  .hero-open {
+    animation: hero-open linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 260px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-open,
+  .settle-back,
+  .hero-drift,
+  .plate-photo,
+  .trace-draw {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .ink-reveal,
+  .mask-reveal > *,
+  .bar-grow,
+  .route-draw,
+  .route-dot,
+  .title-breathe {
+    animation: none !important;
+    clip-path: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    stroke-dashoffset: 0 !important;
+  }
+}

@@ -180,8 +180,8 @@ export function Home() {
       {/* La saisie se pose en bas du premier écran, sur le fond */}
       <section className="flex min-h-[max(26rem,66svh)] flex-col justify-end">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-10">
-          <h1 className="fade-up font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
-            {question}
+          <h1 className="mask-reveal font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl">
+            <span>{question}</span>
           </h1>
 
           <form
