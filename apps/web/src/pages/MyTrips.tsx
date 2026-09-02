@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Trip, TripMode } from '@triptic/shared';
@@ -184,41 +184,54 @@ export function MyTrips() {
       )}
 
       {state.status === 'ready' && shown.length > 0 && (
-        <ul className="flex flex-col">
-          {shown.map((trip) => {
+        // Chaque carnet est une planche : la photo de couverture (le terrain)
+        // en tonalité gravure, qui prend ses couleurs au survol ; le relevé
+        // imprimé dessous.
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {shown.map((trip, i) => {
             const meta = trip.metadata;
+            const hasPhoto = Boolean(trip.cover_photo);
             return (
-              <li key={trip.id}>
+              <li
+                key={trip.id}
+                className="ink-reveal"
+                style={{ '--i': Math.min(i, 6) } as CSSProperties}
+              >
                 <Link
                   to={`/trips/${trip.id}`}
                   aria-label={t('my_trips.open', { title: trip.title })}
-                  className="flex items-center gap-3 border border-b-0 border-mist bg-snow p-3 transition-colors last:border-b hover:bg-sky"
+                  className="plate-hover triptych-plate flex h-full flex-col border border-mist bg-snow text-trail"
+                  style={{ minHeight: 0 }}
                 >
-                  <img
-                    src={trip.cover_photo ?? MODE_ENGRAVING[trip.mode] ?? MODE_ENGRAVING.roadtrip}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    className="h-14 w-20 shrink-0 border border-mist object-cover"
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="label-mono flex items-center gap-1.5 text-fog">
-                      {formatDate(trip.updated_at)} · {t(`mode.${trip.mode}`)}
-                      <span className={`px-1.5 py-0.5 ${STATUS_STYLES[trip.status]}`}>
-                        {t(`my_trips.status_${trip.status}`)}
-                      </span>
-                    </span>
-                    <span className="truncate font-display text-lg font-semibold text-trail">
-                      {trip.title}
+                  <span className="relative block h-36 w-full overflow-hidden border-b border-mist bg-trail">
+                    <img
+                      src={trip.cover_photo ?? MODE_ENGRAVING[trip.mode] ?? MODE_ENGRAVING.roadtrip}
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                      className={`h-full w-full object-cover ${hasPhoto ? 'plate-photo' : 'opacity-90'}`}
+                    />
+                    <span
+                      className={`label-mono absolute left-0 top-0 border-b border-r border-mist px-2 py-1 ${STATUS_STYLES[trip.status]}`}
+                    >
+                      {t(`my_trips.status_${trip.status}`)}
                     </span>
                   </span>
-                  <span className="flex shrink-0 flex-col items-end gap-0.5 font-mono text-xs text-ridge">
-                    {Number.isFinite(meta.distance_km) && (
-                      <span>{formatDistance(meta.distance_km, units)}</span>
-                    )}
-                    {Number.isFinite(meta.elevation_gain_m) && (
-                      <span className="text-fog">+ {formatElevation(meta.elevation_gain_m, units)}</span>
-                    )}
+                  <span className="flex flex-1 flex-col gap-1 p-3">
+                    <span className="label-mono text-fog">
+                      {formatDate(trip.updated_at)} · {t(`mode.${trip.mode}`)}
+                    </span>
+                    <span className="line-clamp-2 font-display text-xl font-semibold leading-tight text-trail">
+                      {trip.title}
+                    </span>
+                    <span className="mt-auto flex gap-3 pt-2 font-mono text-xs text-ridge">
+                      {Number.isFinite(meta.distance_km) && (
+                        <span>{formatDistance(meta.distance_km, units)}</span>
+                      )}
+                      {Number.isFinite(meta.elevation_gain_m) && (
+                        <span className="text-fog">+ {formatElevation(meta.elevation_gain_m, units)}</span>
+                      )}
+                    </span>
                   </span>
                 </Link>
               </li>

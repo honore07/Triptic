@@ -482,7 +482,11 @@
     "practicable": "practicable",
     "with_warning": "possible, with a warning",
     "season_note": "Activities shown filled in are the ones the season makes practicable. The others stay available, with a warning.",
-    "cta": "Continue"
+    "cta": "Continue",
+    "presets_label": "Shortcuts",
+    "preset_weekend": "This weekend",
+    "preset_week": "One week",
+    "preset_none": "No dates"
   },
   "group": {
     "solo": "Alone",

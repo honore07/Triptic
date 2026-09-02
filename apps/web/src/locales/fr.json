@@ -482,7 +482,11 @@
     "practicable": "praticable",
     "with_warning": "proposable avec un avertissement",
     "season_note": "Les activités affichées en plein sont celles que la saison rend praticables. Les autres restent proposables, avec un avertissement.",
-    "cta": "Continuer"
+    "cta": "Continuer",
+    "presets_label": "Raccourcis",
+    "preset_weekend": "Ce week-end",
+    "preset_week": "Une semaine",
+    "preset_none": "Sans dates"
   },
   "group": {
     "solo": "Seul",

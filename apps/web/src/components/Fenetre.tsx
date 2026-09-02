@@ -78,6 +78,37 @@ export function Fenetre({ onConfirm, disabled = false }: FenetreProps) {
     setEnd(value);
   };
 
+  /** Le samedi qui vient (ou celui d'après si on est déjà samedi soir). */
+  const nextSaturday = () => {
+    const d = new Date(today);
+    const delta = (6 - mondayIndex(d) + 7) % 7 || 7;
+    d.setDate(d.getDate() + (mondayIndex(d) === 5 ? 7 : delta));
+    return d;
+  };
+  const addDays = (d: Date, n: number) => {
+    const c = new Date(d);
+    c.setDate(c.getDate() + n);
+    return c;
+  };
+  /** Raccourcis : une fenêtre en un tap — le calendrier reste là pour affiner. */
+  const presets: Array<{ key: 'weekend' | 'week' | 'none'; from: Date | null; to: Date | null }> = [
+    { key: 'weekend', from: nextSaturday(), to: addDays(nextSaturday(), 1) },
+    { key: 'week', from: nextSaturday(), to: addDays(nextSaturday(), 7) },
+    { key: 'none', from: null, to: null },
+  ];
+  const [preset, setPreset] = useState<'weekend' | 'week' | 'none' | null>(null);
+  const applyPreset = (key: 'weekend' | 'week' | 'none', from: Date | null, to: Date | null) => {
+    setPreset(key);
+    if (!from || !to) {
+      setStart(null);
+      setEnd(null);
+      return;
+    }
+    setStart(iso(from));
+    setEnd(iso(to));
+    setCursor(new Date(from.getFullYear(), from.getMonth(), 1));
+  };
+
   const nights = start && end ? (tripDurationDays(start, end) ?? 1) - 1 : null;
   const season = start ? seasonForDate(start) : null;
 
@@ -105,6 +136,33 @@ export function Fenetre({ onConfirm, disabled = false }: FenetreProps) {
             {t('fenetre.title')}
           </h2>
         </div>
+      </div>
+
+      {/* Raccourcis — une fenêtre en un tap, le calendrier pour affiner */}
+      <div role="group" aria-label={t('fenetre.presets_label')} className="flex border border-mist">
+        {presets.map(({ key, from, to }, i) => {
+          // Un raccourci ne reste marqué que tant que la fenêtre est celle
+          // qu'il a posée — retoucher le calendrier le relâche.
+          const on =
+            preset === key &&
+            (key === 'none'
+              ? !start && !end
+              : Boolean(from && to && start === iso(from) && end === iso(to)));
+          return (
+            <button
+              key={key}
+              type="button"
+              disabled={disabled}
+              aria-pressed={on}
+              onClick={() => applyPreset(key, from, to)}
+              className={`min-h-11 min-w-0 flex-1 px-2 font-mono text-[10px] font-medium uppercase tracking-[0.12em] transition-colors ${
+                i > 0 ? 'border-l border-mist' : ''
+              } ${on ? 'bg-summit text-snow' : 'bg-snow text-trail hover:bg-sky'}`}
+            >
+              {t(`fenetre.preset_${key}`)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Navigation de mois */}

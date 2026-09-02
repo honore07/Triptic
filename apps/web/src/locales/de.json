@@ -482,7 +482,11 @@
     "practicable": "machbar",
     "with_warning": "möglich, mit Hinweis",
     "season_note": "Ausgefüllt dargestellte Aktivitäten macht die Saison machbar. Die übrigen bleiben möglich, mit Hinweis.",
-    "cta": "Weiter"
+    "cta": "Weiter",
+    "presets_label": "Schnellwahl",
+    "preset_weekend": "Dieses Wochenende",
+    "preset_week": "Eine Woche",
+    "preset_none": "Ohne Datum"
   },
   "group": {
     "solo": "Allein",
