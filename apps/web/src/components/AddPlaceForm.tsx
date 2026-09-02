@@ -88,19 +88,19 @@ export function AddPlaceForm() {
   };
 
   const inputClass =
-    'w-full rounded-xl border border-mist bg-snow px-3 py-2.5 text-sm text-trail placeholder:text-fog focus:border-summit focus:outline-none focus:ring-2 focus:ring-summit/30';
+    'w-full border border-mist bg-snow px-3 py-2.5 text-sm text-trail placeholder:text-fog';
 
   return (
     <section
       aria-labelledby="add-place-title"
-      className="fade-up rounded-trip border border-mist bg-snow p-5 shadow-lg sm:p-6"
+      className="ink-reveal border border-mist bg-snow p-5 shadow-[6px_6px_0_rgba(34,34,34,0.9)] sm:p-6"
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold/20">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-mist bg-terrain">
           <MapPinPlus size={18} className="text-copper-deep" aria-hidden="true" />
         </span>
         <div>
-          <h2 id="add-place-title" className="font-display text-lg font-bold text-trail">
+          <h2 id="add-place-title" className="font-display text-2xl font-semibold leading-tight text-trail">
             {t('places.title')}
           </h2>
           <p className="text-xs text-ridge">{t('places.hint')}</p>
