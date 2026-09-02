@@ -39,7 +39,7 @@ export function Profil() {
 
       {/* Identité — la gravure du sac tient lieu de portrait tant qu'aucune
        * photo n'a été choisie. */}
-      <div className="fade-up flex flex-col gap-3">
+      <div className="ink-reveal flex flex-col gap-3 border border-mist bg-snow p-4">
         <h1 className="truncate font-display text-3xl font-semibold leading-tight text-trail">
           {email ?? t('profil.anonymous')}
         </h1>
@@ -89,7 +89,7 @@ export function Profil() {
       {/* Véhicule enregistré — raccourci vers PL.13 */}
       <Link
         to="/vehicule"
-        className="flex items-center gap-3 border border-mist bg-snow p-3 transition-colors hover:bg-sky"
+        className="plate-hover flex items-center gap-3 border border-mist bg-snow p-3"
       >
         <Caravan size={20} className="shrink-0 text-summit" aria-hidden="true" />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
