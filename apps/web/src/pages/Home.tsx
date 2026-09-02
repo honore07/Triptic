@@ -57,6 +57,12 @@ export function Home() {
   // Reprise des carnets — silencieuse : l'accueil reste utilisable si l'API
   // est injoignable (hors ligne, serveur local éteint).
   useEffect(() => {
+    // Auth configurée et personne de connecté : la liste répondrait 401 —
+    // on ne la demande pas, les inspirations tiennent l'accueil.
+    if (supabase && !email) {
+      setRecent([]);
+      return;
+    }
     let alive = true;
     void listTrips(plan)
       .then((trips) => {
@@ -66,7 +72,7 @@ export function Home() {
     return () => {
       alive = false;
     };
-  }, [plan]);
+  }, [plan, email]);
 
   const start = (text: string) => {
     const trimmed = text.trim();
