@@ -384,24 +384,96 @@ export async function findTripPhoto(keywords: string[]): Promise<string | null> 
   return null;
 }
 
+/** Un point du trip où une photo prise sur place a du sens. */
+export interface CoverAnchor {
+  title: string;
+  lat: number;
+  lng: number;
+}
+
+interface CoverTrip {
+  waypoints: { name: string; lat: number; lng: number; kind?: string | undefined }[];
+  days?:
+    | { activities: { type: string; title: string; lat: number; lng: number }[] }[]
+    | undefined;
+}
+
 /**
- * Photo par étape (roadmap 2.3) : une requête par jour, mots-clés = temps
- * fort du jour + région du trip. Appelé pour UN SEUL trip (le premier
- * visible) afin de rester dans les quotas Unsplash/Pexels. Sans clé API,
- * findTripPhoto répond null immédiatement — fallback dégradé côté UI.
+ * Points d'ancrage d'une couverture, du plus parlant au moins parlant : les
+ * randos et visites des journées (le temps fort), puis les étapes du tracé
+ * hors départ/arrivée (souvent une ville ou une gare), puis le reste.
+ * Deux points à moins de ~300 m comptent pour un seul.
+ */
+export function coverAnchors(trip: CoverTrip): CoverAnchor[] {
+  const ordered: CoverAnchor[] = [];
+  for (const day of trip.days ?? []) {
+    for (const a of day.activities) {
+      if (a.type === 'hike' || a.type === 'visit') ordered.push({ title: a.title, lat: a.lat, lng: a.lng });
+    }
+  }
+  const stages = trip.waypoints.filter((w) => w.kind !== 'start' && w.kind !== 'end');
+  for (const w of [...stages, ...trip.waypoints]) {
+    ordered.push({ title: w.name, lat: w.lat, lng: w.lng });
+  }
+  const picked: CoverAnchor[] = [];
+  for (const a of ordered) {
+    if (!Number.isFinite(a.lat) || !Number.isFinite(a.lng)) continue;
+    const dup = picked.some((p) => Math.abs(p.lat - a.lat) < 0.003 && Math.abs(p.lng - a.lng) < 0.003);
+    if (!dup) picked.push(a);
+  }
+  return picked;
+}
+
+/** Photo prise sur place pour un point, filtrée par l'agent photo — ou null. */
+async function photoAt(anchor: CoverAnchor, provider: LlmProvider | null): Promise<string | null> {
+  const candidates = await findCommonsMedia(anchor.lat, anchor.lng, 6);
+  if (candidates.length === 0) return null;
+  const useful = await filterUsefulPhotos(anchor.title, candidates, provider);
+  return useful.find((m) => m.type === 'photo')?.url ?? null;
+}
+
+/**
+ * Couverture d'un trip : d'abord une photo RÉELLEMENT prise sur l'un de ses
+ * temps forts (Commons par coordonnées — un trip Vosges recevait Annecy et
+ * les Alpes par mots-clés), sinon la recherche par mots-clés de région.
+ * Deux ancrages au plus par trip : Commons limite les rafales.
+ */
+export async function findTripCover(
+  trip: CoverTrip,
+  keywords: string[],
+  provider: LlmProvider | null = null,
+): Promise<string | null> {
+  for (const anchor of coverAnchors(trip).slice(0, 2)) {
+    const url = await photoAt(anchor, provider);
+    if (url) return url;
+  }
+  return findTripPhoto(keywords);
+}
+
+/**
+ * Photo par étape (roadmap 2.3) : le temps fort du jour (rando ou visite),
+ * cherché sur place par ses coordonnées ; à défaut, mots-clés = temps fort
+ * + région du trip. Appelé pour UN SEUL trip (le premier visible) afin de
+ * rester dans les quotas, et jour après jour pour ne pas mitrailler Commons.
  */
 export async function findDayPhotos(
-  days: { title: string; activities: { type: string; title: string }[]; photo_url?: string | undefined }[],
+  days: {
+    title: string;
+    activities: { type: string; title: string; lat?: number | undefined; lng?: number | undefined }[];
+    photo_url?: string | undefined;
+  }[],
   baseKeywords: string[],
+  provider: LlmProvider | null = null,
 ): Promise<void> {
   const region = baseKeywords[0] ?? '';
-  await Promise.all(
-    days.map(async (day) => {
-      const highlight =
-        day.activities.find((a) => a.type === 'hike' || a.type === 'visit') ??
-        day.activities[0];
-      if (!highlight) return;
-      day.photo_url = (await findTripPhoto([region, highlight.title])) ?? undefined;
-    }),
-  );
+  for (const day of days) {
+    const highlight =
+      day.activities.find((a) => a.type === 'hike' || a.type === 'visit') ?? day.activities[0];
+    if (!highlight) continue;
+    let url: string | null = null;
+    if (typeof highlight.lat === 'number' && typeof highlight.lng === 'number') {
+      url = await photoAt({ title: highlight.title, lat: highlight.lat, lng: highlight.lng }, provider);
+    }
+    day.photo_url = (url ?? (await findTripPhoto([region, highlight.title]))) ?? undefined;
+  }
 }

@@ -14,7 +14,7 @@ import { SEARCHABLE_KINDS } from './places.js';
 import { filtersFromText } from '../services/exploreFilters.js';
 import { recomputeTrip } from '../services/recompute.js';
 import { applyTripEstimates } from '../services/budget.js';
-import { findDayPhotos, findTripPhoto } from '../services/photos.js';
+import { findDayPhotos, findTripCover } from '../services/photos.js';
 import { enrichTripSegments } from '../services/segments.js';
 import { env } from '../env.js';
 import type { Quota } from '../services/quota.js';
@@ -187,7 +187,7 @@ export function createAiRouter(
         sseWrite(res, 'status', { step: 'photos' });
         await Promise.all(
           visible.map(async (trip) => {
-            trip.photo_url = (await findTripPhoto(trip.photo_keywords)) ?? undefined;
+            trip.photo_url = (await findTripCover(trip, trip.photo_keywords)) ?? undefined;
           }),
         );
         // Photos par étape (2.3) — uniquement le 1er trip (quotas API)
