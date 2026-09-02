@@ -73,7 +73,7 @@ export function Vehicule() {
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
-        <div className="fade-up flex flex-col gap-3">
+        <div className="ink-reveal flex flex-col gap-3 border border-mist bg-snow p-4">
           <PhotoPicker
             value={draft.photo}
             fallback="/vire/vire_char-sac.jpg"

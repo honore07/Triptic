@@ -80,14 +80,17 @@ export function AuthPage() {
 
   return (
     <main className="mx-auto w-full max-w-md px-4 pb-12 pt-2">
-      <section className="fade-up border border-mist bg-snow">
-        {/* Gravure d'aube sur la crête — décorative, le titre porte le sens */}
-        <img
-          src="/vire/vire_bandeau-aube.webp"
-          alt=""
-          aria-hidden="true"
-          className="h-40 w-full border-b border-mist object-cover sm:h-48"
-        />
+      <section className="ink-reveal border border-mist bg-snow">
+        {/* Gravure d'aube sur la crête — décorative, le titre porte le sens.
+         * Elle recule d'un pas à l'ouverture, comme la cime de l'entrée. */}
+        <span className="block h-40 w-full overflow-hidden border-b border-mist sm:h-48">
+          <img
+            src="/vire/vire_bandeau-aube.webp"
+            alt=""
+            aria-hidden="true"
+            className="settle-back h-full w-full object-cover"
+          />
+        </span>
 
         <div className="flex flex-col gap-5 px-5 py-6 sm:px-7">
           <div className="flex flex-col gap-2">

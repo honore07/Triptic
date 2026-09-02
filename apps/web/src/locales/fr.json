@@ -482,7 +482,11 @@
     "practicable": "praticable",
     "with_warning": "proposable avec un avertissement",
     "season_note": "Les activités affichées en plein sont celles que la saison rend praticables. Les autres restent proposables, avec un avertissement.",
-    "cta": "Continuer"
+    "cta": "Continuer",
+    "presets_label": "Raccourcis",
+    "preset_weekend": "Ce week-end",
+    "preset_week": "Une semaine",
+    "preset_none": "Sans dates"
   },
   "group": {
     "solo": "Seul",
@@ -597,5 +601,11 @@
     "error_not_an_image": "Ce fichier n’est pas une image.",
     "error_too_large": "Image trop lourde — choisis un fichier de moins de 12 Mo.",
     "error_unreadable": "Impossible de lire cette image."
+  },
+  "public": {
+    "plate": "Une vire partagée",
+    "loading": "Chargement de la vire…",
+    "pitch": "Décris ton aventure. Trois voies proches, jamais identiques. Tu choisis, tu pars.",
+    "cta": "Tracer la mienne"
   }
 }
