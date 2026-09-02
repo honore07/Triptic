@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TripProposal } from '@triptic/shared';
 import { MAP_COLORS } from '../lib/mapColors';
@@ -46,10 +47,10 @@ export function TripCard({ trip, onChoose, index = 0, active = false, onActivate
 
   return (
     <article
-      className={`trip-card-enter triptych-plate relative flex flex-col overflow-hidden border bg-trail text-cloud ${
+      className={`ink-reveal triptych-plate relative flex flex-col overflow-hidden border bg-trail text-cloud ${
         active ? 'is-active border-summit' : 'border-mist'
       }`}
-      style={{ animationDelay: `${index * 110}ms` }}
+      style={{ '--i': index } as CSSProperties}
       onClick={onActivate}
       aria-current={active ? 'true' : undefined}
     >

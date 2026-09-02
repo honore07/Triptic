@@ -3,9 +3,12 @@ import request from 'supertest';
 import { createApp } from '../app.js';
 import {
   clearGalleryCache,
+  coverAnchors,
   diversifyByAuthor,
   findCommonsMedia,
+  findDayPhotos,
   findPlacePhotos,
+  findTripCover,
   type PlaceMedia,
 } from '../services/photos.js';
 
@@ -253,5 +256,93 @@ describe('GET /api/photos', () => {
     const app = createApp({ provider: mockProvider });
     expect((await request(app).get('/api/photos?q=a')).status).toBe(400);
     expect((await request(app).get('/api/photos')).status).toBe(400);
+  });
+});
+
+describe('couvertures de trip par coordonnées', () => {
+  const commonsPayload = (title: string, url: string) => ({
+    query: {
+      pages: {
+        '1': {
+          title,
+          imageinfo: [{ thumburl: url, descriptionurl: 'https://commons.wikimedia.org/wiki/x' }],
+        },
+      },
+    },
+  });
+  const trip = {
+    waypoints: [
+      { name: 'Colmar', lat: 48.08, lng: 7.36, kind: 'start' },
+      { name: 'Col de la Schlucht', lat: 48.063, lng: 7.021, kind: 'stage' },
+      { name: 'Munster', lat: 48.04, lng: 7.14, kind: 'end' },
+    ],
+    days: [
+      {
+        activities: [
+          { type: 'drive', title: 'Route des Crêtes', lat: 48.06, lng: 7.02 },
+          { type: 'hike', title: 'Hohneck', lat: 48.03, lng: 7.0 },
+        ],
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    process.env['UNSPLASH_ACCESS_KEY'] = 'test-key';
+    delete process.env['PEXELS_API_KEY'];
+  });
+  afterEach(() => {
+    delete process.env['UNSPLASH_ACCESS_KEY'];
+    vi.unstubAllGlobals();
+  });
+
+  it('ancre d’abord le temps fort du jour, puis les étapes, jamais deux fois le même lieu', () => {
+    const anchors = coverAnchors(trip);
+    expect(anchors.map((a) => a.title)).toEqual([
+      'Hohneck',
+      'Col de la Schlucht',
+      'Colmar',
+      'Munster',
+    ]);
+  });
+
+  it('prend une photo prise sur place plutôt que la recherche par mots-clés', async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      url.includes('commons.wikimedia.org')
+        ? new Response(JSON.stringify(commonsPayload('File:Hohneck été.jpg', 'https://commons/hohneck.jpg')), { status: 200 })
+        : new Response(JSON.stringify(unsplashPayload), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await findTripCover(trip, ['vosges'])).toBe('https://commons/hohneck.jpg');
+    expect(fetchMock.mock.calls.every(([u]) => String(u).includes('commons'))).toBe(true);
+    // Le premier ancrage est le Hohneck (temps fort), pas la ville de départ
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('48.03%7C7');
+  });
+
+  it('sans photo sur place : repli sur les mots-clés de région, deux ancrages au plus', async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      url.includes('commons.wikimedia.org')
+        ? new Response(JSON.stringify({ query: { pages: {} } }), { status: 200 })
+        : new Response(JSON.stringify(unsplashPayload), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await findTripCover(trip, ['vosges'])).toBe('https://img/1-regular');
+    const commonsCalls = fetchMock.mock.calls.filter(([u]) => String(u).includes('commons'));
+    expect(commonsCalls).toHaveLength(2);
+  });
+
+  it('photo du jour : le temps fort cherché sur place, mots-clés à défaut', async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      url.includes('commons.wikimedia.org')
+        ? new Response(JSON.stringify(url.includes('48.03') ? commonsPayload('File:Hohneck.jpg', 'https://commons/j2.jpg') : { query: { pages: {} } }), { status: 200 })
+        : new Response(JSON.stringify(unsplashPayload), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const days: { title: string; activities: { type: string; title: string; lat: number; lng: number }[]; photo_url?: string }[] = [
+      { title: 'J1', activities: [{ type: 'drive', title: 'Route', lat: 48.06, lng: 7.02 }] },
+      { title: 'J2', activities: [{ type: 'hike', title: 'Hohneck', lat: 48.03, lng: 7.0 }] },
+    ];
+    await findDayPhotos(days, ['vosges']);
+    expect(days[1]?.photo_url).toBe('https://commons/j2.jpg');
+    expect(days[0]?.photo_url).toBe('https://img/1-regular');
   });
 });

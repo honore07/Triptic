@@ -125,9 +125,9 @@ export function Nuitee({ day, onAdd }: NuiteeProps) {
         <p className="text-sm text-ridge">{t('nuitee.empty')}</p>
       )}
 
-      <ul className="flex flex-col gap-2">
+      <ul className="grid gap-3 sm:grid-cols-2">
         {shown.map((place) => (
-          <li key={place.id} className="flex flex-col gap-3 border border-mist bg-snow p-3">
+          <li key={place.id} className="plate-hover ink-reveal flex flex-col gap-3 border border-mist bg-snow p-3">
             <div className="flex items-start gap-3">
               <img
                 src={KIND_ENGRAVING[place.kind] ?? KIND_ENGRAVING.camp}

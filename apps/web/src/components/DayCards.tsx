@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ActivityType, TripDay } from '@triptic/shared';
 import { formatDistance, formatElevation } from '../lib/units';
@@ -77,7 +77,7 @@ export function DayCards({ days, selectedDay, onSelectDay }: Props) {
         <span className="label-mono text-fog">{t('trips.days_count', { count: sorted.length })}</span>
       </div>
       <ol className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
-        {sorted.map((day) => {
+        {sorted.map((day, index) => {
           const selected = day.day === selectedDay;
           const type = dominantType(day);
           const dayDistance = (day.segments ?? []).reduce((s, seg) => s + seg.distance_km, 0);
@@ -86,7 +86,8 @@ export function DayCards({ days, selectedDay, onSelectDay }: Props) {
           return (
             <li
               key={day.day}
-              className="w-44 shrink-0 snap-start sm:w-52"
+              className="ink-reveal w-44 shrink-0 snap-start sm:w-52"
+              style={{ '--i': Math.min(index, 6) } as CSSProperties}
               ref={(el) => {
                 if (el) refs.current.set(day.day, el);
               }}

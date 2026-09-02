@@ -11,6 +11,7 @@ import {
 import { dateForTripDay, type ActivityType, type TripDay } from '@triptic/shared';
 import { formatDistance, formatElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
+import { thumbnailUrl } from './DayCards';
 
 const ACTIVITY_ICONS: Record<ActivityType, typeof Car> = {
   drive: Car,
@@ -44,10 +45,12 @@ interface EtapeProps {
 
 /**
  * Étape — planche PL.11 « ÉTAPE ».
- * La fiche d'une journée : relevé chiffré, profil des montées et déroulé des
- * temps forts. Le profil se lit sur les dénivelés réellement portés par les
- * activités — pas de courbe lissée qui suggérerait une précision qu'on n'a
- * pas (un vrai profil au point demanderait l'altimétrie serveur).
+ * La fiche d'une journée. La photo réelle du jour ouvre la planche quand
+ * elle existe (c'est le terrain), la gravure de l'objet du jour sinon ; puis
+ * le relevé chiffré, le profil des montées qui se dressent, et le déroulé des
+ * temps forts le long d'un filet, comme les heures d'un carnet de course.
+ * Le profil se lit sur les dénivelés réellement portés par les activités —
+ * pas de courbe lissée qui suggérerait une précision qu'on n'a pas.
  */
 export function Etape({ day, startDate }: EtapeProps) {
   const { t, i18n } = useTranslation();
@@ -78,28 +81,57 @@ export function Etape({ day, startDate }: EtapeProps) {
   ];
 
   return (
-    <section aria-labelledby="etape-title" className="fade-up flex flex-col gap-4">
-      <div className="flex items-center gap-3 border-b border-mist pb-3">
-        <img
-          src={ACTIVITY_ENGRAVINGS[type]}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          className="h-17 w-17 shrink-0 rounded-full border border-mist object-cover"
-        />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="label-mono text-fog">
-            {t('trips.day')} {String(day.day).padStart(2, '0')}
-            {dateLabel ? ` · ${dateLabel}` : ''}
-          </p>
-          <h2
-            id="etape-title"
-            className="font-display text-2xl font-semibold leading-tight text-trail"
-          >
-            {day.title}
-          </h2>
+    <section aria-labelledby="etape-title" className="ink-reveal flex flex-col gap-4">
+      {/* Tête de planche : la photo du jour, ou l'objet du jour en médaillon */}
+      {day.photo_url ? (
+        <header className="relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
+          <img
+            src={thumbnailUrl(day.photo_url, 1200)}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="hero-drift absolute inset-0 h-full w-full object-cover"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.15)_0%,rgba(17,17,17,0.35)_45%,rgba(17,17,17,0.92)_100%)]"
+          />
+          <div className="relative flex min-h-[15rem] flex-col justify-end gap-1 p-4 sm:min-h-[18rem] sm:p-5">
+            <p className="label-mono text-cloud/80">
+              {t('trips.day')} {String(day.day).padStart(2, '0')}
+              {dateLabel ? ` · ${dateLabel}` : ''}
+            </p>
+            <h2
+              id="etape-title"
+              className="font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl"
+            >
+              {day.title}
+            </h2>
+          </div>
+        </header>
+      ) : (
+        <div className="flex items-center gap-3 border-b border-mist pb-3">
+          <img
+            src={ACTIVITY_ENGRAVINGS[type]}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="h-17 w-17 shrink-0 rounded-full border border-mist object-cover"
+          />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <p className="label-mono text-fog">
+              {t('trips.day')} {String(day.day).padStart(2, '0')}
+              {dateLabel ? ` · ${dateLabel}` : ''}
+            </p>
+            <h2
+              id="etape-title"
+              className="font-display text-2xl font-semibold leading-tight text-trail"
+            >
+              {day.title}
+            </h2>
+          </div>
         </div>
-      </div>
+      )}
 
       <dl className="grid grid-cols-3 border border-mist">
         {releve.map(({ label, value }, i) => (
@@ -119,16 +151,20 @@ export function Etape({ day, startDate }: EtapeProps) {
             <p className="label-mono text-fog">{t('etape.profile')}</p>
             <p className="label-mono text-fog">{formatElevation(maxGain, units)} max</p>
           </div>
+          {/* Les montées se dressent l'une après l'autre, depuis la ligne de sol */}
           <ul className="flex h-24 items-end gap-1.5 border-b border-mist">
-            {climbs.map((climb) => (
+            {climbs.map((climb, n) => (
               <li
                 key={climb.i}
                 className="flex flex-1 flex-col items-center justify-end"
                 title={`${climb.title} — ${climb.gain} m`}
               >
                 <span
-                  className="w-full bg-summit"
-                  style={{ height: `${Math.max(6, (climb.gain / maxGain) * 100)}%` }}
+                  className="bar-grow w-full bg-summit"
+                  style={{
+                    height: `${Math.max(6, (climb.gain / maxGain) * 100)}%`,
+                    animationDelay: `${120 + n * 90}ms`,
+                  }}
                 />
                 <span className="sr-only">
                   {climb.title} — {climb.gain} m
@@ -140,14 +176,21 @@ export function Etape({ day, startDate }: EtapeProps) {
         </div>
       )}
 
-      <ol className="flex flex-col">
+      {/* Le déroulé du jour, le long d'un filet — chaque temps fort est un
+       * point rouille sur la ligne, comme une heure relevée au carnet. */}
+      <ol className="relative flex flex-col border-l border-mist pl-5">
         {day.activities.map((activity, i) => {
           const Icon = ACTIVITY_ICONS[activity.type] ?? Bike;
           return (
             <li
               key={i}
-              className="flex items-start gap-3 border-b border-mist py-3 last:border-b-0"
+              className="fade-up relative flex items-start gap-3 border-b border-mist py-3 last:border-b-0"
+              style={{ animationDelay: `${160 + i * 70}ms` }}
             >
+              <span
+                aria-hidden="true"
+                className="absolute -left-[1.45rem] top-4 h-2.5 w-2.5 rounded-full border border-mist bg-summit"
+              />
               <Icon size={16} className="mt-1 shrink-0 text-summit" aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p className="label-mono text-fog">

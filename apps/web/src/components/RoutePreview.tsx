@@ -40,10 +40,17 @@ export function RoutePreview({ waypoints, className = '', stroke = MAP_COLORS.su
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeDasharray="0.1 4"
+        pathLength={1}
+        className="route-draw"
       />
       <circle cx={toX(first.lng)} cy={toY(first.lat)} r="3" fill={MAP_COLORS.pine} />
-      <circle cx={toX(last.lng)} cy={toY(last.lat)} r="3" fill={MAP_COLORS.storm} />
+      <circle
+        cx={toX(last.lng)}
+        cy={toY(last.lat)}
+        r="3"
+        fill={MAP_COLORS.storm}
+        className="route-dot"
+      />
     </svg>
   );
 }
