@@ -83,7 +83,10 @@
     "engagement_2": "Machbar",
     "engagement_3": "Fordernd",
     "engagement_4": "Anspruchsvoll",
-    "engagement_5": "Hart"
+    "engagement_5": "Hart",
+    "refine": "Anfrage verfeinern",
+    "refine_open": "Öffnen",
+    "refine_close": "Einklappen"
   },
   "trips": {
     "compare_title": "Drei mögliche Linien.",

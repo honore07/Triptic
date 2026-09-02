@@ -83,7 +83,10 @@
     "engagement_2": "Accessible",
     "engagement_3": "Sustained",
     "engagement_4": "Demanding",
-    "engagement_5": "Severe"
+    "engagement_5": "Severe",
+    "refine": "Refine the request",
+    "refine_open": "Open",
+    "refine_close": "Fold"
   },
   "trips": {
     "compare_title": "Three possible lines.",
