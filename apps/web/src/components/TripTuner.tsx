@@ -187,6 +187,16 @@ export function TripTuner({ dates = null, onConfirm, disabled = false }: Props) 
         ))}
       </div>
 
+      {/* Le reste — contraintes, départ/arrivée, champ libre — se replie
+       * derrière un seul filet : l'essentiel tient en un écran, la
+       * profondeur existe sans s'imposer. */}
+      <details className="group border-y border-mist">
+        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-2 font-display text-lg font-semibold text-trail [&::-webkit-details-marker]:hidden">
+          <span>{t('tuner.refine')}</span>
+          <span className="label-mono text-copper-deep group-open:hidden">{t('tuner.refine_open')}</span>
+          <span className="label-mono hidden text-fog group-open:inline">{t('tuner.refine_close')}</span>
+        </summary>
+        <div className="flex flex-col gap-6 pb-4 pt-2">
       <fieldset className="flex flex-col">
         <legend className="label-mono mb-1 text-fog">{t('tuner.constraints_label')}</legend>
         {CONSTRAINTS.map((key) => (
@@ -257,6 +267,8 @@ export function TripTuner({ dates = null, onConfirm, disabled = false }: Props) 
           className="w-full resize-none border border-mist bg-cloud p-3 font-display text-base italic text-trail placeholder:text-fog"
         />
       </div>
+        </div>
+      </details>
 
       {/* Relevé de bas de planche — ce qui est déjà acquis */}
       {dates && duration !== null && season && (

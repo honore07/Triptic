@@ -157,9 +157,17 @@ export function Explore() {
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="font-display text-2xl font-bold text-trail">{t('explore.title')}</h1>
-        <p className="text-sm text-ridge">{t('explore.hint')}</p>
+      <div className="fade-up flex items-baseline justify-between border-b border-mist pb-2">
+        <p className="font-display text-xl font-semibold tracking-[0.2em] text-trail">
+          {t('app.name')}
+        </p>
+        <p className="label-mono text-fog">{t('explore.nav')}</p>
+      </div>
+      <header className="fade-up flex flex-col gap-1">
+        <h1 className="font-display text-3xl font-semibold leading-tight text-trail">
+          {t('explore.title')}
+        </h1>
+        <p className="font-display text-base italic leading-snug text-ridge">{t('explore.hint')}</p>
       </header>
 
       <form
@@ -176,13 +184,13 @@ export function Explore() {
           placeholder={t('explore.prompt_placeholder')}
           aria-label={t('explore.prompt_placeholder')}
           disabled={busy}
-          className="min-h-12 flex-1 rounded-xl border border-mist bg-snow px-4 text-sm text-trail shadow-sm placeholder:text-fog disabled:opacity-60"
+          className="min-h-12 flex-1 border border-mist bg-snow px-4 font-display text-base italic text-trail shadow-[3px_3px_0_rgba(34,34,34,0.5)] placeholder:text-fog disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={busy || !wish.trim()}
           aria-label={t('explore.parse')}
-          className="flex min-h-12 items-center gap-2 rounded-xl bg-gold px-4 font-display text-sm font-bold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-mist disabled:text-fog"
+          className="cta-plate flex min-h-12 items-center gap-2 px-4"
         >
           <Sparkles size={16} aria-hidden="true" />
           <span className="hidden sm:inline">{t('explore.parse')}</span>
@@ -199,10 +207,8 @@ export function Explore() {
               aria-pressed={active}
               disabled={busy}
               onClick={() => toggleChip(chip.kinds)}
-              className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition-colors ${
-                active
-                  ? 'border-summit bg-summit/10 text-copper-deep'
-                  : 'border-mist bg-snow text-ridge hover:border-summit'
+              className={`min-h-11 border px-3.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] transition-colors ${
+                active ? 'border-mist bg-summit text-snow' : 'border-mist bg-snow text-trail hover:bg-sky'
               }`}
             >
               {t(`explore.chip_${chip.key}`)}
@@ -217,10 +223,8 @@ export function Explore() {
             setTrailMode(!trailMode);
             setSelectedTrail(null);
           }}
-          className={`flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-colors ${
-            trailMode
-              ? 'border-pine bg-pine/10 text-pine-deep'
-              : 'border-mist bg-snow text-ridge hover:border-summit'
+          className={`flex min-h-11 items-center gap-1.5 border px-3.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] transition-colors ${
+            trailMode ? 'border-mist bg-pine text-snow' : 'border-mist bg-snow text-trail hover:bg-sky'
           }`}
         >
           <Footprints size={15} aria-hidden="true" />
@@ -229,7 +233,7 @@ export function Explore() {
         <button
           type="button"
           onClick={locate}
-          className="ml-auto flex min-h-11 items-center gap-1.5 rounded-full border border-mist bg-snow px-4 text-sm font-semibold text-ridge transition-colors hover:border-summit"
+          className="cta-plate-ghost ml-auto flex min-h-11 items-center gap-1.5 px-3.5"
         >
           <Crosshair size={15} aria-hidden="true" />
           {t('explore.locate')}
@@ -237,7 +241,7 @@ export function Explore() {
       </div>
 
       {geoError && (
-        <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm font-semibold text-storm">
+        <p role="alert" className="border border-storm-deep bg-storm-tint px-4 py-3 text-sm text-storm-deep">
           {t('explore.locate_error')}
         </p>
       )}
@@ -252,7 +256,7 @@ export function Explore() {
             value={targetKm}
             disabled={busy}
             onChange={(e) => setTargetKm(Number(e.target.value) || 12)}
-            className="min-h-10 w-20 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
+            className="min-h-10 w-20 border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
           />
           km
         </label>
@@ -269,25 +273,25 @@ export function Explore() {
           type="button"
           disabled={busy}
           onClick={() => void runSearch()}
-          className="cta-plate absolute bottom-3 left-1/2 flex min-h-11 -translate-x-1/2 items-center gap-2 px-5 hover:bg-gold-deep disabled:opacity-60"
+          className="cta-plate absolute bottom-3 left-1/2 flex min-h-11 -translate-x-1/2 items-center gap-2 px-5 disabled:opacity-60"
         >
           <Search size={16} aria-hidden="true" />
           {status === 'searching' ? t('explore.searching') : t('explore.search_area')}
         </button>
       </div>
 
-      <p className="text-xs text-fog">{t('explore.coverage_note')}</p>
+      <p className="label-mono text-fog">{t('explore.coverage_note')}</p>
 
       {status === 'error' && (
         <p
           role="alert"
-          className={`rounded-xl px-4 py-3 text-sm ${
+          className={`border px-4 py-3 text-sm ${
             // Service manquant (503) : ce n'est ni la faute de l'utilisateur ni
             // une panne — ton « warning », pas « erreur ».
             errorKey === 'explore.error_db_unavailable' ||
             errorKey === 'explore.error_routing_unavailable'
-              ? 'bg-amber-tint text-amber-deep'
-              : 'bg-storm/10 text-storm'
+              ? 'border-amber-deep bg-amber-tint text-amber-deep'
+              : 'border-storm-deep bg-storm-tint text-storm-deep'
           }`}
         >
           {t(errorKey)}
@@ -300,7 +304,7 @@ export function Explore() {
           <select
             value={targetDay}
             onChange={(e) => setTargetDay(Number(e.target.value))}
-            className="min-h-10 rounded-lg border border-mist bg-snow px-2 text-sm font-normal text-trail"
+            className="min-h-10 border border-mist bg-snow px-2 text-sm font-normal text-trail"
           >
             {selected.days.map((d) => (
               <option key={d.day} value={d.day}>
@@ -311,12 +315,12 @@ export function Explore() {
         </label>
       )}
 
-      <section aria-label={t('explore.results_title')} className="flex flex-col gap-1.5">
+      <section aria-label={t('explore.results_title')} className="flex flex-col">
         {searched &&
           results.length === 0 &&
           (!trailMode || trails.length === 0) &&
           status === 'idle' && (
-            <p className="rounded-xl bg-terrain px-4 py-3 text-sm text-ridge">
+            <p className="border border-mist bg-terrain px-4 py-3 font-display text-base italic text-ridge">
               {t('explore.no_results')}
             </p>
           )}
@@ -327,15 +331,13 @@ export function Explore() {
               type="button"
               onClick={() => setSelectedTrail(trail)}
               aria-pressed={selectedTrail?.id === trail.id}
-              className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-left text-sm shadow-sm transition-colors ${
-                selectedTrail?.id === trail.id
-                  ? 'border-pine bg-pine/5'
-                  : 'border-transparent bg-snow hover:border-mist'
+              className={`flex items-center gap-3 border border-b-0 px-4 py-3 text-left text-sm transition-colors last:border-b ${
+                selectedTrail?.id === trail.id ? 'border-summit bg-sky' : 'border-mist bg-snow hover:bg-sky'
               }`}
             >
               <Footprints size={16} className="shrink-0 text-pine" aria-hidden="true" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium text-trail">
+                <span className="block truncate font-display text-lg font-semibold leading-tight text-trail">
                   {trail.generated ? t('explore.generated_loop') : trail.name}
                 </span>
                 {trail.summary && (
@@ -361,18 +363,18 @@ export function Explore() {
         {results.map((place) => (
           <article
             key={place.id}
-            className="flex items-center gap-3 rounded-xl bg-snow px-4 py-2.5 text-sm shadow-sm"
+            className="flex items-center gap-3 border border-b-0 border-mist bg-snow px-4 py-3 text-sm last:border-b"
           >
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-2 font-medium text-trail">
+              <p className="flex items-center gap-2 font-display text-lg font-semibold leading-tight text-trail">
                 <span className="truncate">{place.name}</span>
                 {place.notoriety >= 60 && (
-                  <span className="shrink-0 rounded-badge bg-gold/20 px-1.5 py-0.5 text-[10px] font-semibold text-copper-deep">
+                  <span className="label-mono shrink-0 border border-mist bg-snow px-1.5 py-0.5 text-copper-deep">
                     {t('explore.must_see')}
                   </span>
                 )}
               </p>
-              <p className="truncate text-xs text-fog">
+              <p className="label-mono truncate text-fog">
                 {t(`places.kind_${place.kind}`, place.kind)}
                 {place.summary ? ` · ${place.summary}` : ''}
               </p>
@@ -388,7 +390,7 @@ export function Explore() {
                 disabled={addedIds.has(place.id)}
                 onClick={() => addToDay(place)}
                 aria-label={`${t('explore.add_to_day')} — ${place.name}`}
-                className="flex min-h-10 shrink-0 items-center gap-1 rounded-lg bg-gold px-3 text-xs font-bold text-trail transition-colors hover:bg-gold-deep disabled:bg-pine disabled:text-snow"
+                className="cta-plate flex min-h-10 shrink-0 items-center gap-1 px-3 disabled:translate-y-0 disabled:bg-pine disabled:text-snow"
               >
                 <Plus size={14} aria-hidden="true" />
                 {addedIds.has(place.id) ? t('explore.added') : t('explore.add_to_day')}

@@ -62,7 +62,7 @@ export function PaywallModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-trail/60 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-trail/70 p-4 sm:items-center"
       onClick={closePaywall}
       role="presentation"
     >
@@ -71,28 +71,37 @@ export function PaywallModal() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="paywall-title"
-        className="w-full max-w-md rounded-trip bg-snow p-6 shadow-2xl"
+        className="ink-reveal w-full max-w-md border border-mist bg-snow p-6 shadow-[8px_8px_0_rgba(17,17,17,0.9)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between">
-          <h2 id="paywall-title" className="font-display text-xl font-bold text-trail">
-            {t('paywall.title')}
-          </h2>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {/* La corde — l'objet d'expédition qui ouvre les vires suivantes */}
+            <img
+              src="/vire/vire_pic-corde.jpg"
+              alt=""
+              aria-hidden="true"
+              className="h-14 w-14 shrink-0 rounded-full border border-mist object-cover"
+            />
+            <h2 id="paywall-title" className="font-display text-2xl font-semibold leading-tight text-trail">
+              {t('paywall.title')}
+            </h2>
+          </div>
           <button
             type="button"
             onClick={closePaywall}
             aria-label={t('paywall.later')}
-            className="-mr-2 -mt-2 flex min-h-11 min-w-11 items-center justify-center rounded-full text-ridge hover:bg-terrain"
+            className="-mr-2 -mt-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-transparent text-ridge hover:border-mist hover:bg-sky"
           >
             <X size={20} />
           </button>
         </div>
-        <p className="mt-1 text-sm text-ridge">{t('paywall.subtitle')}</p>
+        <p className="mt-2 font-display text-base italic leading-snug text-ridge">{t('paywall.subtitle')}</p>
 
-        <ul className="mt-4 flex flex-col gap-2">
+        <ul className="mt-4 flex flex-col border-y border-mist">
           {features.map((feature) => (
-            <li key={feature} className="flex items-start gap-2 text-sm text-trail">
-              <Check size={16} className="mt-0.5 shrink-0 text-pine" aria-hidden="true" />
+            <li key={feature} className="flex items-start gap-2 border-b border-mist py-2 text-sm text-trail last:border-b-0">
+              <Check size={16} className="mt-0.5 shrink-0 text-summit" aria-hidden="true" />
               {feature}
             </li>
           ))}
@@ -109,7 +118,7 @@ export function PaywallModal() {
           <button
             type="button"
             onClick={() => { track('plan_upgraded', { plan: 'explorateur' }); setPlan('explorateur'); }}
-            className="min-h-11 w-full rounded-xl border border-mist px-4 py-3 text-sm font-semibold text-trail transition-colors hover:border-summit"
+            className="cta-plate-ghost min-h-11 w-full px-4 py-3"
             title={t('paywall.explorateur_extra')}
           >
             {t('paywall.plan_explorateur')} — {t('paywall.price_explorateur')}
@@ -117,7 +126,7 @@ export function PaywallModal() {
           <button
             type="button"
             onClick={closePaywall}
-            className="mt-1 text-sm text-fog hover:text-ridge"
+            className="label-mono mt-1 min-h-11 text-fog hover:text-ridge"
           >
             {t('paywall.later')}
           </button>

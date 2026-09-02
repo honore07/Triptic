@@ -50,23 +50,23 @@ export function PlaceCarousel({ title, media, loading, onClose }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label={t('carousel.label', { place: title })}
-      className="pointer-events-auto absolute inset-x-3 bottom-3 z-10 flex max-h-[calc(100%-1.5rem)] w-auto flex-col overflow-hidden rounded-trip bg-snow shadow-xl sm:inset-x-auto sm:bottom-3 sm:right-4 sm:top-3 sm:w-72"
+      className="ink-reveal pointer-events-auto absolute inset-x-3 bottom-3 z-10 flex max-h-[calc(100%-1.5rem)] w-auto flex-col overflow-hidden border border-mist bg-snow shadow-[6px_6px_0_rgba(34,34,34,0.9)] sm:inset-x-auto sm:bottom-3 sm:right-4 sm:top-3 sm:w-72"
     >
-      <div className="flex items-start justify-between gap-2 px-3 py-2">
-        <p className="min-w-0 truncate font-display text-sm font-bold text-trail">{title}</p>
+      <div className="flex items-start justify-between gap-2 border-b border-mist px-3 py-2">
+        <p className="min-w-0 truncate font-display text-lg font-semibold leading-tight text-trail">{title}</p>
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label={t('carousel.close')}
-          className="-mr-1 -mt-1 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-ridge hover:bg-terrain"
+          className="-mr-1 -mt-1 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-transparent text-ridge hover:border-mist hover:bg-sky"
         >
           <X size={18} aria-hidden="true" />
         </button>
       </div>
 
       {loading && (
-        <p className="px-3 pb-3 text-xs text-fog" role="status">
+        <p className="label-mono px-3 py-3 text-fog" role="status">
           {t('carousel.loading')}
         </p>
       )}
@@ -95,10 +95,10 @@ export function PlaceCarousel({ title, media, loading, onClose }: Props) {
               <img
                 src={item.url}
                 alt={t('carousel.photo_alt', { place: title, n: index + 1 })}
-                className="h-full max-h-64 min-h-32 w-full object-cover"
+                className="photo-settle h-full max-h-64 min-h-32 w-full object-cover"
               />
             )}
-            <span className="absolute left-2 top-2 rounded-full bg-trail/85 px-2 py-0.5 font-mono text-[11px] font-semibold text-snow">
+            <span className="label-mono absolute left-0 top-0 border-b border-r border-mist bg-snow px-2 py-1 text-trail">
               {index + 1} / {count}
             </span>
             {count > 1 && (
@@ -107,7 +107,7 @@ export function PlaceCarousel({ title, media, loading, onClose }: Props) {
                   type="button"
                   onClick={() => go(-1)}
                   aria-label={t('carousel.prev')}
-                  className="absolute left-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full bg-snow/90 text-trail shadow hover:bg-snow"
+                  className="absolute left-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full border border-mist bg-snow/95 text-trail hover:bg-sky"
                 >
                   <ChevronLeft size={18} aria-hidden="true" />
                 </button>
@@ -115,14 +115,14 @@ export function PlaceCarousel({ title, media, loading, onClose }: Props) {
                   type="button"
                   onClick={() => go(1)}
                   aria-label={t('carousel.next')}
-                  className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full bg-snow/90 text-trail shadow hover:bg-snow"
+                  className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full border border-mist bg-snow/95 text-trail hover:bg-sky"
                 >
                   <ChevronRight size={18} aria-hidden="true" />
                 </button>
               </>
             )}
           </div>
-          <p className="px-3 py-2 text-[11px] text-fog">
+          <p className="label-mono border-t border-mist px-3 py-2 text-fog">
             <a
               href={item.link}
               target="_blank"

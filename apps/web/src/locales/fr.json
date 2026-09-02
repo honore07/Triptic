@@ -83,7 +83,10 @@
     "engagement_2": "Accessible",
     "engagement_3": "Soutenu",
     "engagement_4": "Exigeant",
-    "engagement_5": "Sévère"
+    "engagement_5": "Sévère",
+    "refine": "Affiner la demande",
+    "refine_open": "Ouvrir",
+    "refine_close": "Replier"
   },
   "trips": {
     "compare_title": "Trois voies possibles.",
