@@ -51,16 +51,36 @@ const DEEPSEEK_REASONER_MODEL = process.env['DEEPSEEK_REASONER_MODEL'] ?? 'deeps
 export function createDeepseekProvider(apiKey: string): LlmProvider {
   const client = new OpenAI({ baseURL: DEEPSEEK_BASE_URL, apiKey });
 
-  async function call(model: string, opts: CompleteOptions): Promise<string> {
+  /**
+   * Deepseek v4 raisonne avant de répondre et ses tokens de raisonnement
+   * comptent dans max_tokens : quand le budget est mangé par la réflexion,
+   * l'API renvoie finish_reason « length » et un contenu VIDE — que le
+   * parseur JSON prenait pour une réponse malformée, sans jamais basculer
+   * sur le fallback. Ici : un contenu vide est une erreur (le fallback
+   * Anthropic reprend), et un budget épuisé est retenté une fois avec le
+   * double, avant de renoncer.
+   */
+  async function call(model: string, opts: CompleteOptions, retried = false): Promise<string> {
+    const maxTokens = opts.maxTokens ?? 4096;
     const response = await client.chat.completions.create({
       model,
-      max_tokens: opts.maxTokens ?? 4096,
+      max_tokens: maxTokens,
       messages: [
         { role: 'system' as const, content: opts.system },
         ...opts.messages.map((m) => ({ role: m.role, content: m.content })),
       ],
     });
-    return response.choices[0]?.message?.content ?? '';
+    const choice = response.choices[0];
+    const content = choice?.message?.content ?? '';
+    const finish = choice?.finish_reason ?? 'unknown';
+    if (content.trim()) return content;
+    if (finish === 'length' && !retried && maxTokens < 64000) {
+      return call(model, { ...opts, maxTokens: Math.min(maxTokens * 2, 64000) }, true);
+    }
+    throw new Error(
+      `Deepseek returned empty content (model=${model}, finish_reason=${finish}, ` +
+        `completion_tokens=${response.usage?.completion_tokens ?? '?'}, max_tokens=${maxTokens})`,
+    );
   }
 
   return {
