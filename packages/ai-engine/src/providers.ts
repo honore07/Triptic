@@ -139,13 +139,26 @@ export function createAnthropicProvider(
  * fallback. Les retries réseau transitoires restent gérés en amont par
  * withNetworkRetry dans chaque provider.
  */
-export function createFallbackProvider(primary: LlmProvider, fallback: LlmProvider): LlmProvider {
+/** Prévenu à chaque bascule : le serveur journalise (coût, diagnostic). */
+export type FallbackListener = (info: {
+  method: 'complete' | 'correct';
+  from: string;
+  to: string;
+  error: unknown;
+}) => void;
+
+export function createFallbackProvider(
+  primary: LlmProvider,
+  fallback: LlmProvider,
+  onFallback?: FallbackListener,
+): LlmProvider {
   const wrap =
     (method: 'complete' | 'correct') =>
     async (opts: CompleteOptions): Promise<string> => {
       try {
         return await primary[method](opts);
-      } catch {
+      } catch (error) {
+        onFallback?.({ method, from: primary.name, to: fallback.name, error });
         return fallback[method](opts);
       }
     };
@@ -161,7 +174,10 @@ export function createFallbackProvider(primary: LlmProvider, fallback: LlmProvid
  * Deepseek (principal) avec fallback runtime Anthropic si les deux clés
  * existent ; sinon celui dont la clé est configurée. Erreur claire sinon.
  */
-export function createProviderFromEnv(env: NodeJS.ProcessEnv = process.env): LlmProvider {
+export function createProviderFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+  onFallback?: FallbackListener,
+): LlmProvider {
   const deepseekKey = env['DEEPSEEK_API_KEY'];
   const anthropicKey = env['ANTHROPIC_API_KEY'];
   const hasDeepseek = Boolean(deepseekKey && !deepseekKey.startsWith('sk-xxx'));
@@ -170,6 +186,7 @@ export function createProviderFromEnv(env: NodeJS.ProcessEnv = process.env): Llm
     return createFallbackProvider(
       createDeepseekProvider(deepseekKey as string),
       createAnthropicProvider(anthropicKey as string),
+      onFallback,
     );
   }
   if (hasDeepseek) return createDeepseekProvider(deepseekKey as string);

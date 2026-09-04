@@ -61,9 +61,13 @@ describe('createDeepseekProvider', () => {
       complete: vi.fn(async () => '{"from":"fallback"}'),
       correct: vi.fn(async () => '{}'),
     };
-    const p = createFallbackProvider(primary, fallback);
+    const onFallback = vi.fn();
+    const p = createFallbackProvider(primary, fallback, onFallback);
     await expect(p.complete({ system: 's', messages: [] })).resolves.toBe('{"from":"fallback"}');
     expect(create).toHaveBeenCalledTimes(1);
     expect(fallback.complete).toHaveBeenCalledTimes(1);
+    // La bascule est signalée avec sa cause — le serveur la journalise
+    expect(onFallback).toHaveBeenCalledTimes(1);
+    expect(onFallback.mock.calls[0]![0]).toMatchObject({ method: 'complete', from: 'deepseek', to: 'anthropic' });
   });
 });
