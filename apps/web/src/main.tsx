@@ -16,7 +16,7 @@ import '@fontsource/inter/latin-600.css';
 import '@fontsource/inter/latin-700.css';
 import '@fontsource/jetbrains-mono/latin-400.css';
 import '@fontsource/jetbrains-mono/latin-600.css';
-import './lib/i18n';
+import { ready as i18nReady } from './lib/i18n';
 import './styles.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { initAnalytics } from './lib/analytics';
@@ -26,8 +26,12 @@ import { App } from './App';
 // respecte Do Not Track et l'opt-out localStorage (voir lib/analytics.ts).
 void initAnalytics();
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// Le dictionnaire de la langue de départ est prêt avant le premier rendu —
+// jamais d'écran qui change de langue sous les yeux.
+void i18nReady.then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+});
