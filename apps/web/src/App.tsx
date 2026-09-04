@@ -8,6 +8,7 @@ import { supabase } from './lib/supabase';
 import { useUserStore } from './store/userStore';
 import { LangSwitcher } from './components/LangSwitcher';
 import { LogoVire } from './components/LogoVire';
+import { MiseAJour } from './components/MiseAJour';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
 import { Home } from './pages/Home';
@@ -151,6 +152,7 @@ export function App() {
   return (
     <BrowserRouter>
       <Pageviews />
+      <MiseAJour />
       <OnlineIndicator />
       <LaunchOfferBanner />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">

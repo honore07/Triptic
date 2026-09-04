@@ -5,7 +5,10 @@
     "offline": "Offline — deine gespeicherten Trips bleiben verfügbar",
     "online": "Online",
     "page_not_found": "Diese Seite existiert nicht.",
-    "back_home": "Zurück zur Startseite"
+    "back_home": "Zurück zur Startseite",
+    "update_ready": "Eine neue Version von VIRE ist bereit.",
+    "update_reload": "Neu laden",
+    "update_later": "Später"
   },
   "ouverture": {
     "tagline": "Plan · Explore · Repeat",

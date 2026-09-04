@@ -11,13 +11,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // Une nouvelle version n'est plus appliquée en silence : le SW attend,
+      // le bandeau MiseAJour le dit, l'utilisateur recharge quand il veut —
+      // un rechargement automatique coupait une génération de dix minutes.
+      // Le hook useRegisterSW (MiseAJour) fait l'enregistrement : pas de
+      // script injecté en plus.
+      registerType: 'prompt',
+      injectRegister: null,
       workbox: {
-        // Un nouveau SW prend le contrôle IMMÉDIATEMENT (sinon les visiteurs
-        // gardent l'ancien bundle une visite de plus — source du bug
-        // « inscription qui ne tient pas » signalé au lancement : l'app en
-        // cache datait d'avant l'auth).
-        skipWaiting: true,
+        skipWaiting: false,
         clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: '/index.html',
