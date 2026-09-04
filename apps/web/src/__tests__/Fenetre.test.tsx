@@ -76,4 +76,29 @@ describe('Fenêtre (planche PL.04)', () => {
     expect(dates.start).toMatch(/-10$/);
     expect(dates.end).toMatch(/-18$/);
   });
+
+  it('un raccourci pose la fenêtre en un tap, et se relâche dès qu’on retouche le calendrier', () => {
+    const onConfirm = vi.fn();
+    render(<Fenetre onConfirm={onConfirm} />);
+    const week = screen.getByRole('button', { name: 'Une semaine' });
+    fireEvent.click(week);
+    expect(week).toHaveAttribute('aria-pressed', 'true');
+    // Sept nuits : samedi → samedi suivant
+    const releve = screen.getByText('Nuits').parentElement as HTMLElement;
+    expect(within(releve).getByText('7')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    const picked = onConfirm.mock.calls[0]![0] as { start: string; end: string };
+    expect(new Date(picked.start).getDay()).toBe(6);
+    expect(picked.end > picked.start).toBe(true);
+  });
+
+  it('« Sans dates » efface la fenêtre et transmet null', () => {
+    const onConfirm = vi.fn();
+    render(<Fenetre onConfirm={onConfirm} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ce week-end' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sans dates' }));
+    expect(screen.getByRole('button', { name: 'Sans dates' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    expect(onConfirm).toHaveBeenCalledWith(null);
+  });
 });

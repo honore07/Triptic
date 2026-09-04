@@ -12,7 +12,8 @@
     "qa:live": "node scripts/qa/live-check.mjs",
     "qa:a11y": "node scripts/qa/a11y-check.mjs",
     "qa:contrast": "node scripts/qa/contrast-check.mjs",
-    "qa:shots": "node scripts/qa/shots.mjs"
+    "qa:shots": "node scripts/qa/shots.mjs",
+    "qa:perf": "node scripts/qa/perf-check.mjs"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",

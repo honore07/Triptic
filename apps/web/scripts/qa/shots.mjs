@@ -18,7 +18,7 @@ const chrome = spawn(CHROME, [
 ], { stdio: 'ignore' });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-let ws; let id = 0; const pending = new Map();
+let ws; let id = 0; const pending = new Map(); const issues = [];
 async function connect() {
   for (let i = 0; i < 50; i++) {
     try {
@@ -31,7 +31,10 @@ async function connect() {
   await new Promise((r) => (ws.onopen = r));
   ws.onmessage = (m) => {
     const msg = JSON.parse(m.data);
-    if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); }
+    if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); return; }
+    // Les captures servent aussi de parcours : on relève ce que la console dit en chemin
+    if (msg.method === 'Runtime.exceptionThrown') issues.push('exception: ' + (msg.params.exceptionDetails.exception?.description ?? msg.params.exceptionDetails.text).slice(0, 300));
+    if (msg.method === 'Runtime.consoleAPICalled' && (msg.params.type === 'error' || msg.params.type === 'warning')) issues.push('console.' + msg.params.type + ': ' + msg.params.args.map((a) => a.value ?? a.description ?? '').join(' ').slice(0, 300));
   };
 }
 function send(method, params = {}) {
@@ -93,6 +96,7 @@ const chatState = { state: { messages: [{ role: 'user', content: 'Road trip van 
 
 await connect();
 await send('Page.enable'); await send('Runtime.enable');
+issues.length = 0;
 await viewport(1280, 900);
 
 // 1. Ouverture + accueil (desktop)
@@ -182,5 +186,7 @@ await goto(`${BASE}/explore`);
 await sleep(2500);
 await shot('13-explore', { full: false });
 
+console.log('\n=== console pendant le parcours (' + issues.length + ') ===');
+for (const i of issues) console.log(i);
 ws.close(); chrome.kill();
 console.log('done', OUT);
