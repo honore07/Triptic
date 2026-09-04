@@ -2,10 +2,22 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import type { ChatMessage } from '@triptic/shared';
 
+/**
+ * Effort de raisonnement demandé au modèle (Deepseek v4 `reasoning_effort`).
+ * Mesuré le 04/09/2026 sur une liste de 12 villages : sans consigne, le
+ * modèle a brûlé 4 000 tokens de réflexion en 31 s et rendu un contenu VIDE ;
+ * « low » : 7 s, 548 tokens de réflexion, réponse complète ; « none » : 2,4 s.
+ * - 'none' : tâches de classement (agent photo) — réfléchir n'apporte rien ;
+ * - 'low'  : génération et édition de trips (défaut) — un peu de géographie ;
+ * - 'full' : laisser le modèle décider (agent correcteur sur le reasoner).
+ */
+export type ReasoningEffort = 'none' | 'low' | 'full';
+
 export interface CompleteOptions {
   system: string;
   messages: ChatMessage[];
   maxTokens?: number;
+  reasoning?: ReasoningEffort;
 }
 
 export interface LlmProvider {
@@ -60,11 +72,19 @@ export function createDeepseekProvider(apiKey: string): LlmProvider {
    * Anthropic reprend), et un budget épuisé est retenté une fois avec le
    * double, avant de renoncer.
    */
-  async function call(model: string, opts: CompleteOptions, retried = false): Promise<string> {
+  async function call(
+    model: string,
+    opts: CompleteOptions,
+    reasoning: ReasoningEffort,
+    retried = false,
+  ): Promise<string> {
     const maxTokens = opts.maxTokens ?? 4096;
+    const effort = opts.reasoning ?? reasoning;
     const response = await client.chat.completions.create({
       model,
       max_tokens: maxTokens,
+      // Paramètre Deepseek hors du typage OpenAI ('none' n'y figure pas)
+      ...(effort === 'full' ? {} : ({ reasoning_effort: effort } as Record<string, unknown>)),
       messages: [
         { role: 'system' as const, content: opts.system },
         ...opts.messages.map((m) => ({ role: m.role, content: m.content })),
@@ -75,7 +95,7 @@ export function createDeepseekProvider(apiKey: string): LlmProvider {
     const finish = choice?.finish_reason ?? 'unknown';
     if (content.trim()) return content;
     if (finish === 'length' && !retried && maxTokens < 64000) {
-      return call(model, { ...opts, maxTokens: Math.min(maxTokens * 2, 64000) }, true);
+      return call(model, { ...opts, maxTokens: Math.min(maxTokens * 2, 64000) }, reasoning, true);
     }
     throw new Error(
       `Deepseek returned empty content (model=${model}, finish_reason=${finish}, ` +
@@ -85,8 +105,8 @@ export function createDeepseekProvider(apiKey: string): LlmProvider {
 
   return {
     name: 'deepseek',
-    complete: (opts) => call(DEEPSEEK_CHAT_MODEL, opts),
-    correct: (opts) => call(DEEPSEEK_REASONER_MODEL, opts),
+    complete: (opts) => call(DEEPSEEK_CHAT_MODEL, opts, 'low'),
+    correct: (opts) => call(DEEPSEEK_REASONER_MODEL, opts, 'full'),
   };
 }
 

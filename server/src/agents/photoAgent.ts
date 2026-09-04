@@ -122,6 +122,7 @@ export async function filterUsefulPhotos(
       // raisonnement mesurés pour 10 titres, davantage au-delà) : un budget
       // serré tronque la réponse et l'agent échoue en silence.
       maxTokens: 4000,
+      reasoning: 'none', // classer des titres de photos ne demande aucune réflexion
     });
     const verdict = verdictSchema.parse(extractJson(raw));
     const kept = prefiltered.filter((_, i) => verdict.keep.includes(i));
