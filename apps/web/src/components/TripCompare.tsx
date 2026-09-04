@@ -38,6 +38,10 @@ export function TripCompare({ trips, lockedCount, differentiator, onChoose, onUn
   // très vieux navigateurs) on garde l'activation au tap.
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
+    // Sur grand écran les trois volets sont visibles en même temps : c'est
+    // le survol et le tap qui décident, pas la visibilité — sinon un
+    // défilement de page reprendrait la main sur le volet choisi.
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 768px)').matches) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const best = entries

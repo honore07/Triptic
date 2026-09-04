@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -26,11 +25,6 @@ export function MiseAJour() {
     },
   });
 
-  // Le bandeau est annoncé aux lecteurs d'écran au moment où il apparaît
-  useEffect(() => {
-    if (needRefresh) document.getElementById('maj-title')?.focus();
-  }, [needRefresh]);
-
   if (!needRefresh) return null;
 
   return (
@@ -39,7 +33,8 @@ export function MiseAJour() {
       aria-live="polite"
       className="ink-reveal flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-b border-mist bg-trail px-4 py-2 text-cloud"
     >
-      <p id="maj-title" tabIndex={-1} className="font-display text-base italic outline-none">
+      {/* role=status + aria-live : annoncé sans voler le focus à une saisie en cours */}
+      <p className="font-display text-base italic">
         {t('app.update_ready')}
       </p>
       <div className="flex items-center gap-2">
