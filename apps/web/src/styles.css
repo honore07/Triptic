@@ -704,3 +704,14 @@ body {
     stroke-dashoffset: 0 !important;
   }
 }
+
+/* Texte posé sur une photo : halo d'encre qui tient le contraste dans les
+ * zones claires (ciel, neige) sans épaissir le voile sur toute l'image.
+ * Mesuré sur les pixels composés : sans lui, un titre tombait à 2,5:1 sur
+ * un ciel clair. */
+.on-photo {
+  text-shadow:
+    0 1px 2px rgba(17, 17, 17, 0.9),
+    0 0 14px rgba(17, 17, 17, 0.75),
+    0 0 28px rgba(17, 17, 17, 0.45);
+}

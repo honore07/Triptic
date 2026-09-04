@@ -84,7 +84,7 @@ export function PublicTrip() {
               stroke={MAP_COLORS.gold}
             />
           )}
-          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.45)_0%,rgba(17,17,17,0.10)_30%,rgba(17,17,17,0.55)_60%,rgba(17,17,17,0.94)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.45)_0%,rgba(17,17,17,0.10)_24%,rgba(17,17,17,0.80)_50%,rgba(17,17,17,0.94)_68%,rgba(17,17,17,0.97)_100%)]" />
         </div>
 
         <div className="relative flex min-h-[22rem] flex-col justify-end gap-4 p-4 sm:min-h-[28rem] sm:p-6">
@@ -101,7 +101,7 @@ export function PublicTrip() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h1 className="font-display text-3xl font-semibold leading-tight text-cloud sm:text-5xl">
+            <h1 className="on-photo font-display text-3xl font-semibold leading-tight text-cloud sm:text-5xl">
               {trip.title}
             </h1>
             {meta.summary && (

@@ -72,7 +72,7 @@ export function TripCard({ trip, onChoose, index = 0, active = false, onActivate
         )}
         {/* Voile d'encre : léger en haut (le numéro se lit sur l'image),
          * plein en bas (le relevé et la plaque sont en clair). */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.35)_0%,rgba(17,17,17,0.05)_28%,rgba(17,17,17,0.45)_55%,rgba(17,17,17,0.94)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.35)_0%,rgba(17,17,17,0.08)_22%,rgba(17,17,17,0.76)_46%,rgba(17,17,17,0.93)_62%,rgba(17,17,17,0.97)_100%)]" />
       </div>
 
       {/* Tête de planche : le numéro en grand, la difficulté en cartouche */}
@@ -89,14 +89,14 @@ export function TripCard({ trip, onChoose, index = 0, active = false, onActivate
       {/* Relevé — posé sur l'encre du bas */}
       <div className="relative mt-auto flex flex-col gap-3 p-4 pt-16">
         <div className="flex flex-col gap-1">
-          <span className="label-mono self-start border border-cloud/30 bg-trail/85 px-2 py-1 text-gold">
+          <span className="label-mono self-start border border-cloud/30 bg-trail px-2 py-1 text-gold">
             {t('trips.line')} {numeral}
           </span>
-          <h3 className="font-display text-2xl font-semibold leading-tight text-cloud sm:text-[1.7rem]">
+          <h3 className="on-photo font-display text-2xl font-semibold leading-tight text-cloud sm:text-[1.7rem]">
             {trip.title}
           </h3>
           {/* L'ambiance est une phrase du moteur : sous-titre serif, pas une étiquette */}
-          <p className="font-display text-base italic leading-snug text-sky">{trip.ambiance}</p>
+          <p className="on-photo font-display text-base italic leading-snug text-cloud">{trip.ambiance}</p>
         </div>
 
         <p className="plate-summary line-clamp-2 text-sm leading-relaxed text-cloud/85">
