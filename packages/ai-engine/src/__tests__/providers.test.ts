@@ -26,6 +26,18 @@ describe('createDeepseekProvider', () => {
     create.mockReset().mockResolvedValueOnce(reply('{"ok":true}', 'stop'));
     const p = createDeepseekProvider('sk-test');
     await expect(p.complete({ system: 's', messages: [], maxTokens: 300 })).resolves.toBe('{"ok":true}');
+    // Génération : effort de raisonnement « low » par défaut (mesuré : 31 s → 7 s)
+    expect((create.mock.calls[0]![0] as Record<string, unknown>).reasoning_effort).toBe('low');
+  });
+
+  it('un appel peut couper le raisonnement ; le correcteur laisse le modèle libre', async () => {
+    const { createDeepseekProvider } = await import('../providers');
+    create.mockReset().mockResolvedValue(reply('{}', 'stop'));
+    const p = createDeepseekProvider('sk-test');
+    await p.complete({ system: 's', messages: [], reasoning: 'none' });
+    expect((create.mock.calls[0]![0] as Record<string, unknown>).reasoning_effort).toBe('none');
+    await p.correct({ system: 's', messages: [] });
+    expect('reasoning_effort' in (create.mock.calls[1]![0] as object)).toBe(false);
   });
 
   it('budget épuisé et contenu vide : retente une fois avec le double, puis échoue franchement', async () => {

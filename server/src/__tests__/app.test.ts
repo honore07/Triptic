@@ -184,7 +184,9 @@ describe('TRIPTIC API', () => {
     }
     const res = await request(app).post('/api/ai/generate-trips').send(body);
     expect(res.text).toContain('quota_exceeded');
-  });
+    // Quatre générations complètes (ancrage, routage, photos) : ~4 s seul,
+    // davantage quand toute la suite tourne en parallèle — 5 s ne suffisent pas.
+  }, 20_000);
 
   it('saves a trip then exports GPX only for paid plans', async () => {
     const app = createApp({ provider: mockProvider });
