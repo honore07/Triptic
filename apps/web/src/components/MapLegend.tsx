@@ -21,7 +21,7 @@ export function MapLegend({ modes }: Props) {
     <div
       role="group"
       aria-label={t('map.legend')}
-      className="absolute bottom-10 left-2 z-10 flex flex-col gap-1 rounded-badge border border-mist bg-snow/95 px-2.5 py-1.5 shadow-md"
+      className="absolute bottom-10 left-2 z-10 flex flex-col gap-1 border border-mist bg-snow/95 px-2.5 py-1.5 shadow-[3px_3px_0_rgba(34,34,34,0.7)]"
     >
       {modes.map((mode) => {
         const style = segmentLineStyle(mode);

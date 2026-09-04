@@ -68,15 +68,15 @@ export function TripEditChat({ trip, lang, plan, onBeforeApply, onApply }: Props
         {t('edit_chat.title')}
       </h2>
       {question && (
-        <p className="rounded-xl bg-terrain px-4 py-3 text-sm text-trail">{question}</p>
+        <p className="border border-mist bg-terrain px-4 py-3 font-display text-base italic text-trail">{question}</p>
       )}
       {status === 'error' && (
-        <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm text-storm">
+        <p role="alert" className="border border-storm-deep bg-storm-tint px-4 py-3 text-sm text-storm-deep">
           {t('edit_chat.error')}
         </p>
       )}
       {status === 'auth_required' && (
-        <p role="alert" className="rounded-xl bg-terrain px-4 py-3 text-sm text-ridge">
+        <p role="alert" className="border border-mist bg-terrain px-4 py-3 text-sm text-ridge">
           {t('auth.required_generation')}{' '}
           <Link to="/login" className="font-semibold text-copper-deep underline">
             {t('auth.login_nav')}
@@ -97,13 +97,13 @@ export function TripEditChat({ trip, lang, plan, onBeforeApply, onApply }: Props
           placeholder={t('edit_chat.placeholder')}
           aria-label={t('edit_chat.placeholder')}
           disabled={status === 'busy'}
-          className="min-h-12 flex-1 rounded-xl border border-mist bg-snow px-4 text-sm text-trail shadow-sm placeholder:text-fog disabled:opacity-60"
+          className="min-h-12 flex-1 border border-mist bg-snow px-4 font-display text-base italic text-trail shadow-[3px_3px_0_rgba(34,34,34,0.5)] placeholder:text-fog disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={status === 'busy' || !instruction.trim()}
           aria-label={t('chat.send')}
-          className="flex min-h-12 min-w-12 items-center justify-center rounded-xl bg-gold text-trail transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-deep disabled:translate-y-0 disabled:bg-mist disabled:text-fog"
+          className="cta-plate flex min-h-12 min-w-12 items-center justify-center disabled:bg-mist disabled:text-fog"
         >
           <Send size={18} aria-hidden="true" />
         </button>

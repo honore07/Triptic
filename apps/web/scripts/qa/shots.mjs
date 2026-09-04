@@ -125,6 +125,13 @@ await evaluate(`document.getElementById('etape-title')?.scrollIntoView({block:'s
 await sleep(900);
 await viewport(1280, 900);
 await shot('09-etape', { full: false });
+// Édition manuelle du programme (DayEditor) — le dernier écran passé en planches
+await evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Modifier le programme'))?.click(); 'ok'`);
+await sleep(900);
+await evaluate(`document.querySelector('main')?.scrollTo?.(0,0); [...document.querySelectorAll('h2,p')].find(e=>/Programme jour par jour/i.test(e.textContent))?.scrollIntoView({block:'start'}); 'ok'`);
+await sleep(600);
+await viewport(1280, 900);
+await shot('14-editeur', { full: false });
 
 // 3. Relevé (PL.06) — on bloque l'appel réseau pour figer la planche en cours
 await viewport(1280, 900);

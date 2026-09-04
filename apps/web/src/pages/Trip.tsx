@@ -251,13 +251,13 @@ export function TripPage() {
       </div>
 
       {actionError && (
-        <p role="alert" className="rounded-xl bg-storm/10 px-4 py-3 text-sm font-semibold text-storm">
+        <p role="alert" className="border border-storm-deep bg-storm-tint px-4 py-3 text-sm font-semibold text-storm-deep">
           {t('trips.error_action')}
         </p>
       )}
 
       {shareUrl && (
-        <div className="flex flex-col gap-1.5 rounded-xl border border-mist bg-snow p-4">
+        <div className="flex flex-col gap-1.5 border border-mist bg-snow p-4">
           <p className="text-sm text-ridge">{t('trips.copy_manual')}</p>
           <input
             type="text"
@@ -265,7 +265,7 @@ export function TripPage() {
             value={shareUrl}
             aria-label={t('trips.share')}
             onFocus={(e) => e.currentTarget.select()}
-            className="w-full rounded-lg border border-mist bg-terrain px-3 py-2.5 font-mono text-xs text-trail"
+            className="w-full border border-mist bg-terrain px-3 py-2.5 font-mono text-xs text-trail"
           />
         </div>
       )}
@@ -411,7 +411,7 @@ export function TripPage() {
           {sortedWaypoints.map((waypoint, i) => (
             <li
               key={`${waypoint.name}-${i}`}
-              className="flex items-center gap-3 rounded-xl bg-snow px-4 py-2.5 text-sm shadow-sm"
+              className="flex items-center gap-3 border border-b-0 border-mist bg-snow px-4 py-2.5 text-sm last:border-b"
             >
               <span className="font-mono text-xs font-semibold text-copper-deep">
                 {t('trips.day')} {waypoint.day}
