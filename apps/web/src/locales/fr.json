@@ -365,7 +365,8 @@
     "alert_strong_wind": "Vent très fort prévu — prudence en crête et sur les cols.",
     "alert_heat_on_hike": "Forte chaleur prévue un jour de rando — pars tôt et charge de l’eau.",
     "alert_cold_camp": "Nuit glaciale prévue sur un bivouac/camping — équipement grand froid.",
-    "alert_snow_on_route": "Neige prévue sur la route ou le sentier — vérifie les cols et équipe-toi."
+    "alert_snow_on_route": "Neige prévue sur la route ou le sentier — vérifie les cols et équipe-toi.",
+    "horizon": "Horizon ~16 jours"
   },
   "legal": {
     "attributions_nav": "Données & licences",
@@ -542,7 +543,8 @@
   "etape": {
     "time": "Marche",
     "profile": "Profil des montées",
-    "profile_note": "Une barre par montée de la journée — le profil au point demande l’altimétrie serveur."
+    "profile_note": "Une barre par montée de la journée — le profil au point demande l’altimétrie serveur.",
+    "hourly": "Météo heure par heure"
   },
   "profil": {
     "plate": "05 — Profil",

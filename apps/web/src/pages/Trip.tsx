@@ -18,6 +18,7 @@ import { MAP_COLORS } from '../lib/mapColors';
 import { Nuitee } from '../components/Nuitee';
 import { TripEditChat } from '../components/TripEditChat';
 import { WeatherStrip } from '../components/WeatherStrip';
+import type { WeatherDayPayload } from '../lib/api';
 import { useTripStore } from '../store/tripStore';
 import { useUserStore } from '../store/userStore';
 
@@ -43,6 +44,8 @@ export function TripPage() {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
+  /** Prévisions chargées par le bandeau météo — l'heure par heure de l'étape en vient. */
+  const [weatherDays, setWeatherDays] = useState<WeatherDayPayload[] | null>(null);
   const lang = (i18n.language as Lang) ?? 'fr';
 
   /** Édition (manuelle ou chat) → recalcul live + sync du trip sauvegardé. */
@@ -269,7 +272,7 @@ export function TripPage() {
 
       {selected.days && selected.days.length > 0 && (
         <>
-          <WeatherStrip trip={selected} plan={plan} />
+          <WeatherStrip trip={selected} plan={plan} onLoaded={setWeatherDays} />
 
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -312,7 +315,13 @@ export function TripPage() {
           )}
 
           {/* Fiche d'étape (PL.11) puis nuitée (PL.10) — pour la journée ouverte */}
-          {!editing && nightDay && <Etape day={nightDay} startDate={selected.start_date} />}
+          {!editing && nightDay && (
+            <Etape
+              day={nightDay}
+              startDate={selected.start_date}
+              forecast={weatherDays?.find((d) => d.day === nightDay.day)?.forecast ?? null}
+            />
+          )}
 
           {!editing && nightDay && (
             <Nuitee

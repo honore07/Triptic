@@ -365,7 +365,8 @@
     "alert_strong_wind": "Sehr starker Wind erwartet — Vorsicht auf Graten und Pässen.",
     "alert_heat_on_hike": "Große Hitze an einem Wandertag — früh starten und Wasser mitnehmen.",
     "alert_cold_camp": "Frostige Nacht am Lagerplatz erwartet — Winterausrüstung einpacken.",
-    "alert_snow_on_route": "Schnee auf Straße oder Weg erwartet — Pässe prüfen und ausrüsten."
+    "alert_snow_on_route": "Schnee auf Straße oder Weg erwartet — Pässe prüfen und ausrüsten.",
+    "horizon": "Horizont ~16 Tage"
   },
   "legal": {
     "attributions_nav": "Daten & Lizenzen",
@@ -542,7 +543,8 @@
   "etape": {
     "time": "Unterwegs",
     "profile": "Anstiegsprofil",
-    "profile_note": "Ein Balken je Anstieg des Tages — ein Punktprofil braucht Höhendaten vom Server."
+    "profile_note": "Ein Balken je Anstieg des Tages — ein Punktprofil braucht Höhendaten vom Server.",
+    "hourly": "Stunde für Stunde"
   },
   "profil": {
     "plate": "05 — Profil",

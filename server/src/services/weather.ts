@@ -10,6 +10,16 @@ import { logger } from '../logger.js';
  * affiche « trop loin pour une prévision »).
  */
 
+/** Une heure de la journée (fenêtre 6 h → 21 h, celle où l'on est dehors). */
+export interface HourForecast {
+  /** Heure locale, 0-23. */
+  hour: number;
+  weather_code: number;
+  temp_c: number;
+  precipitation_probability: number;
+  wind_kmh: number;
+}
+
 export interface DayForecast {
   date: string;
   weather_code: number;
@@ -18,6 +28,8 @@ export interface DayForecast {
   precipitation_mm: number;
   precipitation_probability: number;
   wind_max_kmh: number;
+  /** Heure par heure (PL.11) — vide si l'API ne l'a pas fournie. */
+  hours: HourForecast[];
 }
 
 export type WeatherAlertCode =
@@ -50,6 +62,35 @@ interface OpenMeteoDaily {
   wind_speed_10m_max: number[];
 }
 
+interface OpenMeteoHourly {
+  time: string[];
+  weather_code: (number | null)[];
+  temperature_2m: (number | null)[];
+  precipitation_probability: (number | null)[];
+  wind_speed_10m: (number | null)[];
+}
+
+/** Fenêtre horaire affichée : de 6 h à 21 h, là où la journée se joue. */
+const HOUR_FROM = 6;
+const HOUR_TO = 21;
+
+function hoursOf(hourly: OpenMeteoHourly | undefined): HourForecast[] {
+  if (!hourly) return [];
+  const out: HourForecast[] = [];
+  hourly.time.forEach((stamp, i) => {
+    const hour = Number(stamp.slice(11, 13));
+    if (!Number.isFinite(hour) || hour < HOUR_FROM || hour > HOUR_TO) return;
+    out.push({
+      hour,
+      weather_code: hourly.weather_code[i] ?? 0,
+      temp_c: Math.round(hourly.temperature_2m[i] ?? 0),
+      precipitation_probability: hourly.precipitation_probability[i] ?? 0,
+      wind_kmh: Math.round(hourly.wind_speed_10m[i] ?? 0),
+    });
+  });
+  return out;
+}
+
 export class WeatherService {
   private readonly cache = new Map<string, { at: number; forecast: DayForecast }>();
 
@@ -79,6 +120,7 @@ export class WeatherService {
         longitude: lng.toFixed(4),
         daily:
           'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max',
+        hourly: 'weather_code,temperature_2m,precipitation_probability,wind_speed_10m',
         timezone: 'auto',
         start_date: date,
         end_date: date,
@@ -90,7 +132,7 @@ export class WeatherService {
       });
       clearTimeout(timer);
       if (!response.ok) return null;
-      const body = (await response.json()) as { daily?: OpenMeteoDaily };
+      const body = (await response.json()) as { daily?: OpenMeteoDaily; hourly?: OpenMeteoHourly };
       const daily = body.daily;
       if (!daily || daily.time.length === 0) return null;
       const forecast: DayForecast = {
@@ -101,6 +143,7 @@ export class WeatherService {
         precipitation_mm: Math.round((daily.precipitation_sum[0] ?? 0) * 10) / 10,
         precipitation_probability: daily.precipitation_probability_max[0] ?? 0,
         wind_max_kmh: Math.round(daily.wind_speed_10m_max[0] ?? 0),
+        hours: hoursOf(body.hourly),
       };
       if (this.cache.size >= CACHE_MAX) {
         const oldest = this.cache.keys().next().value;
