@@ -81,8 +81,9 @@ export function Fenetre({ onConfirm, disabled = false }: FenetreProps) {
   /** Le samedi qui vient (ou celui d'après si on est déjà samedi soir). */
   const nextSaturday = () => {
     const d = new Date(today);
-    const delta = (6 - mondayIndex(d) + 7) % 7 || 7;
-    d.setDate(d.getDate() + (mondayIndex(d) === 5 ? 7 : delta));
+    // Semaine européenne : samedi = index 5 (lundi = 0). Déjà samedi → celui d'après.
+    const delta = (5 - mondayIndex(d) + 7) % 7 || 7;
+    d.setDate(d.getDate() + delta);
     return d;
   };
   const addDays = (d: Date, n: number) => {
