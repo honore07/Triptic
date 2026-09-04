@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { Suspense, lazy, useEffect, type ReactNode } from 'react';
 import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Backpack, Compass, LogOut, MapPinPlus, PartyPopper, UserRound } from 'lucide-react';
@@ -10,20 +10,29 @@ import { LangSwitcher } from './components/LangSwitcher';
 import { LogoVire } from './components/LogoVire';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
-import { Contribute } from './pages/Contribute';
-import { Explore } from './pages/Explore';
 import { Home } from './pages/Home';
-import { LegalAttributions } from './pages/LegalAttributions';
-import { LegalPage } from './pages/LegalPage';
-import { LegalTdm } from './pages/LegalTdm';
-import { MyTrips } from './pages/MyTrips';
 import { Plan } from './pages/Plan';
-import { SavedTrip } from './pages/SavedTrip';
-import { Profil } from './pages/Profil';
-import { PublicTrip } from './pages/PublicTrip';
-import { TripPage } from './pages/Trip';
-import { Vehicule } from './pages/Vehicule';
-import { AuthPage } from './pages/Auth';
+
+/*
+ * Boucle cœur (accueil, génération) dans le bundle initial ; tout le reste
+ * arrive à la demande — la carte Mapbox (1,8 Mo) ne se charge déjà que
+ * quand une carte se rend. Une page qui échoue à charger (réseau coupé en
+ * cours de route) tombe sur l'écran hors ligne du service worker.
+ */
+const Contribute = lazy(() => import('./pages/Contribute').then((m) => ({ default: m.Contribute })));
+const Explore = lazy(() => import('./pages/Explore').then((m) => ({ default: m.Explore })));
+const LegalAttributions = lazy(() =>
+  import('./pages/LegalAttributions').then((m) => ({ default: m.LegalAttributions })),
+);
+const LegalPage = lazy(() => import('./pages/LegalPage').then((m) => ({ default: m.LegalPage })));
+const LegalTdm = lazy(() => import('./pages/LegalTdm').then((m) => ({ default: m.LegalTdm })));
+const MyTrips = lazy(() => import('./pages/MyTrips').then((m) => ({ default: m.MyTrips })));
+const SavedTrip = lazy(() => import('./pages/SavedTrip').then((m) => ({ default: m.SavedTrip })));
+const Profil = lazy(() => import('./pages/Profil').then((m) => ({ default: m.Profil })));
+const PublicTrip = lazy(() => import('./pages/PublicTrip').then((m) => ({ default: m.PublicTrip })));
+const TripPage = lazy(() => import('./pages/Trip').then((m) => ({ default: m.TripPage })));
+const Vehicule = lazy(() => import('./pages/Vehicule').then((m) => ({ default: m.Vehicule })));
+const AuthPage = lazy(() => import('./pages/Auth').then((m) => ({ default: m.AuthPage })));
 
 /**
  * Aligne plan/quota/offre de lancement sur le serveur à chaque changement de
@@ -194,6 +203,8 @@ export function App() {
         <LangSwitcher />
       </header>
       <PageTurn>
+      {/* Le temps qu'une page arrive : la planche reste vide, jamais un spinner */}
+      <Suspense fallback={<main className="min-h-[50vh]" aria-busy="true" />}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/plan" element={<Plan />} />
@@ -213,6 +224,7 @@ export function App() {
         <Route path="/legal/terms" element={<LegalPage section="terms" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
       </PageTurn>
       {/* Bande papier sous le pied de page : l'accueil pose une photo plein
        * écran derrière tout, et ces liens sont en encre sombre. Sans fond

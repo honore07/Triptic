@@ -27,7 +27,7 @@ describe('analytics (PostHog sans cookie)', () => {
     const a = await import('../lib/analytics');
     a._resetForTests();
     expect(a.analyticsEnabled()).toBe(false);
-    a.initAnalytics();
+    await a.initAnalytics();
     expect(init).not.toHaveBeenCalled();
     expect(() => a.track('paywall_opened')).not.toThrow();
     expect(() => a.trackPageview('/plan')).not.toThrow();
@@ -46,8 +46,12 @@ describe('analytics (PostHog sans cookie)', () => {
     const a = await import('../lib/analytics');
     a._resetForTests();
     expect(a.analyticsEnabled()).toBe(true);
-    a.initAnalytics();
+    // Un événement émis pendant le chargement du client n'est pas perdu
+    const ready = a.initAnalytics();
+    a.track('paywall_opened');
+    await ready;
     expect(init).toHaveBeenCalledTimes(1);
+    expect(capture).toHaveBeenCalledWith('paywall_opened', undefined);
     const opts = init.mock.calls[0]![1] as Record<string, unknown>;
     expect(opts.persistence).toBe('memory');
     expect(opts.autocapture).toBe(false);
@@ -68,7 +72,7 @@ describe('analytics (PostHog sans cookie)', () => {
     const a = await import('../lib/analytics');
     a._resetForTests();
     expect(a.analyticsEnabled()).toBe(false);
-    a.initAnalytics();
+    await a.initAnalytics();
     expect(init).not.toHaveBeenCalled();
   });
 
@@ -76,8 +80,7 @@ describe('analytics (PostHog sans cookie)', () => {
     vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test123');
     const a = await import('../lib/analytics');
     a._resetForTests();
-    a.initAnalytics();
-    a.initAnalytics();
+    await Promise.all([a.initAnalytics(), a.initAnalytics()]);
     expect(init).toHaveBeenCalledTimes(1);
   });
 });
