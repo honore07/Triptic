@@ -57,6 +57,7 @@ export function PhotoPicker({ value, fallback, label, onChange }: PhotoPickerPro
           id={inputId}
           type="file"
           accept="image/*"
+          aria-label={label}
           className="sr-only"
           onChange={(e) => pick(e.target.files?.[0])}
         />

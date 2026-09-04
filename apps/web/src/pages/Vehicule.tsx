@@ -72,6 +72,10 @@ export function Vehicule() {
         </button>
       </div>
 
+      <h1 className="fade-up font-display text-3xl font-semibold leading-tight text-trail">
+        {t('vehicule.nav')}
+      </h1>
+
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
         <div className="ink-reveal flex flex-col gap-3 border border-mist bg-snow p-4">
           <PhotoPicker
