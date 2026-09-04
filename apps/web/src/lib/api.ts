@@ -353,6 +353,14 @@ export async function parseExploreFilters(
 }
 
 /** Fenêtre météo d'un jour du trip + alertes proactives (POST /api/trips/weather). */
+export interface WeatherHourPayload {
+  hour: number;
+  weather_code: number;
+  temp_c: number;
+  precipitation_probability: number;
+  wind_kmh: number;
+}
+
 export interface WeatherDayPayload {
   day: number;
   date: string | null;
@@ -363,6 +371,8 @@ export interface WeatherDayPayload {
     precipitation_mm: number;
     precipitation_probability: number;
     wind_max_kmh: number;
+    /** Heure par heure, 6 h → 21 h (PL.11) — vide si l'API ne l'a pas fournie. */
+    hours?: WeatherHourPayload[];
   } | null;
   alerts: { code: string; severity: 'warning' | 'danger' }[];
   out_of_range: boolean;

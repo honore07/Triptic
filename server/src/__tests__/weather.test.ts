@@ -19,6 +19,7 @@ function forecast(overrides: Partial<DayForecast> = {}): DayForecast {
     precipitation_mm: 0,
     precipitation_probability: 10,
     wind_max_kmh: 15,
+    hours: [],
     ...overrides,
   };
 }
@@ -76,6 +77,13 @@ describe('WeatherService', () => {
       precipitation_probability_max: [80],
       wind_speed_10m_max: [23.6],
     },
+    hourly: {
+      time: ['2026-08-01T05:00', '2026-08-01T06:00', '2026-08-01T14:00', '2026-08-01T22:00'],
+      weather_code: [1, 2, 61, 3],
+      temperature_2m: [9.6, 11.2, 20.7, 14.1],
+      precipitation_probability: [0, 10, 80, 30],
+      wind_speed_10m: [5.2, 8.9, 19.4, 12.0],
+    },
   };
 
   function tomorrow(): string {
@@ -98,6 +106,22 @@ describe('WeatherService', () => {
     });
     await service.dayForecast(48.04, 7.01, date);
     expect(fetchMock).toHaveBeenCalledTimes(1); // cache
+    // Heure par heure (PL.11) : la fenêtre 6 h → 21 h seulement, arrondie
+    expect(result?.hours).toEqual([
+      { hour: 6, weather_code: 2, temp_c: 11, precipitation_probability: 10, wind_kmh: 9 },
+      { hour: 14, weather_code: 61, temp_c: 21, precipitation_probability: 80, wind_kmh: 19 },
+    ]);
+    expect(String((fetchMock.mock.calls as unknown[][])[0]?.[0])).toContain('hourly=');
+  });
+
+  it('sans bloc horaire : la journée reste valable, heures vides', async () => {
+    const body = { daily: OPEN_METEO_BODY.daily };
+    const service = new WeatherService(
+      'https://api.open-meteo.com',
+      vi.fn(async () => new Response(JSON.stringify(body))) as unknown as typeof fetch,
+    );
+    const result = await service.dayForecast(48.1, 7.1, tomorrow());
+    expect(result?.hours).toEqual([]);
   });
 
   it('null hors horizon (passé ou > 16 jours) sans appel réseau', async () => {

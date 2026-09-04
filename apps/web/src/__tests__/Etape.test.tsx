@@ -74,4 +74,35 @@ describe('Étape (planche PL.11)', () => {
     render(<Etape day={flat} />);
     expect(screen.queryByText(/max/)).not.toBeInTheDocument();
   });
+
+  it('affiche la bande heure par heure quand la prévision la porte (PL.11)', () => {
+    setLang('fr');
+    render(
+      <Etape
+        day={DAY}
+        forecast={{
+          weather_code: 2,
+          temp_min_c: 11,
+          temp_max_c: 21,
+          precipitation_mm: 2,
+          precipitation_probability: 40,
+          wind_max_kmh: 20,
+          hours: [
+            { hour: 6, weather_code: 2, temp_c: 11, precipitation_probability: 10, wind_kmh: 9 },
+            { hour: 14, weather_code: 61, temp_c: 21, precipitation_probability: 80, wind_kmh: 19 },
+          ],
+        }}
+      />,
+    );
+    const band = screen.getByRole('list', { name: 'Météo heure par heure' });
+    expect(band).toHaveTextContent('06 h');
+    expect(band).toHaveTextContent('14 h');
+    expect(band).toHaveTextContent('80 %');
+  });
+
+  it('sans heures : pas de bande, rien de simulé', () => {
+    setLang('fr');
+    render(<Etape day={DAY} forecast={null} />);
+    expect(screen.queryByRole('list', { name: 'Météo heure par heure' })).not.toBeInTheDocument();
+  });
 });

@@ -365,7 +365,8 @@
     "alert_strong_wind": "Very strong wind expected — caution on ridges and passes.",
     "alert_heat_on_hike": "High heat expected on a hiking day — start early and carry water.",
     "alert_cold_camp": "Freezing night expected at camp — bring cold-weather gear.",
-    "alert_snow_on_route": "Snow expected on the road or trail — check passes and gear up."
+    "alert_snow_on_route": "Snow expected on the road or trail — check passes and gear up.",
+    "horizon": "~16-day horizon"
   },
   "legal": {
     "attributions_nav": "Data & licenses",
@@ -542,7 +543,8 @@
   "etape": {
     "time": "Moving",
     "profile": "Climb profile",
-    "profile_note": "One bar per climb of the day — a point-by-point profile needs server elevation data."
+    "profile_note": "One bar per climb of the day — a point-by-point profile needs server elevation data.",
+    "hourly": "Hour by hour"
   },
   "profil": {
     "plate": "05 — Profile",

@@ -12,6 +12,8 @@ import { dateForTripDay, type ActivityType, type TripDay } from '@triptic/shared
 import { formatDistance, formatElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
 import { thumbnailUrl } from './DayCards';
+import { WeatherIcon } from './WeatherStrip';
+import type { WeatherDayPayload } from '../lib/api';
 
 const ACTIVITY_ICONS: Record<ActivityType, typeof Car> = {
   drive: Car,
@@ -41,6 +43,8 @@ interface EtapeProps {
   day: TripDay;
   /** Date de départ du trip — donne la date réelle de la journée. */
   startDate?: string | undefined;
+  /** Prévision du jour (bandeau météo) — la bande horaire s'affiche si elle porte des heures. */
+  forecast?: WeatherDayPayload['forecast'] | undefined;
 }
 
 /**
@@ -52,7 +56,7 @@ interface EtapeProps {
  * Le profil se lit sur les dénivelés réellement portés par les activités —
  * pas de courbe lissée qui suggérerait une précision qu'on n'a pas.
  */
-export function Etape({ day, startDate }: EtapeProps) {
+export function Etape({ day, startDate, forecast = null }: EtapeProps) {
   const { t, i18n } = useTranslation();
   const units = useProfileStore((s) => s.units);
   const type = day.activities[0]?.type ?? 'hike';
@@ -144,6 +148,42 @@ export function Etape({ day, startDate }: EtapeProps) {
           </div>
         ))}
       </dl>
+
+      {/* Météo heure par heure (PL.11) — 6 h → 21 h, la fenêtre où la journée se joue */}
+      {forecast && forecast.hours && forecast.hours.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between">
+            <p className="label-mono text-fog">{t('etape.hourly')}</p>
+            <p className="label-mono text-fog">
+              {forecast.temp_min_c}° / {forecast.temp_max_c}°
+            </p>
+          </div>
+          <ol
+            aria-label={t('etape.hourly')}
+            className="-mx-4 flex snap-x gap-px overflow-x-auto border-y border-mist bg-mist px-4 sm:mx-0 sm:px-0"
+          >
+            {forecast.hours.map((h) => (
+              <li
+                key={h.hour}
+                className="flex min-w-[3.6rem] shrink-0 snap-start flex-col items-center gap-1 bg-snow px-1.5 py-2"
+              >
+                <span className="label-mono text-fog">{String(h.hour).padStart(2, '0')} h</span>
+                <WeatherIcon code={h.weather_code} size={16} />
+                <span className="font-display text-base font-semibold leading-none text-trail">
+                  {h.temp_c}°
+                </span>
+                <span
+                  className={`font-mono text-[10px] ${
+                    h.precipitation_probability >= 50 ? 'text-copper-deep' : 'text-fog'
+                  }`}
+                >
+                  {h.precipitation_probability} %
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       {climbs.length > 0 && (
         <div className="flex flex-col gap-2">
