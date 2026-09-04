@@ -4,8 +4,9 @@
 > conversation Claude Code sans avoir à tout redécouvrir : où en est le
 > produit, comment il fonctionne, ce qui reste, et par quoi commencer.
 >
-> Dernière mise à jour : **25 août 2026**, après le merge de la PR #35
-> (refonte design complète, 61 fichiers).
+> Dernière mise à jour : **4 septembre 2026**, après les PR #42 à #54
+> (triptyque, mouvements signature, photos prises sur place, performance,
+> génération rapide, accessibilité — voir §2 bis).
 
 ---
 
@@ -73,6 +74,38 @@ Design sont implémentées, de l'ouverture au profil.
 côté serveur, l'UI le dit au lieu d'afficher un chiffre inventé. Les trois
 endroits concernés sont listés en §4.
 
+### 2 bis. La passe de septembre (PR #42 → #54)
+
+Décisions du fondateur (01/09) : gravure + rouille partout, **vraies photos
+uniquement sur le trip et sur la carte**, animation éditoriale, références
+Arc'teryx / Aesop. Ce qui en est sorti, tout en CSS et React existants :
+
+- **Le triptyque** (PL.07) : trois volets photo plein cadre, en tonalité
+  gravure au repos, en couleur quand on s'y arrête ; « ce qui les distingue »
+  calculé depuis les relevés. Carrousel à crans sur mobile.
+- **Itinéraire, étape, page publique** : tête plein cadre avec la photo réelle,
+  relevé sur l'encre, bandeau des jours en planches photo.
+- **Relevé de génération** (PL.06) : étape I / V, chronomètre, ligne de crête
+  à la plume — plus jamais « 0 % » pendant des minutes.
+- **Mouvements signature** (`styles.css`) : `ink-reveal`, `route-draw`,
+  `bar-grow`, `title-breathe`, `settle-back`, `mask-reveal`, `hero-open`
+  (scroll-timeline), `plate-photo` (gravure → couleur), `on-photo` (halo
+  d'encre). Tout s'éteint en `prefers-reduced-motion`.
+- **Photos prises sur place** : `findTripCover` / `findDayPhotos` ancrent la
+  couverture d'une vire sur ses temps forts (Wikimedia Commons par
+  coordonnées), plus jamais par mots-clés.
+- **Moteur** : `reasoning_effort` Deepseek maîtrisé (`low` pour tracer, `none`
+  pour classer) — une semaine de trip passe de 591 s à 105 s ; une réponse
+  vide bascule sur Claude et la bascule est journalisée (`LLM fallback`).
+- **Performance** : bundle initial 1 150 → 670 Ko (PostHog et pages
+  secondaires à la demande, anglais/allemand en morceaux séparés).
+- **PWA** : le service worker attend, un bandeau « Recharger » annonce une
+  nouvelle version — plus de bascule silencieuse qui montrait l'ancien écran
+  ou coupait une génération.
+- **Contrôles** : `apps/web/scripts/qa/` (parcours du site en ligne, audit
+  axe-core, contrastes composés, captures). État au 04/09 : zéro exception,
+  zéro défaut d'accessibilité sur dix pages.
+
 ---
 
 ## 3. Comment ça marche, en bref
@@ -119,22 +152,17 @@ vectorielle pour le favicon 16-32 px.
 Ces points bloquent un lancement public. Ils sont documentés en détail dans
 `deploy/` et audités dans `QA.md`.
 
-**HTTPS** — la prod est servie en HTTP nu, ce qui casse **trois** features
-d'un coup : copie du lien public (clipboard), service worker (PWA/offline) et
-géolocalisation. Toutes trois exigent un contexte sécurisé.
-→ Suivre `deploy/RUNBOOK-https.md` (DNS Cloudflare + VPS, ~30 min).
-→ Vérifier ensuite : partage d'un trip, install PWA, bouton « Utiliser ma position ».
+**HTTPS** — fait : `https://triptic.hakoe-alsace.com` (Traefik, voir
+`deploy/RUNBOOK-https.md`).
 
 **Paywall contournable** — le serveur honore le header client `x-plan`
 (`server/src/middleware/auth.ts`). C'est un **choix assumé** tant qu'on est en
 démo gratuite, pas un oubli.
 → À fermer au passage payant : `deploy/NOTE-paywall-prod.md`.
 
-**Auth Supabase non configurée** — sans `VITE_SUPABASE_*`, l'ouverture mène
-directement à l'accueil et les carnets ne se sauvegardent pas par compte.
-→ Créer le projet Supabase, poser les variables, activer le fournisseur
-**Google** (le bouton est câblé dans `pages/Auth.tsx` ; sans le fournisseur il
-affiche proprement son indisponibilité).
+**Auth Supabase** — configurée en prod : l'ouverture mène à la connexion, la
+génération exige un compte. Reste à activer le fournisseur **Google** côté
+Supabase (le bouton est câblé dans `pages/Auth.tsx`).
 
 **Compression et cache des assets** — `mapbox-gl` fait 1,86 Mo servi sans
 gzip/brotli, et les assets hashés sont en `max-age=0`.
@@ -234,8 +262,20 @@ avant de conclure (`head -c 12 .env | od -c` montre les octets nuls).
 **GraphHopper fige ses profils à l'import** : changer un profil impose un
 rebuild complet du graphe.
 
-**Deepseek v4 raisonne avant de répondre** — prévoir `maxTokens` ≥ 4000, sinon
-la réponse revient vide.
+**Deepseek v4 raisonne avant de répondre, et sa réflexion compte dans
+`max_tokens`** — sans `reasoning_effort`, il brûle tout le budget et rend un
+contenu vide (`finish_reason: length`). Le provider envoie `low` par défaut,
+`none` pour classer, rien pour le correcteur ; ne pas retirer ce paramètre.
+
+**Le service worker garde l'ancien écran** dans un navigateur qui avait déjà
+l'app : depuis la PR #51 un bandeau « Recharger » le dit. Pour forcer : vider
+le stockage du site, ou `qa:live` (navigateur neuf) pour juger le vrai build.
+
+**Déploiement VPS** : `git` y est épinglé en HTTP/1.1 (GitHub coupait les
+pulls HTTP/2) et la session SSH tombe pendant `pnpm build` — lancer en
+`nohup … > deploy.log` avec `GIT_TERMINAL_PROMPT=0`, puis lire `deploy.log`.
+
+**Jamais `git stash` nu** : la pile est partagée entre les worktrees.
 
 ---
 
@@ -243,10 +283,12 @@ la réponse revient vide.
 
 Dans l'ordre de valeur :
 
-1. **HTTPS** — débloque trois features d'un coup, une demi-heure de travail,
-   procédure écrite.
-2. **Auth Supabase** — sans elle, aucun carnet n'est rattaché à un compte.
-3. **Compression Nginx** — gain de performance immédiat, faible effort.
-4. **Imports de données** — élargit la couverture géographique.
-5. **Les trois trous serveur** (§4.2), par ordre de visibilité : météo horaire,
+1. **Regarder trois utilisateurs** tracer une vire sans aide — ce qu'ils
+   comprennent du triptyque, où ils hésitent. Aucun outil ne le mesure.
+2. **Fournisseur Google** dans Supabase, puis **Stripe** quand le passage
+   payant sera décidé (`deploy/NOTE-paywall-prod.md`).
+3. **Imports de données** — élargit la couverture géographique.
+4. **Les trois trous serveur** (§4.2), par ordre de visibilité : météo horaire,
    puis profil altimétrique, puis services des emplacements.
+5. Avant chaque déploiement : `pnpm --filter @triptic/web qa:live` et
+   `qa:a11y` sur le site, `qa:contrast` sur le serveur de dev.
