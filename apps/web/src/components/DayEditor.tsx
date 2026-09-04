@@ -80,7 +80,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
               const key = `${day.day}-${i}`;
               const open = expanded === key;
               return (
-                <li key={key} className="rounded-xl border border-mist/70 bg-cloud">
+                <li key={key} className="border border-mist bg-cloud">
                   <div className="flex items-center gap-1.5 px-3 py-2">
                     <button
                       type="button"
@@ -104,7 +104,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                       disabled={busy || i === 0}
                       onClick={() => move(day.day, i, -1)}
                       aria-label={`${t('editor.move_up')} — ${activity.title}`}
-                      className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-ridge hover:bg-gold/20 disabled:opacity-30"
+                      className="flex min-h-11 min-w-11 items-center justify-center text-ridge hover:bg-sky disabled:opacity-30"
                     >
                       <ArrowUp size={15} aria-hidden="true" />
                     </button>
@@ -113,7 +113,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                       disabled={busy || i === day.activities.length - 1}
                       onClick={() => move(day.day, i, 1)}
                       aria-label={`${t('editor.move_down')} — ${activity.title}`}
-                      className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-ridge hover:bg-gold/20 disabled:opacity-30"
+                      className="flex min-h-11 min-w-11 items-center justify-center text-ridge hover:bg-sky disabled:opacity-30"
                     >
                       <ArrowDown size={15} aria-hidden="true" />
                     </button>
@@ -122,7 +122,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                       disabled={busy || day.activities.length <= 1}
                       onClick={() => remove(day.day, i)}
                       aria-label={`${t('editor.delete')} — ${activity.title}`}
-                      className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-storm hover:bg-storm/10 disabled:opacity-30"
+                      className="flex min-h-11 min-w-11 items-center justify-center text-storm-deep hover:bg-storm-tint disabled:opacity-30"
                     >
                       <Trash2 size={15} aria-hidden="true" />
                     </button>
@@ -137,7 +137,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                           value={activity.title}
                           disabled={busy}
                           onChange={(e) => update(day.day, i, { title: e.target.value })}
-                          className="min-h-10 rounded-lg border border-mist bg-snow px-2.5 text-sm font-normal text-trail"
+                          className="min-h-10 border border-mist bg-snow px-2.5 text-sm font-normal text-trail"
                         />
                       </label>
                       <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
@@ -148,7 +148,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                           onChange={(e) =>
                             update(day.day, i, { type: e.target.value as ActivityType })
                           }
-                          className="min-h-10 rounded-lg border border-mist bg-snow px-2 text-sm font-normal text-trail"
+                          className="min-h-10 border border-mist bg-snow px-2 text-sm font-normal text-trail"
                         >
                           {ACTIVITY_TYPES.map((type) => (
                             <option key={type} value={type}>
@@ -165,7 +165,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                           onChange={(e) =>
                             update(day.day, i, { time_of_day: e.target.value as TimeOfDay })
                           }
-                          className="min-h-10 rounded-lg border border-mist bg-snow px-2 text-sm font-normal text-trail"
+                          className="min-h-10 border border-mist bg-snow px-2 text-sm font-normal text-trail"
                         >
                           {TIMES.map((time) => (
                             <option key={time} value={time}>
@@ -186,7 +186,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                               duration_min: e.target.value ? Number(e.target.value) : undefined,
                             })
                           }
-                          className="min-h-10 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
+                          className="min-h-10 border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
                         />
                       </label>
                       <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
@@ -201,7 +201,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                               cost_estimate: e.target.value ? Number(e.target.value) : undefined,
                             })
                           }
-                          className="min-h-10 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
+                          className="min-h-10 border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
                         />
                       </label>
                       <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
@@ -212,7 +212,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                           value={activity.lat}
                           disabled={busy}
                           onChange={(e) => update(day.day, i, { lat: Number(e.target.value) })}
-                          className="min-h-10 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
+                          className="min-h-10 border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
                         />
                       </label>
                       <label className="flex flex-col gap-1 text-xs font-semibold text-ridge">
@@ -223,7 +223,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
                           value={activity.lng}
                           disabled={busy}
                           onChange={(e) => update(day.day, i, { lng: Number(e.target.value) })}
-                          className="min-h-10 rounded-lg border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
+                          className="min-h-10 border border-mist bg-snow px-2.5 font-mono text-sm font-normal text-trail"
                         />
                       </label>
                     </div>
@@ -236,7 +236,7 @@ export function DayEditor({ days, busy, onChange }: Props) {
             type="button"
             disabled={busy}
             onClick={() => add(day)}
-            className="mt-2 flex min-h-10 items-center gap-1.5 rounded-lg border border-dashed border-mist px-3 text-sm font-semibold text-ridge transition-colors hover:border-summit hover:text-copper-deep disabled:opacity-50"
+            className="mt-2 flex min-h-10 items-center gap-1.5 border border-dashed border-mist px-3 text-sm font-semibold text-ridge transition-colors hover:border-summit hover:text-copper-deep disabled:opacity-50"
           >
             <Plus size={15} aria-hidden="true" />
             {t('editor.add_activity')}

@@ -28,7 +28,7 @@ export function QuickReplies({
           type="button"
           disabled={disabled}
           onClick={() => onPick(reply)}
-          className="min-h-11 rounded-full border border-mist bg-terrain px-4 py-2 text-sm font-medium text-trail transition-colors duration-200 hover:border-gold-deep hover:bg-gold disabled:opacity-60"
+          className="min-h-11 rounded-full border border-mist bg-terrain px-4 py-2 text-sm font-medium text-trail transition-colors duration-200 hover:bg-sky disabled:opacity-60"
         >
           {reply}
         </button>

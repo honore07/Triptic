@@ -128,7 +128,7 @@ export function LegalAttributions() {
         {SOURCES.map((source, i) => (
           <li
             key={source.id}
-            className="fade-up rounded-xl border border-mist bg-snow p-4 shadow-sm"
+            className="fade-up border border-mist bg-snow p-4"
             style={{ animationDelay: `${i * 40}ms` }}
           >
             <h2 className="font-display text-base font-bold text-trail">{source.name}</h2>
