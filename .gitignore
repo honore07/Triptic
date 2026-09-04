@@ -9,3 +9,8 @@ build/
 coverage/
 .turbo/
 .vite/
+
+# Sorties des scripts QA (captures locales)
+apps/web/live-shots/
+apps/web/shots/
+apps/web/shots-jpg/
