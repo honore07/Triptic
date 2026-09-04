@@ -100,9 +100,9 @@ export function AddPlaceForm() {
           <MapPinPlus size={18} className="text-copper-deep" aria-hidden="true" />
         </span>
         <div>
-          <h2 id="add-place-title" className="font-display text-2xl font-semibold leading-tight text-trail">
+          <h1 id="add-place-title" className="font-display text-2xl font-semibold leading-tight text-trail">
             {t('places.title')}
-          </h2>
+          </h1>
           <p className="text-xs text-ridge">{t('places.hint')}</p>
         </div>
       </div>
