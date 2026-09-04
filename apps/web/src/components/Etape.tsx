@@ -94,7 +94,7 @@ export function Etape({ day, startDate }: EtapeProps) {
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.15)_0%,rgba(17,17,17,0.35)_45%,rgba(17,17,17,0.92)_100%)]"
+            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(17,17,17,0.15)_0%,rgba(17,17,17,0.55)_45%,rgba(17,17,17,0.94)_100%)]"
           />
           <div className="relative flex min-h-[15rem] flex-col justify-end gap-1 p-4 sm:min-h-[18rem] sm:p-5">
             <p className="label-mono text-cloud/80">
@@ -103,7 +103,7 @@ export function Etape({ day, startDate }: EtapeProps) {
             </p>
             <h2
               id="etape-title"
-              className="font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl"
+              className="on-photo font-display text-3xl font-semibold leading-tight text-cloud sm:text-4xl"
             >
               {day.title}
             </h2>

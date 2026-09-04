@@ -11,7 +11,14 @@ import { PgGalleryStore } from './repo/galleries.js';
 import { PgEnrichmentQueueStore } from './repo/enrichmentQueue.js';
 import { PgQuotaService } from './services/quota.js';
 
-const provider = createProviderFromEnv();
+// Chaque bascule Deepseek → Claude est journalisée : c'est un surcoût et un
+// symptôme (réponse vide, budget de tokens mangé par le raisonnement, 5xx).
+const provider = createProviderFromEnv(process.env, ({ method, from, to, error }) => {
+  logger.warn(
+    { method, from, to, error: error instanceof Error ? error.message : String(error) },
+    'LLM fallback',
+  );
+});
 // PostgreSQL + PostGIS si DATABASE_URL est défini, sinon store in-memory
 // (trips perdus au restart PM2 — voir deploy/vps-setup.sh pour la migration).
 const repo = env.databaseUrl ? new PgTripRepo(env.databaseUrl) : undefined;
