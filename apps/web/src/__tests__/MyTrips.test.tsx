@@ -13,7 +13,7 @@ vi.mock('../lib/api', () => ({
 
 // Comportement historique testé ici : mode sans auth (supabase absent).
 // Le cas « auth configurée + déconnecté » a son propre test plus bas.
-vi.mock('../lib/supabase', () => ({ supabase: null }));
+vi.mock('../lib/supabase', () => ({ supabase: null, recoveryLink: false }));
 
 const listTrips = vi.mocked(api.listTrips);
 

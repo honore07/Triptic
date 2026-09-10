@@ -11,6 +11,7 @@ import { LogoVire } from './components/LogoVire';
 import { MiseAJour } from './components/MiseAJour';
 import { OnlineIndicator } from './components/OnlineIndicator';
 import { PaywallModal } from './components/PaywallModal';
+import { RecoveryGuard } from './components/RecoveryGuard';
 import { Home } from './pages/Home';
 import { Plan } from './pages/Plan';
 
@@ -152,6 +153,7 @@ export function App() {
   return (
     <BrowserRouter>
       <Pageviews />
+      <RecoveryGuard />
       <MiseAJour />
       <OnlineIndicator />
       <LaunchOfferBanner />

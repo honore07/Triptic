@@ -2,7 +2,10 @@ import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
 import type { PlanId } from '@triptic/shared';
 import { track } from '../lib/analytics';
-import { supabase } from '../lib/supabase';
+import { recoveryLink, supabase } from '../lib/supabase';
+
+/** Réinitialisation entamée : elle survit à un rechargement ou à un onglet refermé. */
+const RECOVERY_KEY = 'vire-password-reset';
 
 interface UserState {
   plan: PlanId;
@@ -15,8 +18,10 @@ interface UserState {
   email: string | null;
   /** true = le serveur applique l'offre de lancement (tout ouvert). */
   launchOffer: boolean;
-  /** Arrivé par un lien de réinitialisation : la connexion demande un nouveau mot de passe. */
+  /** Session ouverte par un lien « mot de passe oublié » : choisir le nouveau mot de passe d'abord. */
   recovery: boolean;
+  /** true une fois la session initiale lue par supabase-js, liens d'email compris. */
+  authReady: boolean;
   setLaunchOffer: (launchOffer: boolean) => void;
   setPlan: (plan: PlanId) => void;
   setRemaining: (remaining: number) => void;
@@ -34,7 +39,8 @@ export const useUserStore = create<UserState>((set) => ({
   accessToken: null,
   email: null,
   launchOffer: false,
-  recovery: false,
+  recovery: recoveryLink || localStorage.getItem(RECOVERY_KEY) === 'pending',
+  authReady: !supabase,
   setLaunchOffer: (launchOffer) => set({ launchOffer }),
   setPlan: (plan) => {
     localStorage.setItem('triptic-plan', plan);
@@ -52,19 +58,29 @@ export const useUserStore = create<UserState>((set) => ({
       accessToken: session?.access_token ?? null,
       email: session?.user.email ?? null,
     }),
-  setRecovery: (recovery) => set({ recovery }),
+  setRecovery: (recovery) => {
+    if (recovery) localStorage.setItem(RECOVERY_KEY, 'pending');
+    else localStorage.removeItem(RECOVERY_KEY);
+    set({ recovery });
+  },
 }));
 
 // Session persistée par supabase-js (localStorage) + refresh automatique :
 // le store reflète l'état, y compris au chargement de la page.
 if (supabase) {
+  if (recoveryLink) useUserStore.getState().setRecovery(true);
   void supabase.auth
     .getSession()
-    .then(({ data }) => useUserStore.getState().setSession(data.session));
+    .then(({ data }) => {
+      const store = useUserStore.getState();
+      store.setSession(data.session);
+      // Lien expiré, ou réinitialisation abandonnée puis déconnectée : plus rien à changer.
+      if (!data.session && store.recovery) store.setRecovery(false);
+    })
+    .catch(() => undefined)
+    .finally(() => useUserStore.setState({ authReady: true }));
   supabase.auth.onAuthStateChange((event, session) => {
     const store = useUserStore.getState();
-    // Le drapeau passe AVANT la session : la page de connexion ne doit jamais
-    // voir un carnet ouvert sans savoir qu'il s'agit d'un nouveau mot de passe.
     if (event === 'PASSWORD_RECOVERY') store.setRecovery(true);
     if (event === 'SIGNED_OUT') store.setRecovery(false);
     store.setSession(session);

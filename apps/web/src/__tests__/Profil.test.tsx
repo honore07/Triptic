@@ -22,6 +22,7 @@ vi.mock('../lib/supabase', () => ({
   get supabase() {
     return authClient.configured ? { auth: { signOut: authClient.signOut } } : null;
   },
+  recoveryLink: false,
 }));
 
 const deleteAccount = vi.hoisted(() => vi.fn<(plan: string) => Promise<string | null>>());

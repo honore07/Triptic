@@ -1,14 +1,15 @@
 import { track } from '../lib/analytics';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { authErrorKey, linkErrorInUrl, type AuthErrorKey } from '../lib/authErrors';
+import { authErrorKey, type AuthErrorKey } from '../lib/authErrors';
+import { linkErrorInUrl } from '../lib/authLinks';
 import { isGoogleEnabled } from '../lib/authProviders';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from '../store/userStore';
 
 type Mode = 'login' | 'signup' | 'forgot';
-type Notice = 'check_email' | 'reset_sent';
+type Notice = 'check_email' | 'reset_sent' | 'password_updated';
 type ErrorKey = AuthErrorKey | 'error_link' | 'error_google';
 
 /**
@@ -24,6 +25,7 @@ export function AuthPage() {
   const navigate = useNavigate();
   const sessionEmail = useUserStore((s) => s.email);
   const recovery = useUserStore((s) => s.recovery);
+  const authReady = useUserStore((s) => s.authReady);
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +35,9 @@ export function AuthPage() {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [busy, setBusy] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
+  // Posé avant de lever le drapeau de réinitialisation : sans lui, la
+  // redirection ci-dessous emporterait le message de confirmation.
+  const passwordJustUpdated = useRef(false);
 
   useEffect(() => {
     // L'erreur est lue ; on retire le jeton d'erreur de l'URL pour qu'un
@@ -50,7 +55,9 @@ export function AuthPage() {
   // Carnet déjà ouvert (retour de Google, lien de confirmation) : rien à faire
   // ici — sauf pendant le choix d'un nouveau mot de passe.
   useEffect(() => {
-    if (sessionEmail && !recovery) navigate('/', { replace: true });
+    if (sessionEmail && !recovery && !passwordJustUpdated.current) {
+      navigate('/', { replace: true });
+    }
   }, [sessionEmail, recovery, navigate]);
 
   if (!supabase) {
@@ -64,6 +71,8 @@ export function AuthPage() {
   const inForgot = !recovery && mode === 'forgot';
   const isSignup = !recovery && mode === 'signup';
   const isLogin = !recovery && mode === 'login';
+  // Le lien est encore en cours de vérification par supabase-js.
+  const waitingForLink = recovery && !authReady;
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -97,8 +106,13 @@ export function AuthPage() {
           setError(authErrorKey(updateError));
           return;
         }
+        // Le compte ne change pas, seul son mot de passe : trips et carnet
+        // restent liés. Un appareil resté connecté avec l'ancien mot de passe
+        // doit, lui, repasser par le nouveau.
+        await auth.signOut({ scope: 'others' }).catch(() => undefined);
+        passwordJustUpdated.current = true;
+        setNotice('password_updated');
         useUserStore.getState().setRecovery(false);
-        navigate('/', { replace: true });
         return;
       }
       if (inForgot) {
@@ -139,6 +153,17 @@ export function AuthPage() {
     });
   };
 
+  // Renoncer : la session ouverte par le lien se ferme sur cet appareil. Le
+  // drapeau tombe avec l'événement SIGNED_OUT, jamais avant — une session
+  // restée ouverte sans nouveau mot de passe est précisément ce qu'on évite.
+  const onCancelRecovery = () => {
+    setBusy(true);
+    void auth
+      .signOut({ scope: 'local' })
+      .catch(() => undefined)
+      .finally(() => setBusy(false));
+  };
+
   const onGoogle = () => {
     setBusy(true);
     setError(null);
@@ -161,13 +186,16 @@ export function AuthPage() {
     })();
   };
 
-  const headline = recovery
-    ? t('auth.recovery_headline')
-    : inForgot
-      ? t('auth.forgot_headline')
-      : isSignup
-        ? t('auth.signup_headline')
-        : t('auth.login_headline');
+  const headline =
+    notice === 'password_updated'
+      ? t('auth.password_updated_headline')
+      : recovery
+        ? t('auth.recovery_headline')
+        : inForgot
+          ? t('auth.forgot_headline')
+          : isSignup
+            ? t('auth.signup_headline')
+            : t('auth.login_headline');
   const submitLabel = recovery
     ? t('auth.submit_recovery')
     : inForgot
@@ -176,6 +204,12 @@ export function AuthPage() {
         ? t('auth.submit_signup')
         : t('auth.submit_login');
   const showSwitch = !recovery && !inForgot;
+  const noticeText =
+    notice === 'check_email'
+      ? t('auth.check_email', { email })
+      : notice === 'reset_sent'
+        ? t('auth.reset_sent')
+        : t('auth.password_updated');
 
   const fieldClass =
     'min-h-12 w-full border border-mist bg-snow px-3 py-2 text-sm text-trail ' +
@@ -205,6 +239,9 @@ export function AuthPage() {
               {headline}
             </h1>
             {inForgot && <p className="text-sm text-ridge">{t('auth.forgot_intro')}</p>}
+            {recovery && !notice && (
+              <p className="text-sm text-ridge">{t('auth.recovery_intro')}</p>
+            )}
           </div>
 
           {notice ? (
@@ -213,15 +250,25 @@ export function AuthPage() {
                 role="status"
                 className="border border-pine bg-pine-tint px-3 py-2 text-sm text-pine-deep"
               >
-                {notice === 'check_email' ? t('auth.check_email', { email }) : t('auth.reset_sent')}
+                {noticeText}
               </p>
-              <button
-                type="button"
-                onClick={() => switchMode('login')}
-                className={`self-start ${linkClass}`}
-              >
-                {t('auth.back_to_login')}
-              </button>
+              {notice === 'password_updated' ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/', { replace: true })}
+                  className="cta-plate flex min-h-13 items-center justify-center px-4 py-3"
+                >
+                  {t('auth.continue_to_account')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => switchMode('login')}
+                  className={`self-start ${linkClass}`}
+                >
+                  {t('auth.back_to_login')}
+                </button>
+              )}
             </div>
           ) : (
             <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -254,7 +301,7 @@ export function AuthPage() {
                     required
                     minLength={6}
                     autoComplete={isLogin ? 'current-password' : 'new-password'}
-                    disabled={busy}
+                    disabled={busy || waitingForLink}
                     aria-describedby="auth-password-hint"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -287,7 +334,7 @@ export function AuthPage() {
 
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || waitingForLink}
                 className="cta-plate flex min-h-13 items-center justify-center px-4 py-3"
               >
                 {submitLabel}
@@ -300,6 +347,17 @@ export function AuthPage() {
                   className={`self-center ${linkClass}`}
                 >
                   {t('auth.back_to_login')}
+                </button>
+              )}
+
+              {recovery && (
+                <button
+                  type="button"
+                  onClick={onCancelRecovery}
+                  disabled={busy}
+                  className={`self-center text-sm ${linkClass}`}
+                >
+                  {t('auth.recovery_cancel')}
                 </button>
               )}
             </form>
