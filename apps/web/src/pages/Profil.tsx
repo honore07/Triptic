@@ -1,10 +1,14 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Caravan } from 'lucide-react';
 import { Bascule } from '../components/Bascule';
 import { PhotoPicker } from '../components/PhotoPicker';
+import { deleteAccount } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import { useChatStore } from '../store/chatStore';
 import { useProfileStore, type Preferences, type Units } from '../store/profileStore';
+import { useTripStore } from '../store/tripStore';
 import { useUserStore } from '../store/userStore';
 
 const UNITS: readonly Units[] = ['metric', 'imperial'];
@@ -16,6 +20,8 @@ const PREFS: readonly (keyof Preferences)[] = [
   'offline_maps',
 ];
 
+type DeleteError = 'delete_error_unavailable' | 'delete_error_partial' | 'delete_error_generic';
+
 /**
  * Profil — planche PL.14 « PROFIL ».
  * Unités d'affichage, préférences durables et région couverte. Les
@@ -24,12 +30,48 @@ const PREFS: readonly (keyof Preferences)[] = [
  */
 export function Profil() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const email = useUserStore((s) => s.email);
+  const plan = useUserStore((s) => s.plan);
   const { units, preferences, avatar, vehicle, setUnits, setAvatar, setPreference } =
     useProfileStore();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<DeleteError | null>(null);
   // Copie locale : sans elle, TypeScript ne peut pas garantir que le client
   // est encore non-null au moment du clic.
   const client = supabase;
+
+  const onDelete = () => {
+    if (!client) return;
+    setDeleting(true);
+    setDeleteError(null);
+    void (async () => {
+      try {
+        const code = await deleteAccount(plan);
+        if (code === null) {
+          // Le compte n'existe plus : ce que ce navigateur gardait de lui part aussi.
+          useProfileStore.getState().reset();
+          useChatStore.getState().reset();
+          useTripStore.getState().clear();
+          await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+          navigate('/', { replace: true });
+          return;
+        }
+        setDeleteError(
+          code === 'auth_deletion_failed'
+            ? 'delete_error_partial'
+            : code === 'account_deletion_unavailable'
+              ? 'delete_error_unavailable'
+              : 'delete_error_generic',
+        );
+      } catch {
+        setDeleteError('delete_error_generic');
+      } finally {
+        setDeleting(false);
+      }
+    })();
+  };
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6">
@@ -123,6 +165,59 @@ export function Profil() {
           </button>
         )}
       </div>
+
+      {/* Fermer son carnet — droit à l'effacement, en deux gestes : on ne
+       * supprime jamais un compte sur un clic égaré. */}
+      {client && email && (
+        <section
+          aria-labelledby="delete-account-title"
+          className="flex flex-col gap-3 border border-storm/40 bg-snow p-4"
+        >
+          <h2 id="delete-account-title" className="label-mono text-storm-deep">
+            {t('auth.delete_title')}
+          </h2>
+          <p className="text-sm text-ridge">{t('auth.delete_intro')}</p>
+          {deleteError && (
+            <p
+              role="alert"
+              className="border border-storm bg-storm-tint px-3 py-2 text-sm text-storm-deep"
+            >
+              {t(`auth.${deleteError}`)}
+            </p>
+          )}
+          {confirmingDelete ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={deleting}
+                className="min-h-11 bg-storm px-4 font-semibold text-snow disabled:opacity-60"
+              >
+                {t('auth.delete_confirm')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmingDelete(false);
+                  setDeleteError(null);
+                }}
+                disabled={deleting}
+                className="min-h-11 px-2 font-semibold text-ridge underline underline-offset-2"
+              >
+                {t('auth.delete_cancel')}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              className="min-h-11 self-start font-semibold text-storm-deep underline underline-offset-2"
+            >
+              {t('auth.delete_start')}
+            </button>
+          )}
+        </section>
+      )}
     </main>
   );
 }

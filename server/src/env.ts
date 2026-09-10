@@ -26,6 +26,13 @@ export const env = {
    */
   supabaseUrl: process.env['SUPABASE_URL'] ?? null,
   /**
+   * Clé secrète Supabase (`sb_secret_…`, ou ancienne service_role) — serveur
+   * uniquement, jamais en VITE_. Elle seule permet de supprimer un compte ;
+   * absente, DELETE /api/me répond 503.
+   */
+  supabaseSecretKey:
+    process.env['SUPABASE_SECRET_KEY'] ?? process.env['SUPABASE_SERVICE_ROLE_KEY'] ?? null,
+  /**
    * Supabase configuré → les écritures et la génération exigent un compte.
    * Jamais en environnement de test : les suites exercent le mode anonyme.
    */

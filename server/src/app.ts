@@ -12,6 +12,7 @@ import { logger } from './logger.js';
 import { authMiddleware } from './middleware/auth.js';
 import {
   aiRateLimiter,
+  authRateLimiter,
   methodAwareRateLimiter,
   readRateLimiter,
 } from './middleware/rateLimit.js';
@@ -26,6 +27,7 @@ import { createMaintenanceRouter } from './routes/maintenance.js';
 import { createPublicTripsRouter, createTripsRouter } from './routes/trips.js';
 import { QuotaService, type Quota } from './services/quota.js';
 import type { PgUserRepo } from './repo/users.js';
+import type { AuthAdmin } from './services/supabaseAdmin.js';
 import { EnrichmentService } from './services/enrichment.js';
 import { renderIndexWithTripOg } from './services/og.js';
 import { RoutingService } from './services/routing.js';
@@ -37,6 +39,8 @@ export interface AppDeps {
   quota?: Quota;
   /** Provisioning des comptes Supabase (FK users) — prod avec BDD seulement. */
   users?: PgUserRepo;
+  /** Suppression des comptes Supabase (clé secrète requise) — absent → 503. */
+  authAdmin?: AuthAdmin;
   /** Base de connaissance des lieux — active le grounding des générations. */
   placeRepo?: PgPlaceRepo;
   /** Routing GraphHopper — segments réels des trips (0.2/0.3). */
@@ -54,6 +58,7 @@ export function createApp({
   repo,
   quota,
   users,
+  authAdmin,
   placeRepo,
   routing,
   galleryStore,
@@ -62,6 +67,9 @@ export function createApp({
 }: AppDeps): Express {
   const app = express();
   const tripRepo = repo ?? new MemoryTripRepo();
+  // Ce qui efface les données d'un compte : la BDD en prod, sinon le store
+  // mémoire du dev (il ne connaît que les trips).
+  const accounts = users ?? (tripRepo instanceof MemoryTripRepo ? tripRepo : undefined);
   const quotaService = quota ?? new QuotaService();
   const routingService =
     routing ?? new RoutingService(env.graphhopperUrl, undefined, env.graphhopperFootProfile);
@@ -168,6 +176,38 @@ export function createApp({
       launch_offer: env.launchOffer && authenticated,
       remaining,
     });
+  });
+
+  // Droit à l'effacement (RGPD). Les données VIRE partent d'abord, en une
+  // transaction ; le compte d'authentification ensuite. Si cette seconde étape
+  // échoue, la relance est sûre : plus rien à effacer, compte absent = supprimé.
+  app.delete('/api/me', authRateLimiter, async (req, res) => {
+    if (!req.user.authenticated) {
+      res.status(401).json({ error: 'auth_required' });
+      return;
+    }
+    if (!authAdmin) {
+      res.status(503).json({ error: 'account_deletion_unavailable' });
+      return;
+    }
+    if (!accounts) {
+      res.status(503).json({ error: 'db_unavailable' });
+      return;
+    }
+    try {
+      await accounts.deleteAccount(req.user.id);
+    } catch (error) {
+      logger.error({ error, context: 'account-deletion' }, 'Account data deletion failed');
+      res.status(500).json({ error: 'account_deletion_failed' });
+      return;
+    }
+    if (!(await authAdmin.deleteUser(req.user.id))) {
+      res.status(502).json({ error: 'auth_deletion_failed' });
+      return;
+    }
+    users?.notifyDeletion(req.user.email);
+    logger.info({ context: 'account-deletion' }, 'Account deleted');
+    res.status(204).end();
   });
 
   const enrichment = placeRepo

@@ -58,4 +58,11 @@ export class MemoryTripRepo implements TripRepo {
     this.trips.set(id, updated);
     return updated;
   }
+
+  /** Droit à l'effacement : les trips du compte, seule donnée que ce store connaît de lui. */
+  async deleteAccount(userId: string): Promise<void> {
+    for (const [id, trip] of this.trips) {
+      if (trip.user_id === userId) this.trips.delete(id);
+    }
+  }
 }
