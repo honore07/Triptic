@@ -10,6 +10,7 @@ import { PgUserRepo } from './repo/users.js';
 import { PgGalleryStore } from './repo/galleries.js';
 import { PgEnrichmentQueueStore } from './repo/enrichmentQueue.js';
 import { PgQuotaService } from './services/quota.js';
+import { SupabaseAuthAdmin } from './services/supabaseAdmin.js';
 
 // Chaque bascule Deepseek → Claude est journalisée : c'est un surcoût et un
 // symptôme (réponse vide, budget de tokens mangé par le raisonnement, 5xx).
@@ -33,11 +34,17 @@ if (galleryStore) setGalleryStore(galleryStore);
 // File d'enrichissement persistée : ce qui n'aboutit pas est repris plus tard
 // au lieu d'être perdu avec le process.
 const enrichmentQueue = env.databaseUrl ? new PgEnrichmentQueueStore(env.databaseUrl) : undefined;
+// Suppression de compte : l'API admin Supabase exige la clé secrète du projet.
+const authAdmin =
+  env.supabaseUrl && env.supabaseSecretKey
+    ? new SupabaseAuthAdmin(env.supabaseUrl, env.supabaseSecretKey)
+    : undefined;
 const app = createApp({
   provider,
   ...(repo ? { repo } : {}),
   ...(placeRepo ? { placeRepo } : {}),
   ...(users ? { users } : {}),
+  ...(authAdmin ? { authAdmin } : {}),
   ...(quota ? { quota } : {}),
   ...(galleryStore ? { galleryStore } : {}),
   ...(enrichmentQueue ? { enrichmentQueue } : {}),

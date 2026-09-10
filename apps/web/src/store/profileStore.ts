@@ -81,6 +81,8 @@ interface ProfileState {
   setPreference: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void;
   saveVehicle: (vehicle: Vehicle) => void;
   clearVehicle: () => void;
+  /** Efface photo, véhicule et préférences de ce navigateur (suppression de compte). */
+  reset: () => void;
 }
 
 export const useProfileStore = create<ProfileState>()(
@@ -96,6 +98,8 @@ export const useProfileStore = create<ProfileState>()(
         set({ preferences: { ...get().preferences, [key]: value } }),
       saveVehicle: (vehicle) => set({ vehicle }),
       clearVehicle: () => set({ vehicle: null }),
+      reset: () =>
+        set({ units: 'metric', preferences: DEFAULT_PREFERENCES, avatar: null, vehicle: null }),
     }),
     { name: 'vire-profile', storage: createJSONStorage(() => localStorage) },
   ),

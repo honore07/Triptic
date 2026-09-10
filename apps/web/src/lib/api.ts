@@ -69,6 +69,20 @@ export async function fetchMe(): Promise<MePayload | null> {
   }
 }
 
+/**
+ * DELETE /api/me — droit à l'effacement. null = compte supprimé, sinon le code
+ * d'erreur du serveur (`auth_deletion_failed` = données effacées, compte encore
+ * ouvert : relancer termine). Une panne réseau lève une TypeError.
+ */
+export async function deleteAccount(plan: PlanId): Promise<string | null> {
+  const res = await fetch(`${API_URL}/api/me`, {
+    method: 'DELETE',
+    headers: await authHeaders(plan),
+  });
+  if (res.ok) return null;
+  return (await apiError(res, 'delete-account')).code ?? `http_${res.status}`;
+}
+
 export interface TripsPayload {
   generation: TripGeneration;
   locked_proposals: number;

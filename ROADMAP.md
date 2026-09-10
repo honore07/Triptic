@@ -34,7 +34,7 @@ Contrôles avant tout commit :
 pnpm --filter @triptic/web typecheck && pnpm --filter @triptic/web test
 ```
 
-**214 tests** doivent passer. Le build de production se vérifie avec
+**229 tests** doivent passer. Le build de production se vérifie avec
 `pnpm --filter @triptic/web build`.
 
 ### Ce qui ne marche pas en local, et c'est normal
@@ -164,11 +164,24 @@ démo gratuite, pas un oubli.
 → À fermer au passage payant : `deploy/NOTE-paywall-prod.md`.
 
 **Auth Supabase** — configurée en prod : l'ouverture mène à la connexion, la
-génération exige un compte. Reste à activer le fournisseur **Google** côté
-Supabase (le bouton est câblé dans `pages/Auth.tsx`).
-⚠️ Depuis la bascule sur `viretrip.com`, la **Site URL** et les redirect URLs du
-projet Supabase sont encore sur l'ancien domaine : les liens de réinitialisation
-de mot de passe et le futur OAuth Google pointeraient au mauvais endroit.
+génération exige un compte. Site URL et redirect URLs du projet pointent sur
+`viretrip.com` (+ `www` et l'ancien domaine : `Auth.tsx` renvoie vers l'origine
+du visiteur, chacune doit donc être listée). L'app sait retrouver un mot de
+passe oublié, dire précisément pourquoi une connexion échoue, attendre la
+confirmation d'email à l'inscription et supprimer un compte (`DELETE /api/me`).
+Le bouton Google n'apparaît que si le fournisseur est actif sur Supabase.
+Reste, dans cet ordre :
+
+1. **SMTP personnalisé (Resend, domaine `viretrip.com`)** — l'envoi par défaut
+   de Supabase n'écrit qu'aux membres de l'équipe, 2 emails/heure : sans lui,
+   aucun lien de réinitialisation ni de confirmation n'arrive à un utilisateur.
+2. Puis cocher **Confirm email** (Sign In / Providers). Aujourd'hui désactivé :
+   on peut s'inscrire avec l'adresse de quelqu'un d'autre.
+3. `SUPABASE_SECRET_KEY` dans `/opt/triptic/.env` — sans elle, la suppression de
+   compte répond 503 et rien n'est effacé.
+4. Importer `n8n-workflows/agent-crm-brevo-delete.json` et poser
+   `N8N_CRM_DELETE_WEBHOOK_URL` : la suppression efface alors aussi le contact Brevo.
+5. Fournisseur **Google** (client OAuth Google Cloud) — le bouton se montrera seul.
 
 **Compression et cache des assets** — `mapbox-gl` fait 1,86 Mo servi sans
 gzip/brotli, et les assets hashés sont en `max-age=0`.

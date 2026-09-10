@@ -50,11 +50,12 @@ export function methodAwareRateLimiter(req: Request, res: Response, next: NextFu
   readRateLimiter(req, res, next);
 }
 
-/** Rate limiting strict sur /api/auth/* (5 req/min par IP). */
+/** Actions de compte sensibles (suppression) : 5 req/min par IP. */
 export const authRateLimiter = rateLimit({
   windowMs: 60_000,
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'rate_limited' },
+  skip: skipInTests,
 });
