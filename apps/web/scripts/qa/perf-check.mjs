@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = process.argv[2] ?? 'https://triptic.hakoe-alsace.com';
+const BASE = process.argv[2] ?? 'https://viretrip.com';
 const PORT = 9345;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

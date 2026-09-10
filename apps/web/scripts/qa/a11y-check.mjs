@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = process.argv[2] ?? 'https://triptic.hakoe-alsace.com';
+const BASE = process.argv[2] ?? 'https://viretrip.com';
 const AXE = 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js';
 const PORT = 9343;
 const profile = mkdtempSync(path.join(tmpdir(), 'vire-a11y-'));

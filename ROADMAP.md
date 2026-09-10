@@ -34,7 +34,7 @@ Contrôles avant tout commit :
 pnpm --filter @triptic/web typecheck && pnpm --filter @triptic/web test
 ```
 
-**203 tests** doivent passer. Le build de production se vérifie avec
+**214 tests** doivent passer. Le build de production se vérifie avec
 `pnpm --filter @triptic/web build`.
 
 ### Ce qui ne marche pas en local, et c'est normal
@@ -152,8 +152,11 @@ vectorielle pour le favicon 16-32 px.
 Ces points bloquent un lancement public. Ils sont documentés en détail dans
 `deploy/` et audités dans `QA.md`.
 
-**HTTPS** — fait : `https://triptic.hakoe-alsace.com` (Traefik, voir
-`deploy/RUNBOOK-https.md`).
+**Domaine et HTTPS** — fait : le site est en ligne sur **`https://viretrip.com`**
+(+ `www`), certificat Let's Encrypt géré par Traefik.
+`triptic.hakoe-alsace.com` répond toujours et sert de filet de sécurité — à
+transformer en redirection quand le nouveau domaine aura fait ses preuves.
+Voir `deploy/RUNBOOK-https.md`.
 
 **Paywall contournable** — le serveur honore le header client `x-plan`
 (`server/src/middleware/auth.ts`). C'est un **choix assumé** tant qu'on est en
@@ -163,6 +166,9 @@ démo gratuite, pas un oubli.
 **Auth Supabase** — configurée en prod : l'ouverture mène à la connexion, la
 génération exige un compte. Reste à activer le fournisseur **Google** côté
 Supabase (le bouton est câblé dans `pages/Auth.tsx`).
+⚠️ Depuis la bascule sur `viretrip.com`, la **Site URL** et les redirect URLs du
+projet Supabase sont encore sur l'ancien domaine : les liens de réinitialisation
+de mot de passe et le futur OAuth Google pointeraient au mauvais endroit.
 
 **Compression et cache des assets** — `mapbox-gl` fait 1,86 Mo servi sans
 gzip/brotli, et les assets hashés sont en `max-age=0`.
