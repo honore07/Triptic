@@ -1,8 +1,11 @@
-# RUNBOOK — HTTPS sur triptic.hakoe-alsace.com
+# RUNBOOK — HTTPS (viretrip.com + triptic.hakoe-alsace.com)
 
 > **État : EN SERVICE.** Certificat émis le 19/08/2026, vérifié de bout en bout
-> le 25/08/2026. Ce document décrit l'installation **réelle** du VPS — il ne
-> reste rien à exécuter pour ce domaine.
+> le 25/08/2026. **Le 10/09/2026, `viretrip.com` et `www.viretrip.com` ont été
+> ajoutés au routeur** : Traefik a étendu le certificat aux trois domaines tout
+> seul, et `APP_URL` est passé sur `https://viretrip.com`. L'ancien domaine
+> continue de répondre. Ce document décrit l'installation **réelle** du VPS — il
+> ne reste rien à exécuter.
 >
 > Les 3 features qui étaient bloquées par le contexte non sécurisé sont
 > débloquées : clipboard (lien public), service worker (PWA/offline) et
@@ -29,8 +32,15 @@ Internet :443 ──► Traefik (conteneur Docker `traefik-traefik-1`, network h
                    └──► http://127.0.0.1:3001  (Express / PM2 « triptic-api »)
 ```
 
-- **DNS** : `triptic.hakoe-alsace.com` → `82.25.118.185` (A record Cloudflare,
-  **nuage gris / DNS only** — requis pour le challenge HTTP-01).
+- **DNS** : `triptic.hakoe-alsace.com`, `viretrip.com` et `www.viretrip.com` →
+  `82.25.118.185` (A records Cloudflare, **nuage gris / DNS only** — requis pour
+  le challenge HTTP-01).
+  ⚠️ Passer `viretrip.com` en proxy (nuage orange) casserait la génération : le
+  flux SSE de `/api/ai/generate-trips` n'émet un événement qu'au changement
+  d'étape, sans battement régulier, et Cloudflare coupe une requête restée
+  silencieuse ~100 s (erreur 524). Ajouter un ping de maintien dans `sseWrite`
+  (`server/src/routes/ai.ts`) **avant** d'activer le proxy, et régler le mode
+  SSL/TLS sur « Full (strict) » pour éviter la boucle de redirection.
 - **Route** : `/docker/traefik/dynamic/triptic.yml` (provider fichier, `watch=true`,
   donc pris en compte sans redémarrer Traefik) :
 
@@ -38,7 +48,7 @@ Internet :443 ──► Traefik (conteneur Docker `traefik-traefik-1`, network h
 http:
   routers:
     triptic:
-      rule: "Host(`triptic.hakoe-alsace.com`)"
+      rule: "Host(`triptic.hakoe-alsace.com`) || Host(`viretrip.com`) || Host(`www.viretrip.com`)"
       entryPoints:
         - websecure
       service: triptic
@@ -93,21 +103,42 @@ Dans le navigateur sur https://triptic.hakoe-alsace.com :
 - Application → Service Workers : le SW est enregistré (PWA installable)
 - Explore → « Autour de moi » : la demande de position s'affiche
 
-## Ajouter un domaine (ex. bascule vers triptic.app)
+## Ajouter un domaine (méthode suivie le 10/09/2026 pour viretrip.com)
 
-1. Chez le registrar : A record `triptic.app` → `82.25.118.185` (+ `www`),
-   sans proxy CDN le temps de l'émission du certificat.
-2. Sur le VPS, ajouter le host à la règle du routeur — Traefik demande le
-   certificat tout seul dans la minute :
+1. Chez le registrar : A records du domaine **et** de son `www` →
+   `82.25.118.185`, en **DNS only** (nuage gris chez Cloudflare) le temps de
+   l'émission du certificat. Vérifier la propagation avant de continuer :
+   `nslookup <domaine> 8.8.8.8`.
+2. Sauvegarder la config, puis ajouter le host à la règle du routeur.
+   **Ne pas utiliser `sed` par SSH** : les accents graves de la règle Traefik
+   sont interprétés comme des substitutions de commande par le shell, des deux
+   côtés de la connexion. Écrire le fichier complet ailleurs, le vérifier, puis
+   le déplacer — `/root` et `/docker` sont sur `/dev/sda1`, le `mv` est donc
+   atomique et Traefik (`watch=true`) ne peut pas lire un fichier à moitié écrit.
 
 ```bash
-sudo sed -i 's#rule: "Host(`triptic.hakoe-alsace.com`)"#rule: "Host(`triptic.hakoe-alsace.com`) || Host(`triptic.app`) || Host(`www.triptic.app`)"#' /docker/traefik/dynamic/triptic.yml
+cp /docker/traefik/dynamic/triptic.yml /docker/traefik/dynamic/triptic.yml.bak-$(date +%Y%m%d)
 ```
 
-3. Passer `APP_URL` sur le nouveau domaine et recharger l'API :
+   Puis, une fois le nouveau contenu écrit et relu dans `/root/triptic-new.yml` :
 
 ```bash
-sed -i 's#^APP_URL=.*#APP_URL=https://triptic.app#' /opt/triptic/.env && pm2 reload triptic-api
+mv /root/triptic-new.yml /docker/traefik/dynamic/triptic.yml
+```
+
+3. Passer `APP_URL` sur le nouveau domaine et recharger l'API (il pilote le CORS
+   et les balises OG des liens publics ; le front, lui, appelle `/api` en
+   relatif — aucune reconstruction nécessaire) :
+
+```bash
+sed -i 's#^APP_URL=.*#APP_URL=https://viretrip.com#' /opt/triptic/.env && pm2 reload triptic-api --update-env
+```
+
+4. Vérifier : `/health` sur le nouveau domaine et sur l'ancien, la redirection
+   `http` → `https` (308), et les noms couverts par le certificat :
+
+```bash
+echo | openssl s_client -servername viretrip.com -connect viretrip.com:443 2>/dev/null | openssl x509 -noout -text | grep -A2 "Subject Alternative Name"
 ```
 
 ## Durcissement
