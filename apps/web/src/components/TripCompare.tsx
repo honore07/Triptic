@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Lock } from 'lucide-react';
 import type { Difficulty, TripProposal } from '@triptic/shared';
-import { formatDistance, formatElevation } from '../lib/units';
+import { formatDistance, formatElevation, showsElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
 import { TableauCompare } from './TableauCompare';
 import { TripCard } from './TripCard';
@@ -57,7 +57,9 @@ export function TripCompare({ trips, lockedCount, differentiator, onChoose, onUn
     return () => observer.disconnect();
   }, [trips.length, view]);
 
-  // Ce qui distingue vraiment les trois voies, axe par axe
+  // Ce qui distingue vraiment les trois voies, axe par axe — le dénivelé
+  // seulement s'il mesure un effort (à pied, à vélo), jamais entre road trips
+  const withElevation = trips.some((x) => showsElevation(x.mode));
   const span = (values: number[]) => ({ min: Math.min(...values), max: Math.max(...values) });
   const days = span(trips.map((x) => x.duration_days));
   const km = span(trips.map((x) => x.distance_km));
@@ -76,12 +78,16 @@ export function TripCompare({ trips, lockedCount, differentiator, onChoose, onUn
       same: Math.round(km.min) === Math.round(km.max),
       value: `${formatDistance(km.min, units)} → ${formatDistance(km.max, units)}`,
     },
-    {
-      key: 'elevation',
-      label: t('tableau.metric_elevation'),
-      same: Math.round(gain.min) === Math.round(gain.max),
-      value: `${formatElevation(gain.min, units)} → ${formatElevation(gain.max, units)}`,
-    },
+    ...(withElevation
+      ? [
+          {
+            key: 'elevation',
+            label: t('tableau.metric_elevation'),
+            same: Math.round(gain.min) === Math.round(gain.max),
+            value: `${formatElevation(gain.min, units)} → ${formatElevation(gain.max, units)}`,
+          },
+        ]
+      : []),
     {
       key: 'difficulty',
       label: t('request.difficulty'),
@@ -112,7 +118,11 @@ export function TripCompare({ trips, lockedCount, differentiator, onChoose, onUn
       </div>
 
       {/* Ce qui les distingue — calculé, axe par axe */}
-      <dl className="grid grid-cols-2 gap-px border border-mist bg-mist sm:grid-cols-4">
+      <dl
+        className={`grid grid-cols-2 gap-px border border-mist bg-mist ${
+          axes.length === 4 ? 'sm:grid-cols-4' : 'sm:grid-cols-3'
+        }`}
+      >
         {axes.map(({ key, label, value, same }) => (
           <div key={key} className="flex flex-col gap-0.5 bg-snow p-2.5">
             <dt className="label-mono text-fog">{label}</dt>

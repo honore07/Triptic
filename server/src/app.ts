@@ -99,6 +99,9 @@ export function createApp({
             'blob:',
             'https://images.unsplash.com',
             'https://images.pexels.com',
+            // Wikimedia sert ses vignettes depuis thumb.wikimedia.org ; upload
+            // reste pour les photos enregistrées avant ce changement.
+            'https://thumb.wikimedia.org',
             'https://upload.wikimedia.org',
             'https://commons.wikimedia.org',
             'https://api.mapbox.com',
@@ -116,6 +119,7 @@ export function createApp({
             'https://*.tiles.mapbox.com',
             'https://images.unsplash.com',
             'https://images.pexels.com',
+            'https://thumb.wikimedia.org',
             'https://upload.wikimedia.org',
             'https://commons.wikimedia.org',
             // Auth Supabase (signup/login/refresh depuis le navigateur)

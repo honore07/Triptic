@@ -1,3 +1,4 @@
+import type { ExpressionSpecification, SymbolLayerSpecification } from 'mapbox-gl';
 import type { SegmentMode, TripDay } from '@triptic/shared';
 import { MAP_COLORS } from './mapColors';
 
@@ -109,6 +110,38 @@ export function fallbackLineStyle(days: TripDay[] | undefined): {
 } {
   const mode = tripModes(days)[0] ?? 'car';
   return { color: SEGMENT_LINE_STYLES[mode].color, dasharray: [1.5, 1.5] };
+}
+
+/** Chevron dessiné une fois par carte (voir MapView), teinté à la couleur du tracé. */
+export const ROUTE_ARROW_ICON = 'route-arrow';
+
+/**
+ * Flèches de sens posées le long du tracé, dans l'ordre des coordonnées (départ
+ * → arrivée). `icon-keep-upright: false` est indispensable : sans lui, Mapbox
+ * retourne les icônes pour garder un « haut » lisible et une flèche sur deux
+ * pointerait à contresens.
+ */
+export function routeArrowLayer(color: string | ExpressionSpecification): SymbolLayerSpecification {
+  return {
+    id: 'route-arrows',
+    type: 'symbol',
+    source: 'route',
+    layout: {
+      'symbol-placement': 'line',
+      'symbol-spacing': 90,
+      'icon-image': ROUTE_ARROW_ICON,
+      'icon-size': 0.7,
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
+      'icon-rotation-alignment': 'map',
+      'icon-keep-upright': false,
+    },
+    paint: {
+      'icon-color': color,
+      'icon-halo-color': '#FFFFFF',
+      'icon-halo-width': 1.5,
+    },
+  };
 }
 
 /**

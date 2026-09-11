@@ -11,6 +11,21 @@ import type {
 } from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { ApiError, generateTripsStream, type TripsPayload } from '../lib/api';
+import { preloadImages } from '../lib/preloadImages';
+import { thumbnailUrl } from '../lib/thumbnails';
+
+/**
+ * Photos d'une génération, aux tailles où elles vont s'afficher : les
+ * couvertures des trois volets, puis pour la vire détaillée (la première) les
+ * planches des jours et les vignettes des marqueurs de la carte.
+ */
+function generationImageUrls(payload: TripsPayload): string[] {
+  const trips = payload.generation.trips;
+  const dayPhotos = (trips[0]?.days ?? []).flatMap((day) =>
+    day.photo_url ? [thumbnailUrl(day.photo_url), thumbnailUrl(day.photo_url, 120)] : [],
+  );
+  return [...trips.flatMap((trip) => (trip.photo_url ? [trip.photo_url] : [])), ...dayPhotos];
+}
 
 /** Dates du trip choisies dans l'onboarding (ISO yyyy-mm-dd). */
 export interface TripDates {
@@ -98,6 +113,8 @@ export const useChatStore = create<ChatState>()(
               break;
             case 'trips':
               set({ result: event.data, status: 'idle' });
+              // Les photos partent tout de suite : elles sont prêtes quand on ouvre une vire
+              preloadImages(generationImageUrls(event.data));
               track('trip_generation_result', {
                 plan,
                 trips: event.data.generation.trips.length,

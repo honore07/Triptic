@@ -6,19 +6,28 @@ import { fetchPlaceMedia, type PlaceMedia } from '../lib/api';
 import { MAP_COLORS } from '../lib/mapColors';
 import {
   MODE_LABEL_KEYS,
+  ROUTE_ARROW_ICON,
   fallbackLineStyle,
   lineColorExpression,
   lineDasharrayExpression,
   lineWidthExpression,
   modeIconSvg,
+  routeArrowLayer,
   tripModes,
 } from '../lib/mapStyles';
+import { preloadImages } from '../lib/preloadImages';
+import { thumbnailUrl } from '../lib/thumbnails';
 import { MapLegend } from './MapLegend';
 import { PlaceCarousel } from './PlaceCarousel';
 import { RoutePreview } from './RoutePreview';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
 const hasToken = Boolean(MAPBOX_TOKEN && !MAPBOX_TOKEN.startsWith('pk.xxx'));
+
+/** Galeries chargées en parallèle en tâche de fond — assez pour avancer, sans marteler l'API. */
+const GALLERY_PREWARM_WORKERS = 2;
+/** La photo de tête et les tuiles de la carte passent d'abord. */
+const GALLERY_PREWARM_DELAY_MS = 1500;
 
 interface Props {
   waypoints: Waypoint[];
@@ -110,9 +119,12 @@ export function createPlaceMarker(
 
   if (thumbUrl) {
     const img = document.createElement('img');
-    img.src = thumbUrl;
+    // 44 px à l'écran : la plus petite vignette standard suffit, et elle part
+    // tout de suite — le marqueur est visible dès que la carte l'est.
+    img.src = thumbnailUrl(thumbUrl, 120);
     img.alt = '';
-    img.loading = 'lazy';
+    img.setAttribute('loading', 'eager');
+    img.setAttribute('decoding', 'async');
     img.className = 'h-full w-full object-cover';
     el.appendChild(img);
   } else {
@@ -133,13 +145,47 @@ function dayCoordinates(day: TripDay): [number, number][] {
   return coords;
 }
 
+/** Clé d'une galerie de lieu — la même position donne la même galerie. */
+function galleryKey(waypoint: Waypoint): string {
+  return `${waypoint.name}|${waypoint.lat}|${waypoint.lng}`;
+}
+
+/**
+ * Chevron du sens de parcours, dessiné une fois par carte en image SDF : Mapbox
+ * le teinte ensuite à la couleur de chaque tracé. Il pointe vers la droite, le
+ * côté que Mapbox aligne sur la direction de la ligne.
+ */
+function addRouteArrowIcon(map: import('mapbox-gl').Map): void {
+  if (map.hasImage(ROUTE_ARROW_ICON)) return;
+  const size = 48;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(size * 0.34, size * 0.22);
+  ctx.lineTo(size * 0.68, size * 0.5);
+  ctx.lineTo(size * 0.34, size * 0.78);
+  ctx.stroke();
+  map.addImage(ROUTE_ARROW_ICON, ctx.getImageData(0, 0, size, size), {
+    sdf: true,
+    pixelRatio: 2,
+  });
+}
+
 /**
  * Carte du trip : Mapbox GL si un token est configuré (affichage uniquement —
  * jamais de stockage de tuiles), sinon aperçu SVG offline.
  * Avec des segments routés (GraphHopper) : tracé réel stylé par mode —
  * voiture copper plein, trek pine pointillé, vélo shadow grey tireté —
  * sur casing blanc de contraste, plus légende si plusieurs modes ;
- * sans routing : trait droit pointillé historique.
+ * sans routing : trait droit pointillé historique. Des chevrons le long du
+ * tracé donnent le sens de parcours.
  */
 export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   const { t } = useTranslation();
@@ -156,15 +202,50 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
   } | null>(null);
   // Une réponse tardive ne doit pas écraser un lieu ouvert entre-temps
   const galleryReqRef = useRef(0);
+  // Galeries déjà chargées (préchargement ou ouverture précédente)
+  const mediaCacheRef = useRef(new Map<string, PlaceMedia[]>());
 
   const openCarousel = useCallback((waypoint: Waypoint) => {
     const req = ++galleryReqRef.current;
+    const key = galleryKey(waypoint);
+    const cached = mediaCacheRef.current.get(key);
+    if (cached) {
+      setGallery({ place: waypoint.name, media: cached, loading: false });
+      return;
+    }
     setGallery({ place: waypoint.name, media: [], loading: true });
     void fetchPlaceMedia(waypoint.name, { lat: waypoint.lat, lng: waypoint.lng }).then((media) => {
+      if (media.length > 0) mediaCacheRef.current.set(key, media);
       if (galleryReqRef.current !== req) return;
       setGallery({ place: waypoint.name, media, loading: false });
     });
   }, []);
+
+  // Galeries des lieux chargées en tâche de fond, avec leur première photo :
+  // ouvrir un marqueur les montre aussitôt, sans « Chargement des photos… ».
+  useEffect(() => {
+    if (!hasToken || waypoints.length === 0) return;
+    let cancelled = false;
+    const queue = [...waypoints];
+    const worker = async () => {
+      for (let w = queue.shift(); w && !cancelled; w = queue.shift()) {
+        const key = galleryKey(w);
+        if (mediaCacheRef.current.has(key)) continue;
+        const media = await fetchPlaceMedia(w.name, { lat: w.lat, lng: w.lng });
+        if (cancelled || media.length === 0) continue;
+        mediaCacheRef.current.set(key, media);
+        const first = media[0];
+        if (first?.type === 'photo') preloadImages([first.url]);
+      }
+    };
+    const timer = setTimeout(() => {
+      void Promise.all(Array.from({ length: GALLERY_PREWARM_WORKERS }, worker));
+    }, GALLERY_PREWARM_DELAY_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [waypoints]);
 
   useEffect(() => {
     if (!hasToken || !containerRef.current || waypoints.length < 2) return;
@@ -191,6 +272,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
       map.on('load', () => {
         const segments = (days ?? []).flatMap((d) => d.segments ?? []);
         const routed = segments.filter((s) => s.geometry && s.geometry.length > 1);
+        let arrowColor: string | ExpressionSpecification;
 
         if (routed.length > 0) {
           // Tracés réels GraphHopper — un feature par segment, stylé par mode
@@ -231,6 +313,7 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
               'line-dasharray': lineDasharrayExpression() as ExpressionSpecification,
             },
           });
+          arrowColor = lineColorExpression() as ExpressionSpecification;
         } else {
           // Repli (routeur down / hors couverture) : trait droit entre
           // waypoints, mais VISIBLE et dans la couleur du mode dominant —
@@ -265,7 +348,12 @@ export function MapView({ waypoints, days, selectedDay, onSelectDay }: Props) {
               'line-dasharray': fallback.dasharray,
             },
           });
+          arrowColor = fallback.color;
         }
+
+        // Sens de parcours lisible d'un coup d'œil
+        addRouteArrowIcon(map);
+        map.addLayer(routeArrowLayer(arrowColor));
 
         // Temps de trajet lisibles directement sur le tracé
         bubblesRef.current = [];

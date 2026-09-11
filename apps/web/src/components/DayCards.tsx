@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ActivityType, TripDay } from '@triptic/shared';
+import { thumbnailUrl } from '../lib/thumbnails';
 import { formatDistance, formatElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
 
@@ -12,22 +13,6 @@ import { useProfileStore } from '../store/profileStore';
  * la seule image non gravée — sinon l'objet d'expédition de la journée.
  * Le détail vit dans la fiche d'étape (PL.11), ouverte juste en dessous.
  */
-
-/**
- * Vignette : réduit la largeur demandée aux CDN images (Unsplash/Pexels
- * utilisent tous deux le paramètre `w`). On ne réécrit l'URL que si elle
- * porte déjà ce paramètre — sinon on la laisse intacte.
- */
-export function thumbnailUrl(url: string, width = 400): string {
-  try {
-    const parsed = new URL(url);
-    if (!parsed.searchParams.has('w')) return url;
-    parsed.searchParams.set('w', String(width));
-    return parsed.toString();
-  } catch {
-    return url;
-  }
-}
 
 /**
  * Gravure par nature de journée — un jour sans photo réelle garde un objet
@@ -42,6 +27,9 @@ const ACTIVITY_ENGRAVINGS: Record<ActivityType, string> = {
   rest: '/vire/vire_pic-corde.jpg',
 };
 
+/** Planches visibles d'emblée : leurs photos se chargent sans attendre le défilement. */
+const EAGER_CARDS = 3;
+
 /** Nature dominante de la journée = son premier temps fort. */
 function dominantType(day: TripDay): ActivityType {
   return day.activities[0]?.type ?? 'hike';
@@ -51,9 +39,11 @@ interface Props {
   days: TripDay[];
   selectedDay: number | null;
   onSelectDay: (day: number) => void;
+  /** false pour un road trip : le dénivelé n'y mesure aucun effort. */
+  showElevation?: boolean;
 }
 
-export function DayCards({ days, selectedDay, onSelectDay }: Props) {
+export function DayCards({ days, selectedDay, onSelectDay, showElevation = true }: Props) {
   const { t } = useTranslation();
   const units = useProfileStore((s) => s.units);
   const refs = useRef(new Map<number, HTMLElement>());
@@ -81,7 +71,9 @@ export function DayCards({ days, selectedDay, onSelectDay }: Props) {
           const selected = day.day === selectedDay;
           const type = dominantType(day);
           const dayDistance = (day.segments ?? []).reduce((s, seg) => s + seg.distance_km, 0);
-          const dayGain = day.activities.reduce((s, a) => s + (a.elevation_gain_m ?? 0), 0);
+          const dayGain = showElevation
+            ? day.activities.reduce((s, a) => s + (a.elevation_gain_m ?? 0), 0)
+            : 0;
           const routed = (day.segments ?? []).some((s) => s.routed);
           return (
             <li
@@ -107,7 +99,8 @@ export function DayCards({ days, selectedDay, onSelectDay }: Props) {
                     src={day.photo_url ? thumbnailUrl(day.photo_url) : ACTIVITY_ENGRAVINGS[type]}
                     alt=""
                     aria-hidden="true"
-                    loading="lazy"
+                    loading={index < EAGER_CARDS ? 'eager' : 'lazy'}
+                    decoding="async"
                     className={`h-full w-full object-cover ${day.photo_url ? '' : 'opacity-90'}`}
                   />
                   {/* Le numéro du jour, imprimé dans le coin */}

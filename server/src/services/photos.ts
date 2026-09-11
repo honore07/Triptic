@@ -104,6 +104,21 @@ export function diversifyByAuthor(media: PlaceMedia[], limit: number): PlaceMedi
 }
 
 /**
+ * Wikimedia ajoute des paramètres de suivi (utm_*) à ses vignettes : sans
+ * effet sur l'image, ils rendent l'URL instable pour les caches et polluent le
+ * titre que lit l'agent photo.
+ */
+export function withoutTracking(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.search = '';
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
  * Photos géolocalisées via Wikimedia Commons — source PRINCIPALE.
  * Les recherches par mot-clé (Unsplash/Pexels) confondent le nom du lieu
  * avec son sens commun : « Petit Ballon » renvoyait des ballons de baudruche.
@@ -143,8 +158,9 @@ export async function findCommonsMedia(
     const found: PlaceMedia[] = [];
     for (const page of Object.values(data.query?.pages ?? {})) {
       const info = page.imageinfo?.[0];
-      const display = info?.thumburl ?? info?.url;
-      if (!display) continue;
+      const raw = info?.thumburl ?? info?.url;
+      if (!raw) continue;
+      const display = withoutTracking(raw);
       // Les fichiers non photographiques (cartes, blasons) desservent l'aperçu
       if (!/\.(jpe?g|png)$/i.test(page.title ?? '')) continue;
       const meta = info?.extmetadata ?? {};
@@ -451,10 +467,33 @@ export async function findTripCover(
 }
 
 /**
+ * Jours cherchés en parallèle : un grand tour de 16 jours restait des dizaines
+ * de secondes sur « Recherche des photos… » jour après jour. Trois à la fois
+ * gardent Commons à l'abri des rafales.
+ */
+const DAY_PHOTO_CONCURRENCY = 3;
+
+/** Applique `task` à chaque élément, jamais plus de `limit` en même temps. */
+async function forEachWithLimit<T>(
+  items: readonly T[],
+  limit: number,
+  task: (item: T) => Promise<void>,
+): Promise<void> {
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const item = items[next++]!;
+      await task(item);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
+
+/**
  * Photo par étape (roadmap 2.3) : le temps fort du jour (rando ou visite),
  * cherché sur place par ses coordonnées ; à défaut, mots-clés = temps fort
  * + région du trip. Appelé pour UN SEUL trip (le premier visible) afin de
- * rester dans les quotas, et jour après jour pour ne pas mitrailler Commons.
+ * rester dans les quotas.
  */
 export async function findDayPhotos(
   days: {
@@ -466,14 +505,14 @@ export async function findDayPhotos(
   provider: LlmProvider | null = null,
 ): Promise<void> {
   const region = baseKeywords[0] ?? '';
-  for (const day of days) {
+  await forEachWithLimit(days, DAY_PHOTO_CONCURRENCY, async (day) => {
     const highlight =
       day.activities.find((a) => a.type === 'hike' || a.type === 'visit') ?? day.activities[0];
-    if (!highlight) continue;
+    if (!highlight) return;
     let url: string | null = null;
     if (typeof highlight.lat === 'number' && typeof highlight.lng === 'number') {
       url = await photoAt({ title: highlight.title, lat: highlight.lat, lng: highlight.lng }, provider);
     }
     day.photo_url = (url ?? (await findTripPhoto([region, highlight.title]))) ?? undefined;
-  }
+  });
 }

@@ -55,4 +55,20 @@ describe('TripCard', () => {
     expect(screen.getByRole('button', { name: 'Diese Linie wählen' })).toBeInTheDocument();
     setLang('fr');
   });
+
+  it('trek : le dénivelé figure au relevé', () => {
+    setLang('fr');
+    render(<TripCard trip={TRIP} onChoose={() => {}} />);
+    expect(screen.getByText('D+')).toBeInTheDocument();
+    expect(screen.getByText('2100 m')).toBeInTheDocument();
+  });
+
+  it('road trip : la case du dénivelé donne la distance par jour', () => {
+    setLang('fr');
+    render(
+      <TripCard trip={{ ...TRIP, mode: 'roadtrip', daily_distance_km: 108 }} onChoose={() => {}} />,
+    );
+    expect(screen.queryByText('D+')).not.toBeInTheDocument();
+    expect(screen.getByText('108 km')).toBeInTheDocument();
+  });
 });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TripProposal } from '@triptic/shared';
+import { showsElevation } from '../lib/units';
 
 /** Les 4 axes de comparaison chiffrée de la planche PL.08. */
 const METRICS = ['duration', 'distance', 'elevation', 'budget'] as const;
@@ -37,6 +38,10 @@ export function TableauCompare({ trips, onChoose }: Props) {
   const { t } = useTranslation();
   const [metric, setMetric] = useState<CompareMetric>('duration');
   const [selected, setSelected] = useState(0);
+  // Pas d'axe dénivelé entre trois road trips : il n'y mesure aucun effort
+  const metrics: readonly CompareMetric[] = trips.some((trip) => showsElevation(trip.mode))
+    ? METRICS
+    : METRICS.filter((key) => key !== 'elevation');
 
   const values = trips.map((trip) => metricValue(trip, metric));
   const max = Math.max(...values, 1);
@@ -80,7 +85,7 @@ export function TableauCompare({ trips, onChoose }: Props) {
       <div>
         <p className="label-mono mb-1.5 text-fog">{t('tableau.sort_by')}</p>
         <div role="group" aria-label={t('tableau.sort_by')} className="flex border border-mist">
-          {METRICS.map((key, i) => (
+          {metrics.map((key, i) => (
             <button
               key={key}
               type="button"
@@ -132,8 +137,8 @@ export function TableauCompare({ trips, onChoose }: Props) {
                   />
                 </span>
 
-                <dl className="grid grid-cols-4 gap-2">
-                  {METRICS.map((key) => (
+                <dl className={`grid gap-2 ${metrics.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                  {metrics.map((key) => (
                     <span key={key} className="flex flex-col gap-0.5">
                       <dt className="label-mono text-fog">{t(`tableau.metric_${key}`)}</dt>
                       <dd className="font-display text-base font-semibold text-trail">

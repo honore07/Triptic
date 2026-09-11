@@ -5,7 +5,7 @@ import { ArrowLeft, Bookmark, Leaf, Pencil, Share2, Undo2, Wallet } from 'lucide
 import type { Lang, TripDay } from '@triptic/shared';
 import { track } from '../lib/analytics';
 import { saveTrip, updateTrip } from '../lib/api';
-import { formatDistance, formatElevation } from '../lib/units';
+import { formatDistance, formatElevation, showsElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
 import { DayCards } from '../components/DayCards';
 import { DayEditor } from '../components/DayEditor';
@@ -130,6 +130,7 @@ export function TripPage() {
     min === max ? `${min} €` : `${min}–${max} €`;
 
   const sortedWaypoints = [...selected.waypoints].sort((a, b) => a.day - b.day);
+  const withElevation = showsElevation(selected.mode);
   // La nuitée ne se propose que sur une journée ouverte : sans choix, pas de
   // liste d'emplacements en vrac sous l'itinéraire.
   const nightDay = selectedDay === null ? null : (selected.days?.find((d) => d.day === selectedDay) ?? null);
@@ -144,14 +145,17 @@ export function TripPage() {
       {/* Tête d'itinéraire — la photo réelle de la vire choisie, plein cadre :
        * c'est le terrain, la seule image non gravée avec la carte. Le relevé
        * se pose sur l'encre du bas ; sans photo, le tracé se dessine sur
-       * l'encre. */}
-      <header className="hero-open relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
-        <div aria-hidden="true" className="absolute inset-0">
+       * l'encre. L'ouverture au défilement ne rogne que la photo : posée sur
+       * la tête entière, elle coupait aussi le titre et le relevé. */}
+      <header className="relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
+        <div aria-hidden="true" className="hero-open absolute inset-0">
           {selected.photo_url ? (
             <img
               src={selected.photo_url}
               alt=""
               fetchPriority="high"
+              loading="eager"
+              decoding="async"
               className="hero-drift h-full w-full object-cover"
             />
           ) : (
@@ -195,17 +199,25 @@ export function TripPage() {
           </div>
 
           {/* Relevé de l'itinéraire — étiquettes mono, valeurs en serif, sur l'encre */}
-          <dl className="grid grid-cols-2 divide-cloud/25 border-y border-cloud/30 sm:grid-cols-4 sm:divide-x">
+          <dl
+            className={`grid grid-cols-2 divide-cloud/25 border-y border-cloud/30 sm:divide-x ${
+              withElevation ? 'sm:grid-cols-4' : 'sm:grid-cols-3'
+            }`}
+          >
             {[
               {
                 label: t('trips.days'),
                 value: t('trips.days_count', { count: selected.duration_days }),
               },
               { label: t('trips.distance'), value: formatDistance(selected.distance_km, units) },
-              {
-                label: t('trips.elevation'),
-                value: formatElevation(selected.elevation_gain_m, units),
-              },
+              ...(withElevation
+                ? [
+                    {
+                      label: t('trips.elevation'),
+                      value: formatElevation(selected.elevation_gain_m, units),
+                    },
+                  ]
+                : []),
               {
                 label: t('trips.per_day'),
                 value: formatDistance(selected.daily_distance_km, units),
@@ -311,7 +323,12 @@ export function TripPage() {
           {editing ? (
             <DayEditor days={selected.days} busy={recomputing} onChange={onDaysChange} />
           ) : (
-            <DayCards days={selected.days} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+            <DayCards
+              days={selected.days}
+              selectedDay={selectedDay}
+              onSelectDay={setSelectedDay}
+              showElevation={withElevation}
+            />
           )}
 
           {/* Fiche d'étape (PL.11) puis nuitée (PL.10) — pour la journée ouverte */}
@@ -320,6 +337,7 @@ export function TripPage() {
               day={nightDay}
               startDate={selected.start_date}
               forecast={weatherDays?.find((d) => d.day === nightDay.day)?.forecast ?? null}
+              showElevation={withElevation}
             />
           )}
 

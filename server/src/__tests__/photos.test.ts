@@ -346,3 +346,81 @@ describe('couvertures de trip par coordonnées', () => {
     expect(days[0]?.photo_url).toBe('https://img/1-regular');
   });
 });
+
+describe('vignettes Wikimedia (thumb.wikimedia.org)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('retire les paramètres de suivi de l’URL de vignette', async () => {
+    const { withoutTracking } = await import('../services/photos.js');
+    expect(
+      withoutTracking(
+        'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/A.jpg/960px-A.jpg?utm_source=commons.wikimedia.org&utm_content=thumbnail',
+      ),
+    ).toBe('https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/A.jpg/960px-A.jpg');
+    expect(withoutTracking('pas une url')).toBe('pas une url');
+  });
+
+  it('la galerie Commons expose des URL propres', async () => {
+    const payload = {
+      query: {
+        pages: {
+          '1': {
+            title: 'File:Annecy.jpg',
+            imageinfo: [
+              {
+                thumburl:
+                  'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Annecy.jpg/960px-Annecy.jpg?utm_source=commons.wikimedia.org',
+                descriptionurl: 'https://commons.wikimedia.org/wiki/File:Annecy.jpg',
+              },
+            ],
+          },
+        },
+      },
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 })),
+    );
+    const [first] = await findCommonsMedia(45.9, 6.13, 5);
+    expect(first?.url).toBe(
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Annecy.jpg/960px-Annecy.jpg',
+    );
+    expect(first?.thumb).toBe(first?.url);
+  });
+
+  it('photos du jour : plusieurs jours à la fois, jamais plus de trois appels simultanés', async () => {
+    let inFlight = 0;
+    let peak = 0;
+    const fetchMock = vi.fn(async (url: string) => {
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      const lat = /ggscoord=([\d.]+)/.exec(url)?.[1] ?? '0';
+      return new Response(
+        JSON.stringify({
+          query: {
+            pages: { '1': { title: `File:J${lat}.jpg`, imageinfo: [{ thumburl: `https://commons/${lat}.jpg` }] } },
+          },
+        }),
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const days: {
+      title: string;
+      activities: { type: string; title: string; lat: number; lng: number }[];
+      photo_url?: string;
+    }[] = Array.from({ length: 7 }, (_, i) => ({
+      title: `J${i + 1}`,
+      activities: [{ type: 'hike', title: `Sommet ${i + 1}`, lat: 45 + i, lng: 6 }],
+    }));
+    await findDayPhotos(days, ['alpes']);
+    expect(peak).toBeGreaterThan(1);
+    expect(peak).toBeLessThanOrEqual(3);
+    // Chaque jour garde SA photo, quel que soit l'ordre d'arrivée des réponses
+    days.forEach((day, i) => expect(day.photo_url).toBe(`https://commons/${45 + i}.jpg`));
+  });
+});

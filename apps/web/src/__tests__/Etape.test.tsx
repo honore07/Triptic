@@ -105,4 +105,12 @@ describe('Étape (planche PL.11)', () => {
     render(<Etape day={DAY} forecast={null} />);
     expect(screen.queryByRole('list', { name: 'Météo heure par heure' })).not.toBeInTheDocument();
   });
+
+  it('road trip : ni dénivelé au relevé ni profil, mais la montée d’une rando reste chiffrée', () => {
+    render(<Etape day={DAY} showElevation={false} />);
+    expect(screen.queryByText('640 m')).not.toBeInTheDocument();
+    expect(screen.queryByText(/max/)).not.toBeInTheDocument();
+    expect(screen.getByText('+ 640 m')).toBeInTheDocument();
+    expect(screen.getByText('18 km')).toBeInTheDocument();
+  });
 });

@@ -1,3 +1,4 @@
+import type { TripMode } from '@triptic/shared';
 import type { Units } from '../store/profileStore';
 
 /**
@@ -21,4 +22,12 @@ export function formatElevation(m: number, units: Units): string {
   return units === 'imperial'
     ? `${Math.round(m / M_PER_FOOT)} ft`
     : `${Math.round(m)} m`;
+}
+
+/**
+ * Le dénivelé mesure un effort : il parle à pied et à vélo. En van, le cumul
+ * des bosses de la route donne un chiffre sans signification — on le tait.
+ */
+export function showsElevation(mode: TripMode): boolean {
+  return mode !== 'roadtrip';
 }
