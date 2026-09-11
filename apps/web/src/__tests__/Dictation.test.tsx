@@ -9,7 +9,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: () => vi.fn() };
 });
-vi.mock('../lib/supabase', () => ({ supabase: null }));
+vi.mock('../lib/supabase', () => ({ supabase: null, recoveryLink: false }));
 
 /** Reconnaissance vocale factice — on pilote les résultats depuis le test. */
 class FakeRecognition {

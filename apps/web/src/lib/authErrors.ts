@@ -33,10 +33,3 @@ export function authErrorKey(error: unknown): AuthErrorKey {
   if (key) return key;
   return status === 429 ? 'error_rate_limit' : 'error_generic';
 }
-
-/** Lien d'email refusé par Supabase (expiré, déjà servi) : il revient avec `error_code` dans l'URL. */
-export function linkErrorInUrl(): boolean {
-  const hash = new URLSearchParams(window.location.hash.slice(1));
-  const query = new URLSearchParams(window.location.search);
-  return hash.has('error_code') || query.has('error_code');
-}

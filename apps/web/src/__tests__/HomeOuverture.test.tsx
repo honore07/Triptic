@@ -19,6 +19,7 @@ vi.mock('../lib/supabase', () => ({
   get supabase() {
     return authConfigured.value ? {} : null;
   },
+  recoveryLink: false,
 }));
 
 /** Connecté = un carnet est ouvert ; déconnecté = email null. */

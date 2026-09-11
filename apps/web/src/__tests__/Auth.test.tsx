@@ -20,8 +20,9 @@ const auth = vi.hoisted(() => ({
   resetPasswordForEmail: vi.fn(),
   updateUser: vi.fn(),
   signInWithOAuth: vi.fn(),
+  signOut: vi.fn(),
 }));
-vi.mock('../lib/supabase', () => ({ supabase: { auth } }));
+vi.mock('../lib/supabase', () => ({ supabase: { auth }, recoveryLink: false }));
 
 const google = vi.hoisted(() => ({ enabled: false }));
 vi.mock('../lib/authProviders', () => ({ isGoogleEnabled: async () => google.enabled }));
@@ -44,11 +45,13 @@ describe('Connexion (planche PL.02)', () => {
       auth.resetPasswordForEmail,
       auth.updateUser,
       auth.signInWithOAuth,
+      auth.signOut,
     ]) {
       action.mockReset();
     }
+    auth.signOut.mockResolvedValue({ error: null });
     google.enabled = false;
-    useUserStore.setState({ email: null, recovery: false });
+    useUserStore.setState({ email: null, recovery: false, authReady: true });
   });
 
   afterEach(() => {
@@ -110,21 +113,6 @@ describe('Connexion (planche PL.02)', () => {
     });
   });
 
-  it('arrivé par le lien de réinitialisation : enregistre le nouveau mot de passe', async () => {
-    auth.updateUser.mockResolvedValue({ data: { user: {} }, error: null });
-    useUserStore.setState({ email: 'marcheur@vire.test', recovery: true });
-    renderAuth();
-    expect(
-      screen.getByRole('heading', { name: 'Choisis un nouveau mot de passe.' }),
-    ).toBeInTheDocument();
-    expect(navigate).not.toHaveBeenCalled();
-    fill('Nouveau mot de passe', 'nouveau-mot-de-passe');
-    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer le mot de passe' }));
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/', { replace: true }));
-    expect(auth.updateUser).toHaveBeenCalledWith({ password: 'nouveau-mot-de-passe' });
-    expect(useUserStore.getState().recovery).toBe(false);
-  });
-
   it('lien expiré ou déjà servi : le dit, puis retire l’erreur de l’adresse', () => {
     window.history.replaceState(null, '', '/login#error=access_denied&error_code=otp_expired');
     renderAuth();
@@ -148,6 +136,74 @@ describe('Connexion (planche PL.02)', () => {
     useUserStore.setState({ email: 'marcheur@vire.test', recovery: false });
     renderAuth();
     expect(navigate).toHaveBeenCalledWith('/', { replace: true });
+  });
+});
+
+describe('Connexion — nouveau mot de passe après le lien reçu par email', () => {
+  beforeEach(() => {
+    setLang('fr');
+    navigate.mockClear();
+    auth.updateUser.mockReset();
+    auth.signOut.mockReset();
+    auth.signOut.mockResolvedValue({ error: null });
+    google.enabled = false;
+    useUserStore.setState({ email: 'marcheur@vire.test', recovery: true, authReady: true });
+  });
+
+  afterEach(() => {
+    useUserStore.setState({ email: null, recovery: false, authReady: true });
+  });
+
+  it('régression : la session du lien arrive avant l’annonce de réinitialisation — la page reste', () => {
+    useUserStore.setState({ email: null, recovery: true, authReady: false });
+    renderAuth();
+    act(() => {
+      useUserStore.setState({ email: 'marcheur@vire.test', authReady: true });
+    });
+    expect(navigate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { name: 'Choisis un nouveau mot de passe.' }),
+    ).toBeInTheDocument();
+  });
+
+  it('attend que le lien soit vérifié avant de laisser enregistrer', () => {
+    useUserStore.setState({ authReady: false });
+    renderAuth();
+    expect(screen.getByRole('button', { name: 'Enregistrer le mot de passe' })).toBeDisabled();
+  });
+
+  it('enregistre le nouveau mot de passe, déconnecte les autres appareils et le confirme', async () => {
+    auth.updateUser.mockResolvedValue({ data: { user: {} }, error: null });
+    renderAuth();
+    expect(screen.getByText(/Tes trips et tes brouillons restent en place/)).toBeInTheDocument();
+    fill('Nouveau mot de passe', 'nouveau-mot-de-passe');
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer le mot de passe' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Nouveau mot de passe enregistré');
+    expect(auth.updateUser).toHaveBeenCalledWith({ password: 'nouveau-mot-de-passe' });
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: 'others' });
+    expect(useUserStore.getState().recovery).toBe(false);
+    // La confirmation reste lisible : on ne part qu'au clic.
+    expect(navigate).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer vers mon carnet' }));
+    expect(navigate).toHaveBeenCalledWith('/', { replace: true });
+  });
+
+  it('refuse un mot de passe identique à l’ancien avec un message clair', async () => {
+    auth.updateUser.mockResolvedValue({
+      data: { user: null },
+      error: { code: 'same_password', status: 422 },
+    });
+    renderAuth();
+    fill('Nouveau mot de passe', 'ancien-mot-de-passe');
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer le mot de passe' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('déjà ton mot de passe actuel');
+    expect(useUserStore.getState().recovery).toBe(true);
+  });
+
+  it('peut renoncer : ferme la session ouverte par le lien sur cet appareil', async () => {
+    renderAuth();
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler et me déconnecter' }));
+    await waitFor(() => expect(auth.signOut).toHaveBeenCalledWith({ scope: 'local' }));
   });
 });
 
