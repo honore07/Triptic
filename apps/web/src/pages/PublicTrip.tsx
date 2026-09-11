@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Trip } from '@triptic/shared';
 import { fetchPublicTrip } from '../lib/api';
-import { formatDistance, formatElevation } from '../lib/units';
+import { formatDistance, formatElevation, showsElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
 import { DayCards } from '../components/DayCards';
 import { DifficultyBadge } from '../components/DifficultyBadge';
@@ -50,6 +50,7 @@ export function PublicTrip() {
   }
 
   const meta = trip.metadata;
+  const withElevation = showsElevation(trip.mode);
   const releve = [
     Number.isFinite(meta.duration_days)
       ? { label: t('trips.days'), value: t('trips.days_count', { count: meta.duration_days }) }
@@ -57,24 +58,29 @@ export function PublicTrip() {
     Number.isFinite(meta.distance_km)
       ? { label: t('trips.distance'), value: formatDistance(meta.distance_km, units) }
       : null,
-    Number.isFinite(meta.elevation_gain_m)
+    Number.isFinite(meta.elevation_gain_m) && withElevation
       ? { label: t('trips.elevation'), value: formatElevation(meta.elevation_gain_m, units) }
       : null,
     Number.isFinite(meta.daily_distance_km)
       ? { label: t('trips.per_day'), value: formatDistance(meta.daily_distance_km, units) }
       : null,
   ].filter((x): x is { label: string; value: string } => x !== null);
+  const releveColumns =
+    releve.length >= 4 ? 'sm:grid-cols-4' : releve.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2';
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6">
-      {/* L'épreuve : photo réelle plein cadre, ou le tracé sur l'encre */}
-      <header className="hero-open ink-reveal relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
-        <div aria-hidden="true" className="absolute inset-0">
+      {/* L'épreuve : photo réelle plein cadre, ou le tracé sur l'encre. L'ouverture
+       * au défilement ne rogne que la photo, jamais le titre ni le relevé. */}
+      <header className="ink-reveal relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
+        <div aria-hidden="true" className="hero-open absolute inset-0">
           {trip.cover_photo ? (
             <img
               src={trip.cover_photo}
               alt=""
               fetchPriority="high"
+              loading="eager"
+              decoding="async"
               className="hero-drift h-full w-full object-cover"
             />
           ) : (
@@ -112,7 +118,9 @@ export function PublicTrip() {
           </div>
 
           {releve.length > 0 && (
-            <dl className="grid grid-cols-2 divide-cloud/25 border-y border-cloud/30 sm:grid-cols-4 sm:divide-x">
+            <dl
+              className={`grid grid-cols-2 divide-cloud/25 border-y border-cloud/30 sm:divide-x ${releveColumns}`}
+            >
               {releve.map(({ label, value }) => (
                 <div key={label} className="flex flex-col gap-0.5 px-2.5 py-2.5">
                   <dt className="label-mono text-cloud/65">{label}</dt>
@@ -134,7 +142,12 @@ export function PublicTrip() {
       />
 
       {trip.days && trip.days.length > 0 && (
-        <DayCards days={trip.days} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+        <DayCards
+          days={trip.days}
+          selectedDay={selectedDay}
+          onSelectDay={setSelectedDay}
+          showElevation={withElevation}
+        />
       )}
 
       {/* La plaque d'invitation : ce que VIRE fait, et la porte pour le faire */}

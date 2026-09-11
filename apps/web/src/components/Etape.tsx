@@ -9,9 +9,9 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { dateForTripDay, type ActivityType, type TripDay } from '@triptic/shared';
+import { thumbnailUrl } from '../lib/thumbnails';
 import { formatDistance, formatElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
-import { thumbnailUrl } from './DayCards';
 import { WeatherIcon } from './WeatherStrip';
 import type { WeatherDayPayload } from '../lib/api';
 
@@ -45,6 +45,11 @@ interface EtapeProps {
   startDate?: string | undefined;
   /** Prévision du jour (bandeau météo) — la bande horaire s'affiche si elle porte des heures. */
   forecast?: WeatherDayPayload['forecast'] | undefined;
+  /**
+   * false pour un road trip : ni dénivelé au relevé ni profil de montées. La
+   * montée d'une rando garde son chiffre, à côté d'elle : c'est un effort réel.
+   */
+  showElevation?: boolean;
 }
 
 /**
@@ -56,7 +61,7 @@ interface EtapeProps {
  * Le profil se lit sur les dénivelés réellement portés par les activités —
  * pas de courbe lissée qui suggérerait une précision qu'on n'a pas.
  */
-export function Etape({ day, startDate, forecast = null }: EtapeProps) {
+export function Etape({ day, startDate, forecast = null, showElevation = true }: EtapeProps) {
   const { t, i18n } = useTranslation();
   const units = useProfileStore((s) => s.units);
   const type = day.activities[0]?.type ?? 'hike';
@@ -73,14 +78,18 @@ export function Etape({ day, startDate, forecast = null }: EtapeProps) {
     : null;
 
   // Montées de la journée, dans l'ordre — l'échelle est celle de la plus forte
-  const climbs = day.activities
-    .map((a, i) => ({ i, title: a.title, gain: a.elevation_gain_m ?? 0 }))
-    .filter((c) => c.gain > 0);
+  const climbs = showElevation
+    ? day.activities
+        .map((a, i) => ({ i, title: a.title, gain: a.elevation_gain_m ?? 0 }))
+        .filter((c) => c.gain > 0)
+    : [];
   const maxGain = Math.max(...climbs.map((c) => c.gain), 1);
 
   const releve = [
     { label: t('trips.distance'), value: distance > 0 ? formatDistance(distance, units) : '—' },
-    { label: t('trips.elevation'), value: gain > 0 ? formatElevation(gain, units) : '—' },
+    ...(showElevation
+      ? [{ label: t('trips.elevation'), value: gain > 0 ? formatElevation(gain, units) : '—' }]
+      : []),
     { label: t('etape.time'), value: minutes > 0 ? asHours(minutes) : '—' },
   ];
 
@@ -89,11 +98,13 @@ export function Etape({ day, startDate, forecast = null }: EtapeProps) {
       {/* Tête de planche : la photo du jour, ou l'objet du jour en médaillon */}
       {day.photo_url ? (
         <header className="relative -mx-4 overflow-hidden border-y border-mist bg-trail text-cloud sm:mx-0 sm:border">
+          {/* La fiche s'ouvre quand on choisit le jour : la photo part aussitôt */}
           <img
             src={thumbnailUrl(day.photo_url, 1200)}
             alt=""
             aria-hidden="true"
-            loading="lazy"
+            loading="eager"
+            decoding="async"
             className="hero-drift absolute inset-0 h-full w-full object-cover"
           />
           <div
@@ -137,11 +148,11 @@ export function Etape({ day, startDate, forecast = null }: EtapeProps) {
         </div>
       )}
 
-      <dl className="grid grid-cols-3 border border-mist">
+      <dl className={`grid border border-mist ${releve.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
         {releve.map(({ label, value }, i) => (
           <div
             key={label}
-            className={`flex flex-col gap-0.5 p-2.5 ${i < 2 ? 'border-r border-mist' : ''}`}
+            className={`flex flex-col gap-0.5 p-2.5 ${i < releve.length - 1 ? 'border-r border-mist' : ''}`}
           >
             <dt className="label-mono text-fog">{label}</dt>
             <dd className="font-display text-xl font-semibold leading-none text-trail">{value}</dd>
@@ -247,7 +258,7 @@ export function Etape({ day, startDate, forecast = null }: EtapeProps) {
               </div>
               <span className="shrink-0 text-right font-mono text-xs text-ridge">
                 {activity.distance_km ? <span className="block">{activity.distance_km} km</span> : null}
-                {activity.elevation_gain_m ? (
+                {activity.elevation_gain_m && (showElevation || activity.type === 'hike') ? (
                   <span className="block text-fog">+ {activity.elevation_gain_m} m</span>
                 ) : null}
                 {activity.cost_estimate ? (

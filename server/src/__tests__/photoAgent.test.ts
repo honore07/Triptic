@@ -28,6 +28,16 @@ describe('mediaTitle', () => {
       'Paysage au Buchwald (Wasserbourg)',
     );
   });
+
+  it('ignore les paramètres de suivi des vignettes Wikimedia récentes', () => {
+    const item = {
+      ...media('Annecy_-_panoramio_%289%29.jpg'),
+      url:
+        'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Annecy_-_panoramio_%289%29.jpg/' +
+        '960px-Annecy_-_panoramio_%289%29.jpg?utm_source=commons.wikimedia.org&utm_content=thumbnail',
+    };
+    expect(mediaTitle(item)).toBe('Annecy panoramio (9)');
+  });
 });
 
 describe('isObviouslyOffTopic', () => {

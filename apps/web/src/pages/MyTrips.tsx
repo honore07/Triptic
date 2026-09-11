@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Trip, TripMode } from '@triptic/shared';
 import { listTrips } from '../lib/api';
-import { formatDistance, formatElevation } from '../lib/units';
+import { formatDistance, formatElevation, showsElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from '../store/userStore';
@@ -72,17 +72,27 @@ export function MyTrips() {
   const all = state.status === 'ready' ? state.trips : [];
   const shown = all.filter((trip) => filter === 'all' || trip.mode === filter);
 
-  // Cumul de tout le carnet — le filtre trie l'affichage, pas le bilan
+  // Cumul de tout le carnet — le filtre trie l'affichage, pas le bilan. Le
+  // dénivelé ne compte que les vires à pied ou à vélo.
   const totals = all.reduce(
     (acc, trip) => ({
       count: acc.count + 1,
       km: acc.km + (Number.isFinite(trip.metadata.distance_km) ? trip.metadata.distance_km : 0),
       gain:
         acc.gain +
-        (Number.isFinite(trip.metadata.elevation_gain_m) ? trip.metadata.elevation_gain_m : 0),
+        (showsElevation(trip.mode) && Number.isFinite(trip.metadata.elevation_gain_m)
+          ? trip.metadata.elevation_gain_m
+          : 0),
     }),
     { count: 0, km: 0, gain: 0 },
   );
+  const totalCells = [
+    { label: t('my_trips.total_trips'), value: String(totals.count) },
+    { label: t('trips.distance'), value: formatDistance(totals.km, units) },
+    ...(all.some((trip) => showsElevation(trip.mode))
+      ? [{ label: t('trips.elevation'), value: formatElevation(totals.gain, units) }]
+      : []),
+  ];
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6">
@@ -95,15 +105,15 @@ export function MyTrips() {
       </h1>
 
       {all.length > 0 && (
-        <dl className="grid grid-cols-3 border border-mist">
-          {[
-            { label: t('my_trips.total_trips'), value: String(totals.count) },
-            { label: t('trips.distance'), value: formatDistance(totals.km, units) },
-            { label: t('trips.elevation'), value: formatElevation(totals.gain, units) },
-          ].map(({ label, value }, i) => (
+        <dl
+          className={`grid border border-mist ${totalCells.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}
+        >
+          {totalCells.map(({ label, value }, i) => (
             <div
               key={label}
-              className={`flex flex-col gap-0.5 p-2.5 ${i < 2 ? 'border-r border-mist' : ''}`}
+              className={`flex flex-col gap-0.5 p-2.5 ${
+                i < totalCells.length - 1 ? 'border-r border-mist' : ''
+              }`}
             >
               <dt className="label-mono text-fog">{label}</dt>
               <dd className="font-display text-2xl font-semibold leading-none text-trail">
@@ -228,7 +238,7 @@ export function MyTrips() {
                       {Number.isFinite(meta.distance_km) && (
                         <span>{formatDistance(meta.distance_km, units)}</span>
                       )}
-                      {Number.isFinite(meta.elevation_gain_m) && (
+                      {Number.isFinite(meta.elevation_gain_m) && showsElevation(trip.mode) && (
                         <span className="text-fog">+ {formatElevation(meta.elevation_gain_m, units)}</span>
                       )}
                     </span>

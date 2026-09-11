@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { TripDay } from '@triptic/shared';
-import { DayCards, thumbnailUrl } from '../components/DayCards';
+import { DayCards } from '../components/DayCards';
+import { thumbnailUrl } from '../lib/thumbnails';
 import { setLang } from '../lib/i18n';
 
 const DAYS: TripDay[] = [
@@ -62,6 +63,18 @@ describe('DayCards (cartes-étapes 2.2)', () => {
     // La planche fait ~200 px de large : 400 px suffisent, jamais le 1080 d'origine
     expect(container.querySelector('img')?.getAttribute('src')).toContain('w=400');
   });
+
+  it('trek : le dénivelé du jour reste affiché', () => {
+    setLang('fr');
+    render(<DayCards days={DAYS} selectedDay={null} onSelectDay={() => {}} />);
+    expect(screen.getByText('+ 600 m')).toBeInTheDocument();
+  });
+
+  it('road trip : aucun dénivelé sur les planches', () => {
+    setLang('fr');
+    render(<DayCards days={DAYS} selectedDay={null} onSelectDay={() => {}} showElevation={false} />);
+    expect(screen.queryByText('+ 600 m')).not.toBeInTheDocument();
+  });
 });
 
 describe('thumbnailUrl', () => {
@@ -79,5 +92,23 @@ describe('thumbnailUrl', () => {
       'https://images.unsplash.com/photo-1',
     );
     expect(thumbnailUrl('not-a-url')).toBe('not-a-url');
+  });
+
+  it('Wikimedia : arrondit à la largeur standard supérieure, seule servie par thumb.wikimedia.org', () => {
+    const url =
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Annecy_%289%29.jpg/960px-Annecy_%289%29.jpg';
+    expect(thumbnailUrl(url, 400)).toBe(
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Annecy_%289%29.jpg/500px-Annecy_%289%29.jpg',
+    );
+    expect(thumbnailUrl(url, 1200)).toBe(
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Annecy_%289%29.jpg/1280px-Annecy_%289%29.jpg',
+    );
+    expect(thumbnailUrl(url, 120)).toContain('/330px-');
+    expect(thumbnailUrl(url, 5000)).toContain('/1920px-');
+  });
+
+  it('Wikimedia : une image originale, sans largeur dans le nom, reste intacte', () => {
+    const original = 'https://upload.wikimedia.org/wikipedia/commons/9/96/Annecy.jpg';
+    expect(thumbnailUrl(original, 400)).toBe(original);
   });
 });

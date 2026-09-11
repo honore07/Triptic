@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TripProposal } from '@triptic/shared';
 import { MAP_COLORS } from '../lib/mapColors';
-import { formatDistance, formatElevation } from '../lib/units';
+import { formatDistance, formatElevation, showsElevation } from '../lib/units';
 import { useProfileStore } from '../store/profileStore';
 import { DifficultyBadge } from './DifficultyBadge';
 import { RoutePreview } from './RoutePreview';
@@ -57,10 +57,12 @@ export function TripCard({ trip, onChoose, index = 0, active = false, onActivate
       {/* Le terrain — photo réelle plein cadre, tracé SVG à défaut */}
       <div aria-hidden={trip.photo_url ? undefined : 'true'} className="absolute inset-0">
         {trip.photo_url ? (
+          // Les trois volets sont à l'écran dès l'arrivée : pas de chargement différé
           <img
             src={trip.photo_url}
             alt={`${trip.title} — ${trip.ambiance}`}
-            loading="lazy"
+            loading="eager"
+            decoding="async"
             className="plate-photo h-full w-full object-cover"
           />
         ) : (
@@ -109,10 +111,18 @@ export function TripCard({ trip, onChoose, index = 0, active = false, onActivate
             value={t('trips.days_count', { count: trip.duration_days })}
           />
           <Releve label={t('trips.distance')} value={formatDistance(trip.distance_km, units)} />
-          <Releve
-            label={t('trips.elevation')}
-            value={formatElevation(trip.elevation_gain_m, units)}
-          />
+          {/* En van, la case du dénivelé sert la distance par jour : le relevé garde ses quatre cases */}
+          {showsElevation(trip.mode) ? (
+            <Releve
+              label={t('trips.elevation')}
+              value={formatElevation(trip.elevation_gain_m, units)}
+            />
+          ) : (
+            <Releve
+              label={t('trips.per_day')}
+              value={formatDistance(trip.daily_distance_km, units)}
+            />
+          )}
           <Releve
             label={t('budget.title')}
             value={

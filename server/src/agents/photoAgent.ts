@@ -87,7 +87,8 @@ export function isObviouslyOffTopic(title: string): boolean {
 /** Titre lisible d'un média Commons (le nom de fichier porte le sujet). */
 export function mediaTitle(item: PlaceMedia): string {
   try {
-    const file = decodeURIComponent(item.url.split('/').pop() ?? '');
+    // Le chemin seul : les vignettes récentes portent des paramètres de suivi
+    const file = decodeURIComponent(new URL(item.url).pathname.split('/').pop() ?? '');
     return file
       .replace(/^\d+px-/, '')
       .replace(/\.(jpe?g|png)$/i, '')

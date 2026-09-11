@@ -77,3 +77,34 @@ describe('createTimeBubble', () => {
     }
   });
 });
+
+describe('flèches de sens du tracé', () => {
+  it('suivent la ligne sans jamais se retourner, teintées à la couleur du tracé', async () => {
+    const { routeArrowLayer, ROUTE_ARROW_ICON } = await import('../lib/mapStyles');
+    const layer = routeArrowLayer('#A94E2B');
+    expect(layer.type).toBe('symbol');
+    expect(layer.source).toBe('route');
+    expect(layer.layout?.['symbol-placement']).toBe('line');
+    expect(layer.layout?.['icon-keep-upright']).toBe(false);
+    expect(layer.layout?.['icon-rotation-alignment']).toBe('map');
+    expect(layer.layout?.['icon-image']).toBe(ROUTE_ARROW_ICON);
+    expect(layer.paint?.['icon-color']).toBe('#A94E2B');
+  });
+});
+
+describe('createPlaceMarker', () => {
+  it('charge tout de suite une vignette Wikimedia à la taille du marqueur', async () => {
+    const { createPlaceMarker } = await import('../components/MapView');
+    const el = createPlaceMarker(
+      { name: 'Annecy', lat: 45.9, lng: 6.13, day: 1, kind: 'start' },
+      '#000000',
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/A.jpg/960px-A.jpg',
+      'Voir les photos d’Annecy',
+    );
+    const img = el.querySelector('img');
+    expect(img?.getAttribute('src')).toBe(
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/A.jpg/330px-A.jpg',
+    );
+    expect(img?.getAttribute('loading')).toBe('eager');
+  });
+});

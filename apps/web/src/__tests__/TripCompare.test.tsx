@@ -6,7 +6,7 @@ import { setLang } from '../lib/i18n';
 
 function trip(over: Partial<TripProposal> & { title: string }): TripProposal {
   return {
-    mode: 'roadtrip',
+    mode: 'trek',
     duration_days: 4,
     distance_km: 180,
     elevation_gain_m: 900,
@@ -40,6 +40,17 @@ describe('TripCompare — le triptyque (PL.07)', () => {
     expect(screen.getByText('160 km → 200 km')).toBeInTheDocument();
     expect(screen.getByText('500 m → 1070 m')).toBeInTheDocument();
     expect(screen.getByText('Facile → Difficile')).toBeInTheDocument();
+  });
+
+  it('road trip : le dénivelé sort de « ce qui les distingue » et des volets', () => {
+    setLang('fr');
+    const vans = TRIPS.map((x) => ({ ...x, mode: 'roadtrip' as const }));
+    render(
+      <TripCompare trips={vans} lockedCount={0} differentiator="d" onChoose={() => {}} onUnlock={() => {}} />,
+    );
+    expect(screen.queryByText('500 m → 1070 m')).not.toBeInTheDocument();
+    expect(screen.queryByText('D+')).not.toBeInTheDocument();
+    expect(screen.getByText('160 km → 200 km')).toBeInTheDocument();
   });
 
   it('le premier volet est actif ; un tap sur un autre volet le met en avant', () => {

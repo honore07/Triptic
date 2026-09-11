@@ -25,12 +25,20 @@ export default defineConfig({
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
-            // Photos Unsplash/Pexels des TripCards
-            urlPattern: /^https:\/\/(images\.unsplash\.com|images\.pexels\.com)\/.*/,
+            // Photos réelles des trips (couvertures, jours, carrousels) : une
+            // photo déjà vue revient aussitôt, même hors ligne.
+            urlPattern:
+              /^https:\/\/(images\.unsplash\.com|images\.pexels\.com|thumb\.wikimedia\.org|upload\.wikimedia\.org)\/.*/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'trip-photos',
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              expiration: {
+                maxEntries: 150,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+                // Images cross-origin = réponses opaques, lourdes pour le quota :
+                // on vide ce cache plutôt que de faire échouer l'app.
+                purgeOnQuotaError: true,
+              },
             },
           },
           {

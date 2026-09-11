@@ -19,6 +19,9 @@ describe('En-têtes de sécurité (helmet)', () => {
     expect(csp).toContain("default-src 'self'");
     expect(csp).toContain('https://api.mapbox.com');
     expect(csp).toContain('worker-src');
+    // Vignettes Wikimedia : sans cet hôte, toutes les photos réelles des trips sont bloquées
+    expect(csp).toMatch(/img-src[^;]*https:\/\/thumb\.wikimedia\.org/);
+    expect(csp).toMatch(/connect-src[^;]*https:\/\/thumb\.wikimedia\.org/);
     expect(res.headers['x-frame-options']).toBeDefined();
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['x-powered-by']).toBeUndefined();
