@@ -189,12 +189,22 @@ export function createAiRouter(
         // montrait une voiture de police au centre de Bolzano. Couvertures et
         // photos par étape (2.3, uniquement le 1er trip — quotas API) en même
         // temps : l'agent juge les unes pendant que Commons sert les autres.
+        // Jamais deux fois la même photo : ni entre les jours, ni entre les
+        // couvertures des propositions côte à côte ; la couverture du 1er trip
+        // choisit avant ses jours.
+        const used = new Set<string>();
+        const cover = (trip: (typeof visible)[number]) =>
+          findTripCover(trip, trip.photo_keywords, provider, used).then((url) => {
+            trip.photo_url = url ?? undefined;
+          });
         const first = visible[0];
+        const firstCover = first ? cover(first) : undefined;
         await Promise.all([
-          ...visible.map(async (trip) => {
-            trip.photo_url = (await findTripCover(trip, trip.photo_keywords, provider)) ?? undefined;
-          }),
-          first?.days ? findDayPhotos(first.days, first.photo_keywords, provider) : undefined,
+          firstCover,
+          ...visible.slice(1).map(cover),
+          first?.days
+            ? findDayPhotos(first.days, first.photo_keywords, provider, used, firstCover)
+            : undefined,
         ]);
         sseWrite(res, 'trips', {
           generation: {

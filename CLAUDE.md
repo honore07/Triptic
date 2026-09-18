@@ -922,6 +922,14 @@ Phases 0-6 de la roadmap implémentées (PR `claude/triptic-roadmap-improvements
   que des vues extérieures d'ensemble en format paysage ; écarte intérieurs,
   bâtiments seuls, véhicules, événements, animaux, objets, plats, cartes.
   Agent indisponible = seules les photos dont les faits disent un paysage.
+  **Second regard** (`agents/photoVision.ts`) : un modèle qui VOIT l'image
+  (Claude, `ANTHROPIC_API_KEY`, modèle `ANTHROPIC_VISION_MODEL`, défaut
+  `claude-opus-5`) valide chaque photo retenue en 330 px — un titre Commons
+  peut mentir (« Viewpoint, Waterfall » = des pieds sur une passerelle).
+  Panne = mis de côté 2 min, l'agent texte fait foi. **Jamais deux fois la
+  même photo dans un trip** (ni la même série « Lac Blanc 01/02 ») : un
+  ensemble `used` partagé par la couverture et les jours ; vues épuisées à
+  5 km → recherche à 12 km avant tout repli Unsplash/Pexels.
   Clés de galerie préfixées par la version des règles (changer les règles
   périme les galeries en base) ; `pnpm photos:refresh [--apply]` refait les
   photos des trips enregistrés (fichier SQL de retour arrière). ⚠️ Deepseek v4

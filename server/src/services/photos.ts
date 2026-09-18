@@ -1,5 +1,6 @@
 import type { LlmProvider } from '@triptic/ai-engine';
 import { PHOTO_RULES_VERSION, rankPlacePhotos } from '../agents/photoAgent.js';
+import { checkByEye } from '../agents/photoVision.js';
 import { logger } from '../logger.js';
 import type { GalleryStore } from '../repo/galleries.js';
 
@@ -270,16 +271,19 @@ export async function findCommonsMedia(
   lat: number,
   lng: number,
   wanted: number,
+  radiusKm = 5,
 ): Promise<PhotoCandidate[]> {
   const batch = Math.min(wanted * 2, 50);
-  const search = `nearcoord:5km,${lat},${lng} filew:>999 ${VIEW_SEARCH_TERMS}`;
+  const search = `nearcoord:${radiusKm}km,${lat},${lng} filew:>999 ${VIEW_SEARCH_TERMS}`;
   const views = await queryCommons(
     `${COMMONS_API}&generator=search&gsrnamespace=6&gsrlimit=${batch}` +
       `&gsrsearch=${encodeURIComponent(search)}${COMMONS_PROPS}`,
   );
   if (views.length >= wanted) return views;
+  // La géo-recherche plafonne à 10 km
   const nearest = await queryCommons(
-    `${COMMONS_API}&generator=geosearch&ggscoord=${lat}%7C${lng}&ggsradius=4000` +
+    `${COMMONS_API}&generator=geosearch&ggscoord=${lat}%7C${lng}` +
+      `&ggsradius=${Math.min(radiusKm * 800, 10_000)}` +
       `&ggslimit=${batch}&ggsnamespace=6${COMMONS_PROPS}`,
   );
   const seen = new Set(views.map((photo) => photo.url));
@@ -377,7 +381,10 @@ export async function findPlacePhotos(
     const candidates = await findCommonsMedia(coords.lat, coords.lng, limit * 2);
     if (candidates.length > 0) {
       const [ranked = []] = await rankPlacePhotos([{ place: query, candidates }], provider);
-      const geo = diversifyByAuthor(ranked, limit).map(toPlaceMedia);
+      // Second regard : l'image elle-même, un titre pouvant mentir
+      const shortlist = diversifyByAuthor(ranked, limit);
+      const seen = await checkByEye(shortlist.map((photo) => photo.url));
+      const geo = shortlist.filter((photo) => seen.get(photo.url) !== false).map(toPlaceMedia);
       if (geo.length > 0) {
         cacheSet(key, geo);
         void persist(key, query, geo);
@@ -455,10 +462,14 @@ export async function findPlacePhotos(
     }
   }
 
+  // Recherche par mots-clés : le second regard écarte les hors-sujet
+  const seen = await checkByEye(photos.map((photo) => photo.url));
+  const checked = photos.filter((photo) => seen.get(photo.url) !== false);
+
   // Les vidéos ferment la galerie : elles coûtent plus cher à charger que
   // les photos, autant les servir après un premier aperçu immédiat.
   const videos = await findPexelsVideos(query, VIDEO_SLOTS);
-  const media = [...photos.slice(0, limit), ...videos];
+  const media = [...checked.slice(0, limit), ...videos];
 
   if (media.length > 0) {
     cacheSet(key, media);
@@ -467,25 +478,59 @@ export async function findPlacePhotos(
   return media;
 }
 
-/**
- * Sélectionne une photo réelle (Unsplash puis Pexels) pour un trip.
- * Retourne null si aucune clé API configurée ou en cas d'échec —
- * le frontend affiche alors un fond dégradé.
- */
-export async function findTripPhoto(keywords: string[]): Promise<string | null> {
-  const query = `${keywords.join(' ')} landscape adventure`;
+/** Une photo = son URL sans paramètres. */
+export function photoKey(url: string): string {
+  return withoutTracking(url);
+}
 
+/**
+ * Ce qu'on ne montre qu'une fois par trip : le fichier, et sa série Commons —
+ * « Lac Blanc (Orbey) 02 » et « 03 », « Paysage (87) » et « (88) » sont la
+ * même vue en deux fichiers.
+ */
+function photoKeys(url: string): string[] {
+  const keys = [photoKey(url)];
+  try {
+    const parsed = new URL(url);
+    if (/wikimedia\.org$/.test(parsed.hostname)) {
+      const name = decodeURIComponent(parsed.pathname.split('/').pop() ?? '')
+        .replace(/^\d+px-/, '')
+        .replace(/\.[a-z]+$/i, '')
+        .replace(/[\s_]+/g, ' ');
+      const series = name
+        .replace(/\s*-?\s*(?:img\s*)?\(?\d+\)?\s*$/i, '')
+        .trim()
+        .toLowerCase();
+      if (series) keys.push(`serie:${series}`);
+    }
+  } catch {
+    // URL illisible : le fichier seul fait foi
+  }
+  return keys;
+}
+
+/** Photo déjà montrée dans ce trip (elle-même ou une autre de sa série) ? */
+export function isUsed(used: Set<string>, url: string): boolean {
+  return photoKeys(url).some((key) => used.has(key));
+}
+
+export function markUsed(used: Set<string>, url: string): void {
+  for (const key of photoKeys(url)) used.add(key);
+}
+
+/** Photos candidates par mots-clés : Unsplash, puis Pexels s'il n'a rien donné. */
+async function keywordPhotos(query: string): Promise<string[]> {
   const unsplashKey = process.env['UNSPLASH_ACCESS_KEY'];
   if (unsplashKey && !unsplashKey.startsWith('xxx')) {
     try {
       const res = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${KEYWORD_CANDIDATES}&orientation=landscape`,
         { headers: { Authorization: `Client-ID ${unsplashKey}` } },
       );
       if (res.ok) {
         const data = (await res.json()) as { results?: { urls?: { regular?: string } }[] };
-        const url = data.results?.[0]?.urls?.regular;
-        if (url) return url;
+        const urls = (data.results ?? []).flatMap((item) => (item.urls?.regular ? [item.urls.regular] : []));
+        if (urls.length > 0) return urls;
       }
     } catch (error) {
       logger.warn({ error, context: 'photos-unsplash' }, 'Unsplash lookup failed');
@@ -496,20 +541,43 @@ export async function findTripPhoto(keywords: string[]): Promise<string | null> 
   if (pexelsKey && !pexelsKey.startsWith('xxx')) {
     try {
       const res = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${KEYWORD_CANDIDATES}&orientation=landscape`,
         { headers: { Authorization: pexelsKey } },
       );
       if (res.ok) {
         const data = (await res.json()) as { photos?: { src?: { large?: string } }[] };
-        const url = data.photos?.[0]?.src?.large;
-        if (url) return url;
+        return (data.photos ?? []).flatMap((item) => (item.src?.large ? [item.src.large] : []));
       }
     } catch (error) {
       logger.warn({ error, context: 'photos-pexels' }, 'Pexels lookup failed');
     }
   }
+  return [];
+}
 
-  return null;
+/** Photos demandées par recherche de mots-clés, pour en avoir une de rechange. */
+const KEYWORD_CANDIDATES = 5;
+
+/**
+ * Sélectionne une photo réelle (Unsplash puis Pexels) pour un trip : la
+ * première que le second regard ne refuse pas et que le trip n'affiche pas
+ * déjà. Retourne null si aucune clé API configurée ou en cas d'échec — le
+ * frontend affiche alors un fond dégradé.
+ */
+export async function findTripPhoto(
+  keywords: string[],
+  used: Set<string> = new Set(),
+): Promise<string | null> {
+  const query = `${keywords.join(' ')} landscape adventure`;
+  const candidates = (await keywordPhotos(query))
+    .filter((url) => !isUsed(used, url))
+    .slice(0, 3);
+  if (candidates.length === 0) return null;
+  const seen = await checkByEye(candidates);
+  // Relu après l'attente : un autre jour a pu prendre la photo entre-temps
+  const pick = candidates.find((url) => !isUsed(used, url) && seen.get(url) !== false) ?? null;
+  if (pick) markUsed(used, pick);
+  return pick;
 }
 
 /** Un point du trip où une photo prise sur place a du sens. */
@@ -517,6 +585,21 @@ export interface CoverAnchor {
   title: string;
   lat: number;
   lng: number;
+  /** Rayon de recherche des vues ; 5 km par défaut. */
+  radiusKm?: number | undefined;
+}
+
+/**
+ * Dernier essai sur place avant la recherche par mots-clés : le premier point,
+ * cherché plus large. Sur un trek de trois jours autour du Hohneck, les jours
+ * se partagent les mêmes vues à 5 km ; le repli Unsplash/Pexels montrait
+ * alors un lac alpin pour les Vosges.
+ */
+const WIDE_RADIUS_KM = 12;
+
+function withWideSearch(anchors: CoverAnchor[]): CoverAnchor[] {
+  const first = anchors[0];
+  return first ? [...anchors, { ...first, radiusKm: WIDE_RADIUS_KM }] : anchors;
 }
 
 interface CoverTrip {
@@ -567,7 +650,8 @@ const VIEW_MAX_ENTRIES = 500;
 const VIEW_CANDIDATES = 8;
 
 function anchorKey(anchor: CoverAnchor): string {
-  return `${anchor.lat.toFixed(3)},${anchor.lng.toFixed(3)}`;
+  const point = `${anchor.lat.toFixed(3)},${anchor.lng.toFixed(3)}`;
+  return anchor.radiusKm ? `${point}@${anchor.radiusKm}` : point;
 }
 
 /**
@@ -594,7 +678,7 @@ async function viewsAt(
     const ranked = Promise.all(
       pending.map(async ([, anchor]) => ({
         place: anchor.title,
-        candidates: await findCommonsMedia(anchor.lat, anchor.lng, VIEW_CANDIDATES),
+        candidates: await findCommonsMedia(anchor.lat, anchor.lng, VIEW_CANDIDATES, anchor.radiusKm),
       })),
     ).then((places) => rankPlacePhotos(places, provider));
     pending.forEach(([key], i) => {
@@ -611,14 +695,26 @@ async function viewsAt(
   return Promise.all(anchors.map((anchor) => views.get(anchorKey(anchor)) ?? []));
 }
 
+/** Photos regardées par passe et par emplacement, deux passes par point au plus. */
+const EYE_CHECKS_PER_PASS = 2;
+const EYE_PASSES = 2;
+
 /**
  * Pour chaque emplacement (une couverture, une journée), la meilleure vue du
- * premier de ses points qui en offre une. Les points sont essayés par vagues :
- * le suivant n'est payé que pour les emplacements restés sans photo.
+ * premier de ses points qui en offre une :
+ * - jamais une photo déjà montrée ailleurs dans le trip (`used`) — deux étapes
+ *   proches recevaient la même photo du col de la Schlucht ;
+ * - validée par le second regard (l'image elle-même), deux candidates à la
+ *   fois, deux passes au plus par point.
+ * Les points sont essayés par vagues : le suivant n'est payé que pour les
+ * emplacements restés sans photo. `after` : attendre ce choix (la couverture)
+ * avant de servir les emplacements, pour qu'il garde la meilleure photo.
  */
 async function firstViews(
   slots: CoverAnchor[][],
   provider: LlmProvider | null,
+  used: Set<string>,
+  after?: Promise<unknown>,
 ): Promise<(PhotoCandidate | undefined)[]> {
   const picked: (PhotoCandidate | undefined)[] = slots.map(() => undefined);
   const depth = Math.max(0, ...slots.map((anchors) => anchors.length));
@@ -632,9 +728,34 @@ async function firstViews(
       open.map(({ anchor }) => anchor),
       provider,
     );
-    open.forEach(({ slot }, k) => {
-      picked[slot] = views[k]?.[0];
-    });
+    if (after) {
+      await after.catch(() => undefined);
+      after = undefined;
+    }
+    const looked = open.map(() => new Set<string>());
+    for (let pass = 0; pass < EYE_PASSES; pass += 1) {
+      const toCheck = open.map(({ slot }, k) =>
+        picked[slot]
+          ? []
+          : (views[k] ?? [])
+              .filter((view) => !isUsed(used, view.url) && !looked[k]?.has(view.url))
+              .slice(0, EYE_CHECKS_PER_PASS),
+      );
+      if (toCheck.every((list) => list.length === 0)) break;
+      const seen = await checkByEye(toCheck.flat().map((view) => view.url));
+      // Choix sans attente entre lecture et réservation : deux emplacements
+      // ne peuvent pas prendre la même photo
+      open.forEach(({ slot }, k) => {
+        const list = toCheck[k] ?? [];
+        for (const view of list) looked[k]?.add(view.url);
+        if (picked[slot]) return;
+        const view = list.find((v) => !isUsed(used, v.url) && seen.get(v.url) !== false);
+        if (view) {
+          picked[slot] = view;
+          markUsed(used, view.url);
+        }
+      });
+    }
   }
   return picked;
 }
@@ -642,16 +763,18 @@ async function firstViews(
 /**
  * Couverture d'un trip : la meilleure vue d'ensemble RÉELLEMENT prise sur l'un
  * de ses temps forts (Commons par coordonnées — un trip Vosges recevait Annecy
- * et les Alpes par mots-clés), validée par l'agent photo ; sinon la recherche
- * par mots-clés de région. Deux points au plus par trip.
+ * et les Alpes par mots-clés), validée par l'agent photo puis à l'œil ; sinon
+ * la recherche par mots-clés de région. Deux points au plus par trip. `used` :
+ * les photos déjà prises ailleurs, qu'elle ne reprend pas (et complète).
  */
 export async function findTripCover(
   trip: CoverTrip,
   keywords: string[],
   provider: LlmProvider | null = null,
+  used: Set<string> = new Set(),
 ): Promise<string | null> {
-  const [view] = await firstViews([coverAnchors(trip).slice(0, 2)], provider);
-  return view?.url ?? findTripPhoto(keywords);
+  const [view] = await firstViews([withWideSearch(coverAnchors(trip).slice(0, 2))], provider, used);
+  return view?.url ?? findTripPhoto(keywords, used);
 }
 
 /**
@@ -704,9 +827,11 @@ function dayAnchors(activities: DayActivity[]): CoverAnchor[] {
 
 /**
  * Photo par étape (roadmap 2.3) : la meilleure vue d'ensemble prise sur place
- * autour des temps forts du jour, validée par l'agent photo ; à défaut,
- * mots-clés = temps fort + région du trip. Appelé pour UN SEUL trip (le
- * premier visible) afin de rester dans les quotas.
+ * autour des temps forts du jour, validée par l'agent photo puis à l'œil ; à
+ * défaut, mots-clés = temps fort + région du trip. Chaque jour a SA photo,
+ * différente de celles des autres jours et de la couverture (`used`, complété
+ * au passage). `after` : la couverture, servie la première. Appelé pour UN
+ * SEUL trip (le premier visible) afin de rester dans les quotas.
  */
 export async function findDayPhotos(
   days: {
@@ -716,11 +841,15 @@ export async function findDayPhotos(
   }[],
   baseKeywords: string[],
   provider: LlmProvider | null = null,
+  used: Set<string> = new Set(),
+  after?: Promise<unknown>,
 ): Promise<void> {
   const region = baseKeywords[0] ?? '';
   const views = await firstViews(
-    days.map((day) => dayAnchors(day.activities).slice(0, 2)),
+    days.map((day) => withWideSearch(dayAnchors(day.activities).slice(0, 2))),
     provider,
+    used,
+    after,
   );
   await forEachWithLimit(
     days.map((day, i) => ({ day, view: views[i] })),
@@ -729,7 +858,7 @@ export async function findDayPhotos(
       const highlight =
         day.activities.find((a) => a.type === 'hike' || a.type === 'visit') ?? day.activities[0];
       if (!highlight) return;
-      day.photo_url = view?.url ?? (await findTripPhoto([region, highlight.title])) ?? undefined;
+      day.photo_url = view?.url ?? (await findTripPhoto([region, highlight.title], used)) ?? undefined;
     },
   );
 }

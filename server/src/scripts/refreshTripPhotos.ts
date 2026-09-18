@@ -21,6 +21,7 @@ import postgres from 'postgres';
 import { createProviderFromEnv } from '@triptic/ai-engine';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
+import { photoJudgeFromEnv, setPhotoJudge } from '../agents/photoVision.js';
 import { findDayPhotos, findTripCover } from '../services/photos.js';
 
 interface StoredDay {
@@ -127,6 +128,7 @@ async function main(): Promise<void> {
   }
   const sql = postgres(env.databaseUrl, { max: 1 });
   const provider = createProviderFromEnv(process.env);
+  setPhotoJudge(photoJudgeFromEnv());
 
   const rows = await sql<TripRow[]>`
     SELECT id, title, cover_photo, metadata, days_json, waypoints_json
@@ -136,13 +138,16 @@ async function main(): Promise<void> {
   const refreshes: Refresh[] = [];
   for (const row of rows) {
     const keywords = row.metadata?.photo_keywords ?? [];
+    // Une photo n'apparaît qu'une fois par trip : la couverture choisit d'abord
+    const used = new Set<string>();
     const cover = await findTripCover(
       { waypoints: row.waypoints_json ?? [], days: row.days_json ?? [] },
       keywords,
       provider,
+      used,
     );
     const days = row.days_json ? structuredClone(row.days_json) : null;
-    if (days) await findDayPhotos(days, keywords, provider);
+    if (days) await findDayPhotos(days, keywords, provider, used);
     const refresh = { row, cover, days };
     refreshes.push(refresh);
     logger.info(

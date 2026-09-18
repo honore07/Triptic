@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { PHOTO_RULES_VERSION } from '../agents/photoAgent.js';
+import { setPhotoJudge } from '../agents/photoVision.js';
 import { createApp } from '../app.js';
 import type { GalleryStore } from '../repo/galleries.js';
 import {
@@ -12,6 +13,8 @@ import {
   findPlacePhotos,
   findTripCover,
   GALLERY_KEY_PREFIX,
+  isUsed,
+  markUsed,
   setGalleryStore,
   type PlaceMedia,
 } from '../services/photos.js';
@@ -50,7 +53,7 @@ const commonsPayload = (...pages: ReturnType<typeof commonsPage>[]) => ({
 });
 const EMPTY_COMMONS = { query: { pages: {} } };
 /** Latitude interrogée, que la requête Commons soit une recherche ou une géo-recherche. */
-const latOf = (url: string) => /(?:ggscoord=|nearcoord%3A5km%2C)([\d.]+)/.exec(url)?.[1] ?? '';
+const latOf = (url: string) => /(?:ggscoord=|nearcoord%3A\d+km%2C)([\d.]+)/.exec(url)?.[1] ?? '';
 
 describe('findPlacePhotos', () => {
   beforeEach(() => {
@@ -489,6 +492,100 @@ describe('couvertures de trip par coordonnées', () => {
     await findDayPhotos(days, ['vosges']);
     expect(days[1]?.photo_url).toBe('https://commons/j2.jpg');
     expect(days[0]?.photo_url).toBe('https://img/1-regular');
+  });
+
+  it('jamais deux fois la même photo dans un trip : couverture et jours voisins', async () => {
+    // Trois étapes à moins de 5 km : Commons renvoie les mêmes vues partout
+    const schlucht = commonsPayload(
+      commonsPage('File:Vue du col de la Schlucht.jpg', 'https://commons/a.jpg'),
+      commonsPage('File:Panorama du Hohneck.jpg', 'https://commons/b.jpg'),
+      commonsPage('File:Vue du lac de Retournemer.jpg', 'https://commons/c.jpg'),
+    );
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(schlucht), { status: 200 })));
+    const hike = (lat: number) => [{ type: 'hike', title: `Crête ${lat}`, lat, lng: 7.02 }];
+    const days: { title: string; activities: { type: string; title: string; lat: number; lng: number }[]; photo_url?: string }[] = [
+      { title: 'J1', activities: hike(48.061) },
+      { title: 'J2', activities: hike(48.062) },
+    ];
+    const used = new Set<string>();
+    const cover = await findTripCover({ waypoints: [], days }, ['vosges'], null, used);
+    await findDayPhotos(days, ['vosges'], null, used);
+    const all = [cover, ...days.map((d) => d.photo_url)];
+    expect(all.every(Boolean)).toBe(true);
+    expect(new Set(all).size).toBe(3);
+  });
+
+  it('vues épuisées à 5 km : on élargit à 12 km avant les mots-clés', async () => {
+    const near = commonsPayload(commonsPage('File:Vue du Hohneck.jpg', 'https://commons/a.jpg'));
+    const wide = commonsPayload(
+      commonsPage('File:Vue du Hohneck.jpg', 'https://commons/a.jpg'),
+      commonsPage('File:Panorama du Kastelberg.jpg', 'https://commons/k.jpg'),
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url.includes('commons.wikimedia.org')
+          ? new Response(JSON.stringify(decodeURIComponent(url).includes('nearcoord:12km') ? wide : near), { status: 200 })
+          : new Response(JSON.stringify(unsplashPayload), { status: 200 }),
+      ),
+    );
+    const days: { title: string; activities: { type: string; title: string; lat: number; lng: number }[]; photo_url?: string }[] = [
+      { title: 'J1', activities: [{ type: 'hike', title: 'Hohneck', lat: 48.04, lng: 7.02 }] },
+      { title: 'J2', activities: [{ type: 'hike', title: 'Hohneck sud', lat: 48.03, lng: 7.02 }] },
+    ];
+    await findDayPhotos(days, ['vosges']);
+    expect(days.map((d) => d.photo_url)).toEqual(['https://commons/a.jpg', 'https://commons/k.jpg']);
+  });
+
+  it('deux fichiers d’une même série Commons comptent pour une seule photo', () => {
+    const wiki = (file: string) => `https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/${file}/960px-${file}`;
+    const trip = new Set<string>();
+    // true = déjà montrée dans le trip (elle ou sa série), sinon on la prend
+    const pick = (file: string) => {
+      const taken = isUsed(trip, wiki(file));
+      if (!taken) markUsed(trip, wiki(file));
+      return taken;
+    };
+    expect(pick('Lac_Blanc_(Orbey)_01.JPG')).toBe(false);
+    expect(pick('Lac_Blanc_(Orbey).jpg')).toBe(true);
+    expect(pick('Lac_Blanc_(Orbey)_03.JPG')).toBe(true);
+    expect(pick('Paysage_(87).jpg')).toBe(false);
+    expect(pick('Paysage_(88).jpg')).toBe(true);
+    expect(pick('Chatelblanc_-_img_41843.jpg')).toBe(false);
+    expect(pick('Chatelblanc_-_img_41850.jpg')).toBe(true);
+    // Deux lieux différents restent deux photos
+    expect(pick('Lac_Noir_(Orbey)_01.JPG')).toBe(false);
+  });
+
+  it('une photo refusée à l’œil laisse la place à la suivante', async () => {
+    // Le juge « voit » les pieds : l'image téléchargée pour cette photo
+    const FEET_BYTES = Buffer.from([0xff, 0xd8, 0x01]).toString('base64');
+    setPhotoJudge({
+      name: 'mock-eye',
+      look: async ({ images }) =>
+        JSON.stringify({ keep: images.flatMap((image, n) => (image.data === FEET_BYTES ? [] : [n])) }),
+    });
+    try {
+      // Le titre ment : les règles le classent même devant la vraie vue
+      const gallery = commonsPayload(
+        commonsPage('File:Vue panoramique, Waterfall, Bonlieu.jpg', 'https://commons/pieds.jpg'),
+        commonsPage('File:Vue du Hohneck.jpg', 'https://commons/hohneck.jpg'),
+      );
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url: string) =>
+          url.includes('commons.wikimedia.org')
+            ? new Response(JSON.stringify(gallery), { status: 200 })
+            : new Response(new Uint8Array(url.includes('pieds') ? [0xff, 0xd8, 0x01] : [0xff, 0xd8, 0x02]), {
+                status: 200,
+                headers: { 'content-type': 'image/jpeg' },
+              }),
+        ),
+      );
+      expect(await findTripCover(trip, ['vosges'])).toBe('https://commons/hohneck.jpg');
+    } finally {
+      setPhotoJudge(null);
+    }
   });
 
   it('photo du jour : la rando passe avant le centre-ville du même jour', async () => {
