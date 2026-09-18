@@ -911,15 +911,29 @@ Phases 0-6 de la roadmap implémentées (PR `claude/triptic-roadmap-improvements
   `agents/complianceAgent.ts` (règles versionnées, audit Pino), registre
   `tdm_sources`, LIA dans `docs/legal/LIA-tdm.md`. ⛔ Aucune fiche web
   `active` sans l'agent. ⛔ GR®/GRP® FFRP exclus des imports trails.
-- **Photos de lieu (Agent 6)** : carrousel de la carte alimenté par Wikimedia
-  Commons en **recherche par coordonnées** (`services/photos.ts`) — jamais par
-  mot-clé seul : « Petit Ballon » renvoyait des ballons de baudruche via
-  Unsplash/Pexels, qui ne servent plus que de repli. Filtrage par
-  `agents/photoAgent.ts` (règles versionnées, audit Pino) : ne gardent que les
-  photos permettant de se projeter (paysages, patrimoine), écartent macros,
-  portraits, véhicules, assiettes, imagerie satellite. Défaillance = repli sur
-  le pré-filtre déterministe, jamais un carrousel vide. ⚠️ Deepseek v4 raisonne
-  avant de répondre : prévoir `maxTokens` ≥ 4000, sinon réponse vide.
+- **Photos de lieu (Agent 6)** : couvertures, photos du jour et carrousel de
+  la carte viennent de Wikimedia Commons **autour des coordonnées**
+  (`services/photos.ts`) — jamais par mot-clé seul : « Petit Ballon » renvoyait
+  des ballons de baudruche via Unsplash/Pexels, qui ne servent plus que de
+  repli. Recherche des vues d'ensemble d'abord (`nearcoord` + mots de paysage),
+  puis photos les plus proches. **Toute photo passe par
+  `agents/photoAgent.ts`** (règles 2.0.0 versionnées, audit Pino) qui juge sur
+  les faits Commons (titre, catégories, description, dimensions) : ne garde
+  que des vues extérieures d'ensemble en format paysage ; écarte intérieurs,
+  bâtiments seuls, véhicules, événements, animaux, objets, plats, cartes.
+  Agent indisponible = seules les photos dont les faits disent un paysage.
+  **Second regard** (`agents/photoVision.ts`) : un modèle qui VOIT l'image
+  (Claude, `ANTHROPIC_API_KEY`, modèle `ANTHROPIC_VISION_MODEL`, défaut
+  `claude-opus-5`) valide chaque photo retenue en 330 px — un titre Commons
+  peut mentir (« Viewpoint, Waterfall » = des pieds sur une passerelle).
+  Panne = mis de côté 2 min, l'agent texte fait foi. **Jamais deux fois la
+  même photo dans un trip** (ni la même série « Lac Blanc 01/02 ») : un
+  ensemble `used` partagé par la couverture et les jours ; vues épuisées à
+  5 km → recherche à 12 km avant tout repli Unsplash/Pexels.
+  Clés de galerie préfixées par la version des règles (changer les règles
+  périme les galeries en base) ; `pnpm photos:refresh [--apply]` refait les
+  photos des trips enregistrés (fichier SQL de retour arrière). ⚠️ Deepseek v4
+  raisonne avant de répondre : prévoir `maxTokens` ≥ 4000, sinon réponse vide.
 - **Mise en service VPS** : suivre `deploy/RUNBOOK-roadmap.md`.
 
 ## RÈGLES TRIPTIC SPÉCIFIQUES (toujours actives)

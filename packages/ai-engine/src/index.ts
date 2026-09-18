@@ -25,6 +25,7 @@ import { validateDays, validateTrips } from './validate.js';
 import type { LlmProvider } from './providers.js';
 
 export * from './providers.js';
+export * from './imageJudge.js';
 export * from './schema.js';
 export * from './prompts.js';
 export { sanitizeUserInput } from './sanitize.js';

@@ -3,6 +3,7 @@ import { createApp } from './app.js';
 import { env } from './env.js';
 import { logger } from './logger.js';
 import { setGalleryStore } from './services/photos.js';
+import { photoJudgeFromEnv, setPhotoJudge } from './agents/photoVision.js';
 import { allowPlanOverride } from './middleware/auth.js';
 import { PgTripRepo } from './repo/pgTrips.js';
 import { PgPlaceRepo } from './repo/places.js';
@@ -31,6 +32,8 @@ const quota = env.databaseUrl ? new PgQuotaService(env.databaseUrl) : undefined;
 // ensuite — le cache mémoire seul repartait de zéro à chaque redémarrage.
 const galleryStore = env.databaseUrl ? new PgGalleryStore(env.databaseUrl) : undefined;
 if (galleryStore) setGalleryStore(galleryStore);
+// Second regard sur les photos : un modèle qui voit l'image (clé Anthropic)
+setPhotoJudge(photoJudgeFromEnv());
 // File d'enrichissement persistée : ce qui n'aboutit pas est repris plus tard
 // au lieu d'être perdu avec le process.
 const enrichmentQueue = env.databaseUrl ? new PgEnrichmentQueueStore(env.databaseUrl) : undefined;

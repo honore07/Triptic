@@ -15,7 +15,8 @@
     "import:datatourisme": "tsx src/import/datatourisme/runDatatourismeImport.ts",
     "import:blog": "tsx src/import/blogs/runBlogImport.ts",
     "import:villages": "tsx src/import/wikidata/importVillages.ts",
-    "enrich:wikidata": "tsx src/import/wikidata/enrichNotoriety.ts"
+    "enrich:wikidata": "tsx src/import/wikidata/enrichNotoriety.ts",
+    "photos:refresh": "tsx src/scripts/refreshTripPhotos.ts"
   },
   "dependencies": {
     "@triptic/ai-engine": "workspace:*",

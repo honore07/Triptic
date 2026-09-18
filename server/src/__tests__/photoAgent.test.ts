@@ -1,118 +1,205 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  filterUsefulPhotos,
-  isObviouslyOffTopic,
-  mediaTitle,
+  AGENT_TIMEOUT_MS,
+  assessPhoto,
+  MIN_SCORE_WITHOUT_AGENT,
+  PHOTO_RULES_PROMPT,
+  PHOTO_RULES_VERSION,
+  rankPlacePhotos,
 } from '../agents/photoAgent.js';
-import type { PlaceMedia } from '../services/photos.js';
+import type { PhotoCandidate, PhotoFacts } from '../services/photos.js';
 
-const media = (file: string): PlaceMedia => ({
+/** Faits Commons d'une photo 3:2 assez grande, sauf mention contraire. */
+const facts = (title: string, categories: string[] = [], extra: Partial<PhotoFacts> = {}): PhotoFacts => ({
+  title,
+  description: '',
+  categories,
+  width: 4000,
+  height: 2667,
+  ...extra,
+});
+
+const photo = (title: string, categories: string[] = [], extra: Partial<PhotoFacts> = {}): PhotoCandidate => ({
   type: 'photo',
-  url: `https://upload.wikimedia.org/thumb/960px-${file}`,
+  url: `https://thumb.wikimedia.org/${encodeURIComponent(title)}.jpg`,
   thumb: '',
   author: 'A',
   link: '',
   source: 'commons',
+  facts: facts(title, categories, extra),
 });
 
-describe('mediaTitle', () => {
-  it('rend lisible le nom de fichier Commons', () => {
-    expect(mediaTitle(media('Col_Petit_Ballon_2024.jpg'))).toBe('Col Petit Ballon 2024');
-    expect(mediaTitle(media('Vu_de_Wasserbourg_depuis_le_Buchwald.jpg'))).toBe(
-      'Vu de Wasserbourg depuis le Buchwald',
+const mockAgent = (reply: () => Promise<string>) => ({
+  name: 'mock',
+  complete: vi.fn(async (_opts: { system: string; messages: { content: string }[] }) => reply()),
+  correct: vi.fn(),
+});
+
+describe('assessPhoto — règles déterministes', () => {
+  it('écarte les hors-sujet que trahissent titre et catégories (cas réels, septembre 2026)', () => {
+    expect(
+      assessPhoto(
+        facts('DSC01021 Jeep Cherokee, Carabinieri, Front Right', [
+          'Jeep Grand Cherokee of the Carabinieri',
+          '2023 Republic Day in Bolzano (Italy)',
+        ]),
+      ).reject,
+    ).toBe('véhicule');
+    expect(
+      assessPhoto(facts('Z850 EMU at La Joux', ['Saint-Gervais-Vallorcine Line', 'SNCF Class Z 850'])).reject,
+    ).toBe('véhicule');
+    expect(assessPhoto(facts("Bœuf d'Hérens", ['Oxen in Switzerland', 'Hérens cattle'])).reject).toBe(
+      'animal ou plante',
     );
+    expect(
+      assessPhoto(facts('Baptismal fonts Kaysersberg', ['Baptismal font of Église Sainte-Croix (Kaysersberg)']))
+        .reject,
+    ).toBe('intérieur');
+    expect(
+      assessPhoto(facts('2013-02-28 17-06-06-details-belfort', ['Reliefs in Belfort', 'Keystones in Belfort']))
+        .reject,
+    ).toBe('objet ou détail');
+    expect(assessPhoto(facts('ISS045-E-141043 - View of Earth')).reject).toBe('vue satellite');
   });
 
-  it('décode les caractères échappés', () => {
-    expect(mediaTitle(media('Paysage_au_Buchwald_%28Wasserbourg%29.jpg'))).toBe(
-      'Paysage au Buchwald (Wasserbourg)',
+  it('écarte les cadrages qui ne remplissent pas une carte', () => {
+    expect(assessPhoto(facts('Vue du Hohneck', [], { width: 2448, height: 3264 })).reject).toBe(
+      'cadrage portrait',
     );
+    expect(assessPhoto(facts('Vue du Hohneck', [], { width: 800, height: 533 })).reject).toBe('trop petite');
+    expect(
+      assessPhoto(
+        facts('2011-05-29-pano-hohneck-1', ['Landscapes of Haut-Rhin'], { width: 16517, height: 2704 }),
+      ).reject,
+    ).toBe('panorama trop étroit');
   });
 
-  it('ignore les paramètres de suivi des vignettes Wikimedia récentes', () => {
-    const item = {
-      ...media('Annecy_-_panoramio_%289%29.jpg'),
-      url:
-        'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Annecy_-_panoramio_%289%29.jpg/' +
-        '960px-Annecy_-_panoramio_%289%29.jpg?utm_source=commons.wikimedia.org&utm_content=thumbnail',
-    };
-    expect(mediaTitle(item)).toBe('Annecy panoramio (9)');
-  });
-});
-
-describe('isObviouslyOffTopic', () => {
-  it('écarte les sujets hors-lieu, en plusieurs langues', () => {
-    // Cas réellement rencontrés dans la galerie du Petit Ballon
-    expect(isObviouslyOffTopic('2010 Rally France-Alsace - Michał Kościuszko')).toBe(true);
-    expect(isObviouslyOffTopic('Kever op margriet')).toBe(true); // scarabée (nl)
-    expect(isObviouslyOffTopic('Bruine vlinder op gele bloem')).toBe(true); // papillon
-    expect(isObviouslyOffTopic('Hagedis in jeneverbes')).toBe(true); // lézard
-    expect(isObviouslyOffTopic('Blason de Wasserbourg')).toBe(true);
-    // Photos NASA géotaguées au sol : on ne reconnaît aucun lieu dessus
-    expect(isObviouslyOffTopic('ISS045-E-141043 - View of Earth')).toBe(true);
-  });
-
-  it('laisse passer paysages, villages et patrimoine', () => {
-    expect(isObviouslyOffTopic('Col Petit Ballon 2024')).toBe(false);
-    expect(isObviouslyOffTopic('Vu de Wasserbourg depuis le Buchwald')).toBe(false);
-    expect(isObviouslyOffTopic('Munster CourAbbaye 02')).toBe(false);
-    expect(isObviouslyOffTopic('Hohneck von Südosten')).toBe(false);
-  });
-});
-
-describe('filterUsefulPhotos', () => {
-  const gallery = [
-    media('Col_Petit_Ballon_2024.jpg'),
-    media('2010_Rally_France-Alsace.jpg'),
-    media('Velo_rose_enfant.jpg'),
-    media('Vu_de_Wasserbourg.jpg'),
-  ];
-
-  it('applique le pré-filtre même sans agent LLM', async () => {
-    const kept = await filterUsefulPhotos('Petit Ballon', gallery, null);
-    expect(kept.map(mediaTitle)).toEqual([
-      'Col Petit Ballon 2024',
-      'Velo rose enfant',
-      'Vu de Wasserbourg',
-    ]);
-  });
-
-  it('laisse l’agent écarter ce que le pré-filtre ne voit pas', async () => {
-    const provider = {
-      name: 'mock',
-      complete: vi.fn(
-        async (_opts: { messages: { content: string }[] }) =>
-          '{"keep":[0,2],"rejected":[{"n":1,"why":"objet isolé"}]}',
-      ),
-      correct: vi.fn(),
-    };
-    const kept = await filterUsefulPhotos('Petit Ballon', gallery, provider);
-    expect(kept.map(mediaTitle)).toEqual(['Col Petit Ballon 2024', 'Vu de Wasserbourg']);
-    // Le prompt reçoit bien le lieu et les titres numérotés
-    const sent = provider.complete.mock.calls[0]?.[0];
-    expect(sent?.messages[0]?.content).toContain('Petit Ballon');
-    expect(sent?.messages[0]?.content).toContain('0. Col Petit Ballon 2024');
-  });
-
-  it('agent en panne : on garde le pré-filtre plutôt qu’un carrousel vide', async () => {
-    const provider = {
-      name: 'mock',
-      complete: vi.fn(async () => {
-        throw new Error('LLM down');
+  it('garde les vues d’ensemble ; un bâtiment seul ne passe jamais sans l’agent', () => {
+    const radar = assessPhoto(
+      facts('Vuedepuisleradarverslest', ['Grand Ballon'], {
+        description: "Vu vers l'est depuis le radar du grand ballon",
       }),
-      correct: vi.fn(),
-    };
-    const kept = await filterUsefulPhotos('Petit Ballon', gallery, provider);
-    expect(kept).toHaveLength(3);
+    );
+    const village = assessPhoto(facts('Vue du village de Ribeauvillé', ['Ribeauvillé', 'Landscapes of Haut-Rhin']));
+    for (const view of [radar, village]) {
+      expect(view.reject).toBeNull();
+      expect(view.score).toBeGreaterThanOrEqual(MIN_SCORE_WITHOUT_AGENT);
+    }
+    const church = assessPhoto(
+      facts('Saint Barthelemy church of Gérardmer', [
+        'Église Saint-Barthélemy de Gérardmer',
+        'Tone-mapped HDR images of churches in France',
+      ]),
+    );
+    const townHall = assessPhoto(facts('Rochejean - mairie', ['Town hall of Rochejean'], { width: 2048, height: 1536 }));
+    // Pas écartés d'office (un château dans son site reste possible)…
+    expect(church.reject).toBeNull();
+    // …mais jamais proposés sans le feu vert de l'agent
+    expect(church.score).toBeLessThan(MIN_SCORE_WITHOUT_AGENT);
+    expect(townHall.score).toBeLessThan(MIN_SCORE_WITHOUT_AGENT);
   });
 
-  it('verdict qui rejette tout : suspect, on retombe sur le pré-filtre', async () => {
-    const provider = {
-      name: 'mock',
-      complete: vi.fn(async () => '{"keep":[],"rejected":[]}'),
-      correct: vi.fn(),
-    };
-    const kept = await filterUsefulPhotos('Petit Ballon', gallery, provider);
-    expect(kept).toHaveLength(3);
+  it('ignore les catégories de maintenance et ne prend pas une vue aérienne pour un oiseau', () => {
+    expect(assessPhoto(facts('Lac Blanc (Orbey) 03', ['Pages with maps', 'Lac Blanc (Orbey)'])).reject).toBeNull();
+    expect(assessPhoto(facts("Bird's-eye view of Colmar")).reject).toBeNull();
+  });
+
+  it('ne confond pas un nom de lieu avec un sujet écarté', () => {
+    // La Grave (Hautes-Alpes), face à la Meije : pas une tombe
+    expect(assessPhoto(facts('La Meije vue de La Grave', ['La Grave'])).reject).toBeNull();
+  });
+});
+
+describe('rankPlacePhotos', () => {
+  const hohneck = [
+    photo('Tirailleurs tunisiens Hohneck', ['Hohneck', 'Military monuments and memorials in France']),
+    photo('Petit Ballon depuis le Hohneck', ['Petit Ballon', 'Mountains of Haut-Rhin']),
+    photo('Chalet-restaurant Hohneck', ['Hohneck', 'Buildings in La Bresse']),
+    photo('Aircraft 68YD over Hohneck, Vosges-0215', ['2016 in aviation in France']),
+  ];
+  const bolzano = [photo('DSC01206 Landtagsgebäude Bozen 06-2023', ['Landtagsgebäude Bozen'])];
+
+  it('sans agent : seules les photos dont les faits disent un paysage', async () => {
+    const [kept] = await rankPlacePhotos([{ place: 'Hohneck', candidates: hohneck }], null);
+    expect(kept?.map((p) => p.facts.title)).toEqual(['Petit Ballon depuis le Hohneck']);
+  });
+
+  it('l’agent tranche lieu par lieu, en un appel, sur les faits Commons', async () => {
+    const provider = mockAgent(async () => '{"L1": [0], "L2": []}');
+    const [atHohneck, atBolzano] = await rankPlacePhotos(
+      [
+        { place: 'Hohneck', candidates: hohneck },
+        { place: 'Centre de Bolzano', candidates: bolzano },
+      ],
+      provider,
+    );
+    expect(atHohneck?.map((p) => p.facts.title)).toEqual(['Petit Ballon depuis le Hohneck']);
+    // Liste vide = rien ne montre l'espace : pas de repli sur les règles
+    expect(atBolzano).toEqual([]);
+    expect(provider.complete).toHaveBeenCalledTimes(1);
+    const sent = provider.complete.mock.calls[0]?.[0];
+    expect(sent?.system).toBe(PHOTO_RULES_PROMPT);
+    const listing = sent?.messages[0]?.content ?? '';
+    expect(listing).toContain('L1 — Hohneck');
+    expect(listing).toContain('L2 — Centre de Bolzano');
+    expect(listing).toContain('Mountains of Haut-Rhin');
+    expect(listing).toContain('4000×2667');
+    // L'avion est écarté par les règles avant d'être montré à l'agent
+    expect(listing).not.toContain('Aircraft');
+  });
+
+  it('suit l’ordre de l’agent et tolère des numéros rendus en texte', async () => {
+    const views = [
+      photo('Vue du village de Ribeauvillé', ['Landscapes of Haut-Rhin']),
+      photo('Lac Blanc (Orbey) 03', ['Lac Blanc (Orbey)']),
+    ];
+    const provider = mockAgent(async () => '{"L1": ["1", "0", "1"]}');
+    const [kept] = await rankPlacePhotos([{ place: 'Ribeauvillé', candidates: views }], provider);
+    expect(kept?.map((p) => p.facts.title)).toEqual(['Lac Blanc (Orbey) 03', 'Vue du village de Ribeauvillé']);
+  });
+
+  it('agent en panne : les règles déterministes font foi', async () => {
+    const provider = mockAgent(async () => {
+      throw new Error('LLM down');
+    });
+    const [kept] = await rankPlacePhotos([{ place: 'Hohneck', candidates: hohneck }], provider);
+    expect(kept?.map((p) => p.facts.title)).toEqual(['Petit Ballon depuis le Hohneck']);
+  });
+
+  it('agent qui ne répond jamais : repli sur les règles après le délai', async () => {
+    vi.useFakeTimers();
+    try {
+      const provider = mockAgent(() => new Promise<string>(() => {}));
+      const pending = rankPlacePhotos([{ place: 'Hohneck', candidates: hohneck }], provider);
+      await vi.advanceTimersByTimeAsync(AGENT_TIMEOUT_MS);
+      const [kept] = await pending;
+      expect(kept?.map((p) => p.facts.title)).toEqual(['Petit Ballon depuis le Hohneck']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('lieu absent de la réponse : repli sur les règles pour ce lieu seulement', async () => {
+    const provider = mockAgent(async () => '{"L2": []}');
+    const [atHohneck, atBolzano] = await rankPlacePhotos(
+      [
+        { place: 'Hohneck', candidates: hohneck },
+        { place: 'Centre de Bolzano', candidates: bolzano },
+      ],
+      provider,
+    );
+    expect(atHohneck?.map((p) => p.facts.title)).toEqual(['Petit Ballon depuis le Hohneck']);
+    expect(atBolzano).toEqual([]);
+  });
+
+  it('au-delà de six lieux, plusieurs appels courts', async () => {
+    const provider = mockAgent(async () => '{}');
+    const places = Array.from({ length: 7 }, (_, i) => ({ place: `Lieu ${i}`, candidates: hohneck }));
+    await rankPlacePhotos(places, provider);
+    expect(provider.complete).toHaveBeenCalledTimes(2);
+  });
+
+  it('le prompt porte la version des règles (audit)', () => {
+    expect(PHOTO_RULES_PROMPT).toContain(`version ${PHOTO_RULES_VERSION}`);
   });
 });
