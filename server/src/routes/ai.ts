@@ -185,16 +185,17 @@ export function createAiRouter(
           applyTripEstimates(trip, result.generation.request);
         }
         sseWrite(res, 'status', { step: 'photos' });
-        await Promise.all(
-          visible.map(async (trip) => {
-            trip.photo_url = (await findTripCover(trip, trip.photo_keywords)) ?? undefined;
-          }),
-        );
-        // Photos par étape (2.3) — uniquement le 1er trip (quotas API)
+        // Chaque photo passe par l'agent photo : sans lui, une couverture
+        // montrait une voiture de police au centre de Bolzano. Couvertures et
+        // photos par étape (2.3, uniquement le 1er trip — quotas API) en même
+        // temps : l'agent juge les unes pendant que Commons sert les autres.
         const first = visible[0];
-        if (first?.days) {
-          await findDayPhotos(first.days, first.photo_keywords);
-        }
+        await Promise.all([
+          ...visible.map(async (trip) => {
+            trip.photo_url = (await findTripCover(trip, trip.photo_keywords, provider)) ?? undefined;
+          }),
+          first?.days ? findDayPhotos(first.days, first.photo_keywords, provider) : undefined,
+        ]);
         sseWrite(res, 'trips', {
           generation: {
             ...result.generation,

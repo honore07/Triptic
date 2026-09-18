@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { placeGalleries } from '../db/schema.js';
-import type { PlaceMedia } from '../services/photos.js';
+import { GALLERY_KEY_PREFIX, type PlaceMedia } from '../services/photos.js';
 
 /**
  * Galeries photo persistées (migration 0009).
@@ -49,6 +49,7 @@ export class PgGalleryStore implements GalleryStore {
   /**
    * Les lieux les plus notoires qui n'ont pas encore de galerie (ou dont la
    * galerie a vieilli). Notoriété d'abord : ce sont ceux qu'on ouvre le plus.
+   * Une galerie filtrée avec d'anciennes règles photo ne compte pas.
    */
   async staleTargets(
     limit: number,
@@ -59,7 +60,8 @@ export class PgGalleryStore implements GalleryStore {
              ST_Y(p.location::geometry) AS lat,
              ST_X(p.location::geometry) AS lng
         FROM places p
-        LEFT JOIN place_galleries g ON g.query = p.name
+        LEFT JOIN place_galleries g
+               ON g.query = p.name AND g.cache_key LIKE ${`${GALLERY_KEY_PREFIX}%`}
        WHERE p.status = 'active'
          AND p.location IS NOT NULL
          AND (g.cache_key IS NULL OR g.updated_at < NOW() - ${`${maxAgeDays} days`}::interval)
