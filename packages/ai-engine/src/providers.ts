@@ -60,7 +60,28 @@ async function withNetworkRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<
 const DEEPSEEK_CHAT_MODEL = process.env['DEEPSEEK_CHAT_MODEL'] ?? 'deepseek-v4-flash';
 const DEEPSEEK_REASONER_MODEL = process.env['DEEPSEEK_REASONER_MODEL'] ?? 'deepseek-v4-pro';
 
-export function createDeepseekProvider(apiKey: string): LlmProvider {
+/**
+ * Silence maximal toléré de Deepseek, en ms, avant d'abandonner l'appel.
+ * Le 14/09/2026, Deepseek saturé acceptait les connexions sans jamais
+ * répondre (il garde la connexion ouverte jusqu'à 30 min avec des
+ * « : keep-alive ») : le fallback, qui ne se déclenche que sur erreur,
+ * n'arrivait jamais. Mesuré le 18/09/2026 en streaming : premier fragment
+ * utile en 0,6-1 s (flash comme pro), puis un fragment au moins toutes les
+ * 0,25 s. 30 s de silence = panne, pas lenteur. Le délai se réarme à chaque
+ * fragment : un road trip de 16 jours (~5 min) n'est jamais coupé tant
+ * qu'il progresse. Surchargeable par DEEPSEEK_IDLE_TIMEOUT_MS.
+ */
+const DEFAULT_IDLE_TIMEOUT_MS = 30_000;
+
+function idleTimeoutFromEnv(): number {
+  const value = Number(process.env['DEEPSEEK_IDLE_TIMEOUT_MS']);
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_IDLE_TIMEOUT_MS;
+}
+
+export function createDeepseekProvider(
+  apiKey: string,
+  { idleTimeoutMs = idleTimeoutFromEnv() }: { idleTimeoutMs?: number } = {},
+): LlmProvider {
   const client = new OpenAI({ baseURL: DEEPSEEK_BASE_URL, apiKey });
 
   /**
@@ -71,6 +92,11 @@ export function createDeepseekProvider(apiKey: string): LlmProvider {
    * sur le fallback. Ici : un contenu vide est une erreur (le fallback
    * Anthropic reprend), et un budget épuisé est retenté une fois avec le
    * double, avant de renoncer.
+   *
+   * L'appel est streamé pour surveiller la progression : sans aucun
+   * fragment utile (ni contenu, ni raisonnement) pendant idleTimeoutMs,
+   * la requête est abandonnée et une erreur explicite laisse le fallback
+   * reprendre. Les « : keep-alive » ne comptent pas comme progression.
    */
   async function call(
     model: string,
@@ -80,26 +106,64 @@ export function createDeepseekProvider(apiKey: string): LlmProvider {
   ): Promise<string> {
     const maxTokens = opts.maxTokens ?? 4096;
     const effort = opts.reasoning ?? reasoning;
-    const response = await client.chat.completions.create({
-      model,
-      max_tokens: maxTokens,
-      // Paramètre Deepseek hors du typage OpenAI ('none' n'y figure pas)
-      ...(effort === 'full' ? {} : ({ reasoning_effort: effort } as Record<string, unknown>)),
-      messages: [
-        { role: 'system' as const, content: opts.system },
-        ...opts.messages.map((m) => ({ role: m.role, content: m.content })),
-      ],
-    });
-    const choice = response.choices[0];
-    const content = choice?.message?.content ?? '';
-    const finish = choice?.finish_reason ?? 'unknown';
+    const controller = new AbortController();
+    let idle = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const armIdleTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        idle = true;
+        controller.abort();
+      }, idleTimeoutMs);
+    };
+
+    let content = '';
+    let finish = 'unknown';
+    let completionTokens: number | string = '?';
+    armIdleTimer();
+    try {
+      const stream = await client.chat.completions.create(
+        {
+          model,
+          max_tokens: maxTokens,
+          stream: true,
+          stream_options: { include_usage: true },
+          // Paramètre Deepseek hors du typage OpenAI ('none' n'y figure pas)
+          ...(effort === 'full' ? {} : ({ reasoning_effort: effort } as Record<string, unknown>)),
+          messages: [
+            { role: 'system' as const, content: opts.system },
+            ...opts.messages.map((m) => ({ role: m.role, content: m.content })),
+          ],
+        },
+        { signal: controller.signal },
+      );
+      for await (const chunk of stream) {
+        const choice = chunk.choices[0];
+        // reasoning_content : champ Deepseek hors du typage OpenAI
+        const delta = choice?.delta as { content?: string | null; reasoning_content?: string | null } | undefined;
+        if (delta?.content || delta?.reasoning_content) armIdleTimer();
+        if (delta?.content) content += delta.content;
+        if (choice?.finish_reason) finish = choice.finish_reason;
+        if (chunk.usage) completionTokens = chunk.usage.completion_tokens;
+      }
+    } catch (error) {
+      if (idle) {
+        throw new Error(
+          `Deepseek idle timeout: no output for ${idleTimeoutMs} ms (model=${model}, max_tokens=${maxTokens})`,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+
     if (content.trim()) return content;
     if (finish === 'length' && !retried && maxTokens < 64000) {
       return call(model, { ...opts, maxTokens: Math.min(maxTokens * 2, 64000) }, reasoning, true);
     }
     throw new Error(
       `Deepseek returned empty content (model=${model}, finish_reason=${finish}, ` +
-        `completion_tokens=${response.usage?.completion_tokens ?? '?'}, max_tokens=${maxTokens})`,
+        `completion_tokens=${completionTokens}, max_tokens=${maxTokens})`,
     );
   }
 
