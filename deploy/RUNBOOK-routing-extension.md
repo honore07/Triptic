@@ -1,7 +1,8 @@
-# TRIPTIC — Runbook : extension du routing (Lorraine, puis Alpes FR)
+# TRIPTIC — Runbook : extension du routing (Lorraine, Alpes FR, puis Pyrénées)
 
 > Commandes à coller **une par une** dans le terminal Hostinger (VPS, root).
-> Couverture actuelle : Alsace seule. Objectif : + Lorraine, puis + Alpes FR.
+> Couverture actuelle : Alsace seule. Objectif : + Lorraine, + Alpes FR,
+> puis + Pyrénées (GR10 / HRP).
 >
 > **Stratégie retenue** : télécharger `france-latest.osm.pbf` (4,7 Go) une
 > seule fois, puis découper la zone voulue avec `osmium extract --bbox`
@@ -13,10 +14,11 @@
 > Suisse / Italie : pas dans ce runbook — voir la section « Et la Suisse /
 > l'Italie ? » en bas (honnêtement : pas raisonnable sur ce VPS pour l'instant).
 
-⚠️ Pendant chaque réimport (étapes 2 et 3), le routing est indisponible
-(1-2 h pour la Lorraine, jusqu'à une nuit pour les Alpes). L'app continue de
-fonctionner : elle retombe automatiquement sur les estimations LLM
-(`RoutingService` renvoie null → fallback). Lancer l'étape Alpes le soir.
+⚠️ Pendant chaque réimport (étapes 2, 3 et 3bis), le routing est indisponible
+(1-2 h pour la Lorraine, jusqu'à une nuit pour les Alpes, jusqu'à 12 h pour
+les Pyrénées). L'app continue de fonctionner : elle retombe automatiquement
+sur les estimations LLM (`RoutingService` renvoie null → fallback). Lancer
+les étapes Alpes et Pyrénées le soir.
 
 ---
 
@@ -155,6 +157,72 @@ Attendu : un JSON avec `"distance":` autour de 10 000-15 000.
 
 ---
 
+## 3bis. Étape C — Pyrénées (GR10 / HRP, du Pays basque au Perthus)
+
+Rectangle contigu qui **ajoute** les Pyrénées à la couverture Est. La bbox
+englobe aussi le Massif central, les Cévennes et l'Aveyron (effet de bord :
+osmium extract est bien plus rapide sur bbox que sur polygone — 15 min contre
+plusieurs heures — et un rectangle est le seul moyen simple de garder une
+zone contiguë sans îlots). Extrait ~2,5-3 Go, **import : jusqu'à 12 h** sur
+le KVM 2 (2 vCPU, 4 Go JVM). À lancer le soir, idéalement un vendredi.
+
+```bash
+cd /opt/triptic && nohup env STAGE=pyrenees bash deploy/graphhopper-extend.sh > /var/log/triptic-gh-extend.log 2>&1 &
+```
+
+```bash
+tail -f /var/log/triptic-gh-extend.log
+```
+
+### Vérification C1 — GraphHopper en direct (Cauterets → Gavarnie, profil foot_scenic)
+
+Le cœur des Hautes-Pyrénées, sur le tracé du GR10 (~25-40 km selon le tracé retenu) :
+
+```bash
+curl -sS "http://localhost:8989/route?point=42.8883,-0.1131&point=42.7358,-0.0122&profile=foot_scenic" | head -c 300
+```
+
+Attendu : un JSON avec `"distance":` autour de 25 000-40 000. Si
+`Cannot find point` : l'import n'est pas fini, ou le point est hors bbox.
+
+### Vérification C2 — GR10 au départ atlantique (Hendaye → Sare, foot_scenic)
+
+```bash
+curl -sS "http://localhost:8989/route?point=43.3591,-1.7749&point=43.3125,-1.5794&profile=foot_scenic" | head -c 300
+```
+
+Attendu : `"distance":` autour de 15 000-30 000.
+
+### Vérification C3 — régression Alsace et Alpes (les tests historiques doivent toujours passer)
+
+```bash
+curl -sS "http://localhost:8989/route?point=48.0631,7.0209&point=47.9014,7.0994&profile=car_scenic" | head -c 200
+curl -sS "http://localhost:8989/route?point=45.9237,6.8694&point=45.8992,6.1294&profile=car_scenic" | head -c 200
+```
+
+Si l'un des deux renvoie `Cannot find point`, la bbox pyrenees a mal
+englobé la couverture précédente — arrêter et vérifier `BBOX` dans
+`deploy/graphhopper-extend.sh`.
+
+### Vérification C4 — boucle rando Pyrénées (round_trip, foot)
+
+```bash
+curl -sS "http://localhost:8989/route?point=42.8883,-0.1131&profile=foot&algorithm=round_trip&round_trip.distance=15000&ch.disable=true" | head -c 300
+```
+
+Attendu : `"distance":` autour de 12 000-18 000.
+
+### Vérification C5 — API publique, trek Pyrénées
+
+```bash
+curl -sS -X POST https://triptic.hakoe-alsace.com/api/trips/recompute -H "Content-Type: application/json" -d '{"mode":"trek","duration_days":1,"days":[{"day":1,"title":"Test Pyrénées","activities":[{"type":"hike","time_of_day":"morning","title":"Cauterets","lat":42.8883,"lng":-0.1131},{"type":"visit","time_of_day":"afternoon","title":"Pont d Espagne","lat":42.8547,"lng":-0.1442},{"type":"camp","time_of_day":"evening","title":"Refuge Wallon","lat":42.8550,"lng":-0.1650}]}]}' | python3 -c "import sys,json;d=json.load(sys.stdin);segs=d['days'][0]['segments'] if 'days' in d else [];print(f'{len(segs)} segments, routés :', [s.get('routed') for s in segs]) if segs else print('erreur API:',d)"
+```
+
+Attendu : `2 segments, routés : [True, True]`. Si `[False, False]` :
+GraphHopper n'a pas répondu, voir logs.
+
+---
+
 ## 4. Et la Suisse / l'Italie ?
 
 **Pas maintenant sur ce VPS** — dit honnêtement :
@@ -218,8 +286,9 @@ pm2 reload triptic-api && curl -fsS http://localhost:3001/health
 
 | Risque | Détail | Parade |
 |---|---|---|
-| RAM pendant l'import Alpes | JVM 4 Go + MMAP sur 8 Go : ça passe pour ~1,5 Go de pbf, mais un OOM reste possible si d'autres services chargent | Swap 4 Go (pré-vol), lancer la nuit, `docker logs` en cas d'arrêt |
-| Durée import étape B | 2 vCPU : demi-journée à une nuit (le script attend 12 h max) | nohup + tail ; routing en fallback LLM pendant ce temps |
-| Disque | ~12-15 Go consommés au total (France 4,7 + extrait 1,5 + graphe + élévation) sur 100 Go | `df -h` avant chaque étape ; ménage des vieux extraits (pré-vol) |
+| RAM pendant l'import Alpes/Pyrénées | JVM 4 Go + MMAP sur 8 Go : ça passe pour ~1,5-3 Go de pbf, mais un OOM reste possible si d'autres services chargent | Swap 4 Go (pré-vol), lancer la nuit, `docker logs` en cas d'arrêt |
+| Durée import étapes B et C | 2 vCPU : demi-journée à 12 h (le script attend 12 h max) | nohup + tail ; routing en fallback LLM pendant ce temps |
+| Disque étape C | ~16-18 Go consommés au total (France 4,7 + extrait ~3 + graphe + élévation) sur 100 Go | `df -h` avant chaque étape ; ménage des vieux extraits (pré-vol) |
+| Régression sur zones existantes | Le stage pyrenees remplace le graphe : si sa bbox n'englobe pas la précédente, Alsace/Alpes tombent en fallback | Vérifications C3 après import ; la bbox pyrenees (-2,42.3,8.35,49.7) inclut par construction celle du stage est (4.5,43,8.35,49.7) |
 | Tuiles d'élévation CGIAR | GraphHopper télécharge les tuiles SRTM pendant l'import ; le serveur CGIAR est parfois capricieux | Relancer le script (idempotent) ; les tuiles déjà en cache sont réutilisées |
-| Couverture limitée à la France | Un trip qui sort de la bbox (Bâle, Genève côté suisse, Turin…) ne sera pas routé → fallback estimation | Assumé — voir section 4 |
+| Couverture limitée à la France | Un trip qui sort de la bbox (Bâle, Genève côté suisse, Turin, Andorre, Espagne côté Pyrénées…) ne sera pas routé → fallback estimation | Assumé — voir section 4 |

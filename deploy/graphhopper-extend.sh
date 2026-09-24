@@ -2,8 +2,9 @@
 # TRIPTIC — extension de la couverture routing : Alsace → +Lorraine → +Alpes FR
 # Usage (depuis /opt/triptic, en root, de préférence sous nohup — voir
 # deploy/RUNBOOK-routing-extension.md) :
-#   STAGE=nordest bash deploy/graphhopper-extend.sh   # Alsace + Lorraine (~300 Mo)
-#   STAGE=est     bash deploy/graphhopper-extend.sh   # + Franche-Comté + Alpes FR (~1,5 Go)
+#   STAGE=nordest  bash deploy/graphhopper-extend.sh   # Alsace + Lorraine (~300 Mo)
+#   STAGE=est      bash deploy/graphhopper-extend.sh   # + Franche-Comté + Alpes FR (~1,5 Go)
+#   STAGE=pyrenees bash deploy/graphhopper-extend.sh   # + Pyrénées via bbox élargie (~3 Go, nuit complète)
 #
 # Stratégie « source unique » : france-latest.osm.pbf (4,7 Go) téléchargé UNE
 # fois, puis osmium extract --bbox découpe la zone voulue. Un seul fichier
@@ -20,13 +21,20 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
-STAGE="${STAGE:?Définir STAGE=nordest ou STAGE=est}"
+STAGE="${STAGE:?Définir STAGE=nordest, STAGE=est ou STAGE=pyrenees}"
 case "$STAGE" in
   # lon_min,lat_min,lon_max,lat_max — zones CONTIGUËS (un graphe en îlots
   # déconnectés ne sait pas router entre les îlots)
-  nordest) BBOX="4.7,47.2,8.35,49.7"  ;;  # Alsace + Lorraine
-  est)     BBOX="4.5,43.0,8.35,49.7"  ;;  # + Franche-Comté + Jura + Alpes FR (Corse exclue)
-  *) echo "STAGE invalide : $STAGE (attendu nordest|est)"; exit 1 ;;
+  nordest)  BBOX="4.7,47.2,8.35,49.7"    ;;  # Alsace + Lorraine
+  est)      BBOX="4.5,43.0,8.35,49.7"    ;;  # + Franche-Comté + Jura + Alpes FR (Corse exclue)
+  # Rectangle contigu Est + centre + Pyrénées (GR10/HRP, du Pays basque au
+  # Perthus). Extension ouest jusqu'à lon -2 et sud jusqu'à lat 42.3 → ajoute
+  # aussi Massif central, Cévennes, Aveyron : effet de bord accepté (une bbox
+  # est un rectangle, pas un polygone, et osmium extract est bien plus rapide
+  # sur bbox — 15 min contre plusieurs heures sur .poly). Corse toujours exclue.
+  # Ordre de grandeur (KVM 2, 4 Go JVM) : extrait ~2,5-3 Go, import 6-12 h.
+  pyrenees) BBOX="-2.0,42.3,8.35,49.7"   ;;
+  *) echo "STAGE invalide : $STAGE (attendu nordest|est|pyrenees)"; exit 1 ;;
 esac
 
 DATA_DIR=/opt/graphhopper/data
@@ -71,7 +79,8 @@ echo "       l'API TRIPTIC bascule sur les estimations LLM en attendant) ==="
 rm -rf "$DATA_DIR/graph-cache"
 docker compose -f "$COMPOSE_FILE" up -d --force-recreate
 
-echo "=== 7. Attente du service (nordest : ~1-2 h ; est : jusqu'à une nuit) ==="
+echo "=== 7. Attente du service (nordest : ~1-2 h ; est : jusqu'à une nuit ;"
+echo "       pyrenees : jusqu'à 12 h, à lancer le soir) ==="
 for i in $(seq 1 2880); do   # 12 h max (2880 × 15 s)
   if curl -fsS http://localhost:8989/health >/dev/null 2>&1; then
     echo " ✓ GraphHopper OK sur la nouvelle couverture ($STAGE) — tests dans le runbook"
